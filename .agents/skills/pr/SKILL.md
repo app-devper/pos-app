@@ -1,6 +1,6 @@
 ---
 name: pr
-description: Land the current branch's open pull request in app-devper/devper-workspace — squash-merge (auto-merge if the check is still running), delete the branch, sync the base branch, and back-merge main into develop when the PR targeted main. Use when the user says "pr land", "merge it", "/pr", or otherwise asks to land the current PR.
+description: Land the current branch's open pull request in app-devper/pos-app — squash-merge (auto-merge if the check is still running), delete the branch, sync the base branch, and back-merge main into develop when the PR targeted main. Use when the user says "pr land", "merge it", "/pr", or otherwise asks to land the current PR.
 ---
 
 # pr — land the current branch's PR
@@ -73,4 +73,4 @@ This repo follows **git flow** (see the `git-flow` skill): feature PRs target
   per app. Confirm a release PR bumped the app's `version:` before landing.
 - Branch protection is not enforced (free-plan private repo); still treat a
   red `check` as blocking and never merge over a failed check.
-- Run from inside `/Users/admin/ProjectPos/devper-workspace`.
+- Run from inside `/Users/admin/ProjectPos/Devper/pos-app`.

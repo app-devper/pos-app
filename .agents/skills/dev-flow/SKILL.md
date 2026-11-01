@@ -1,14 +1,23 @@
 ---
 name: dev-flow
-description: End-to-end delivery flow for app-devper/devper-workspace — from an idea or bug through shaping, design, test-first build, verify, review, PR into develop, release PR into main, tag, deploy check and back-merge. Says which skill to use at each stage. Use when starting any change, when unsure what comes next, or when asked to ship, release or hotfix.
+description: End-to-end delivery flow for app-devper/pos-app — from an idea or bug through shaping, design, test-first build, verify, review, PR into develop, release PR into main, tag, deploy check and back-merge. Says which skill to use at each stage. Use when starting any change, when unsure what comes next, or when asked to ship, release or hotfix.
 ---
 
-# dev-flow — idea → release for devper-workspace
+# dev-flow — idea → release for pos-app
 
 One flow, nine stages. Each stage names the skill that does the work and the
 exit check that must hold before moving on. Skip a stage only where it says
 so. Branching and PR mechanics are owned by `git-flow` and `pr`; this skill
 only sequences them.
+
+Skills named below live in two places. `.agents/skills/` in this repo holds
+the ones about this repo: `dart-flutter-patterns`, `dev-flow`,
+`flutter-dart-code-review`, `git-flow`, `pr`. The generic ones —
+`codebase-design`, `coding-standards`, `domain-modeling`, `grill-with-docs`,
+`grilling`, `improve-codebase-architecture`, `tdd-workflow` — come from
+`app-devper/agent-skills`, linked into `~/.claude/skills` by its `install.sh`.
+If a generic skill is missing, clone that repo and run the script; never
+recreate one inside this repo, because a same-named copy would be shadowed.
 
 ## 0. Pick the track
 
@@ -23,7 +32,8 @@ only sequences them.
 ## 1. Shape — agree on what and why
 
 - New behaviour or unclear requirement → `/grill-with-docs` (runs `grilling`
-  + `domain-modeling`). Terms go into `CONTEXT.md`, hard-to-reverse decisions
+  + `domain-modeling`; the user starts it — when you drive the flow
+  yourself, load `grilling` and then `domain-modeling`). Terms go into `CONTEXT.md`, hard-to-reverse decisions
   into `docs/adr/`.
 - Small, well-understood fix → `grilling` only, a few questions, no docs.
 - Refactor → `/improve-codebase-architecture` picks the candidate and grills it.
@@ -109,6 +119,29 @@ directly.
    Deploy only the apps whose `version:` this release bumped.
 
 **Exit:** tag `vX.Y.Z` on `main`, app deployed by hand from `main`, `develop` contains `main`.
+
+
+### Android test builds: Firebase App Distribution
+
+After the release lands, testers get the Android build from App Distribution
+(project `devperpos`, group `testers`, Firebase app `1:1056670356976:android:b899a584c0ace390a73935`):
+```bash
+git checkout main && git pull --ff-only
+(cd packages/applications/pos && flutter build apk --release)
+firebase appdistribution:distribute packages/applications/pos/build/app/outputs/flutter-apk/app-release.apk \
+  --project devperpos --app 1:1056670356976:android:b899a584c0ace390a73935 --groups testers --release-notes "vX.Y.Z: <one line>"
+```
+The release APK is signed with the key in `~/.devper/keystores/pos-release.properties`
+(never in the repo; without it the APK is unsigned and App Distribution refuses it). It is
+backed up in Secret Manager of `devperpos`; on a new machine:
+```bash
+mkdir -p ~/.devper/keystores && chmod 700 ~/.devper ~/.devper/keystores
+gcloud secrets versions access latest --secret pos-release-keystore --project devperpos | base64 -d > ~/.devper/keystores/pos-release.jks
+gcloud secrets versions access latest --secret pos-release-keystore-properties --project devperpos > ~/.devper/keystores/pos-release.properties
+chmod 600 ~/.devper/keystores/pos-release.*
+```
+Losing the key means a new applicationId for every future install. A tester is added once with
+`firebase appdistribution:testers:add <email> --group-alias testers --project devperpos`.
 
 ## 9. Hotfix — production is broken
 
