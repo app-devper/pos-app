@@ -81,3 +81,7 @@ app.*.map.json
 # version, so it churns on every build.
 **/ios/Flutter/flutter_export_environment.sh
 devtools_options.yaml
+
+# Release keys never enter the repo (see packages/applications/pos/android/app/build.gradle)
+**/*.jks
+**/*.keystore

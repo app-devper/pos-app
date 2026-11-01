@@ -1,4 +1,4 @@
-package com.devper.pos;
+package app.devper.pos;
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity;
