@@ -30,6 +30,7 @@ case "$target" in
     config=app
     env_file=.env.e2e
     printf 'run.sh: target API %s — run by the owner\n' "$HOSTED_API"
+    printf 'run.sh: the API allows 5 sign-ins a minute; a full run may pause 65s to wait it out\n'
     [ -f "$APP_DIR/$env_file" ] || {
       printf 'run.sh: %s/%s is missing (copy .env.e2e.example and fill it in)\n' "$APP_DIR" "$env_file" >&2
       exit 2
@@ -40,11 +41,13 @@ esac
 
 run_id="$(date +%Y%m%d%H%M%S)-$$"
 cd "$APP_DIR"
+# Only the file's path is passed: the test reads the credentials at run time,
+# so they are neither compiled into the test nor visible in `ps`.
 set +e
 fvm flutter test "e2e/$file" \
   --dart-define=ENV="$config" \
   --dart-define=E2E_RUN_ID="$run_id" \
-  --dart-define-from-file="$env_file"
+  --dart-define=E2E_ENV_FILE="$APP_DIR/$env_file"
 code=$?
 set -e
 exit "$code"
