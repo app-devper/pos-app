@@ -16,14 +16,24 @@ Future<List<Product>> productsNamed(String name) async {
 }
 
 /// Deletes every product named exactly [name]; does nothing when there is
-/// none (a test may already have deleted it through the screens).
+/// none (a test may already have deleted it through the screens). Tries
+/// every one, then rethrows the first failure.
 ///
 /// pos-api only marks a deleted product (deletedDate) and leaves its units,
 /// prices, stock rows, history and adjustments in place; it does not refuse a
 /// product that still has stock. See the Task 4 report.
 Future<void> deleteProductsNamed(String name) async {
   final repository = getIt()<ProductRepository>();
+  Object? firstError;
+  StackTrace? firstStack;
   for (final product in await productsNamed(name)) {
-    await repository.removeProductById(product.id);
+    try {
+      await repository.removeProductById(product.id);
+    } on Object catch (error, stack) {
+      // Try the rest: one refusal must not leave the others behind.
+      firstError ??= error;
+      firstStack ??= stack;
+    }
   }
+  if (firstError != null) Error.throwWithStackTrace(firstError, firstStack!);
 }
