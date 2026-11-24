@@ -89,7 +89,7 @@ Future<String> receiveAndImport(ReceiveRobot receives, Receipt receipt) =>
 Future<String> _receiveAndImport(ReceiveRobot receives, Receipt receipt) async {
   Cleanup.add('draft receive ${receipt.reference}',
       () => cancelDraftReceivesWithReference(receipt.reference));
-  Cleanup.keep('supplier "${receipt.supplierName}"');
+  Cleanup.keep('supplier "${receipt.supplierName}" (kept for reuse)');
   await receives.create(
       supplierName: receipt.supplierName, reference: receipt.reference);
   await receives.addItem(receipt.item);

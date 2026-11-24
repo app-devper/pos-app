@@ -79,7 +79,8 @@ class CleanupLedger {
     registerTearDown(_runQueued);
   }
 
-  /// Records [label] as left on purpose; it is reported, never undone.
+  /// Records [label] as left on purpose; it is reported as given (say why
+  /// in the label, e.g. "(kept for reuse)"), never undone.
   void keep(String label) => _kept.add(label);
 
   Future<void> _runQueued() async {
@@ -92,7 +93,7 @@ class CleanupLedger {
   String report() => leftoversLine([
         ..._failed,
         ..._stack.pending,
-        for (final label in _kept) '$label (kept for reuse)',
+        ..._kept,
       ]);
 }
 
@@ -104,8 +105,8 @@ class Cleanup {
 
   static void add(String label, Undo undo) => _ledger.add(label, undo);
 
-  /// Reports [label] as left behind on purpose, e.g. a record reused by
-  /// every run.
+  /// Reports [label], as given, as left behind on purpose; the label says
+  /// why, e.g. `'supplier "X" (kept for reuse)'`.
   static void keep(String label) => _ledger.keep(label);
 
   /// Called by initE2E(): prints the report after the file's last test.

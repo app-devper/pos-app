@@ -239,7 +239,7 @@ void _registerCleanup(CustomerPlan plan) {
   if (plan.removes) {
     Cleanup.add(plan.name, () => removeCustomersNamed(plan.name));
   } else {
-    Cleanup.keep('customer "${plan.name}"');
+    Cleanup.keep('customer "${plan.name}" (kept for reuse)');
   }
 }
 
