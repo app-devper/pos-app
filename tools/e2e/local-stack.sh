@@ -70,7 +70,7 @@ record_start() {
 # Forgets a pid file that does not name our process, without killing it.
 drop_stale() {
   if [ -f "$(pid_file "$1")" ] && ! pid_alive "$1"; then
-    log "$1: dropped a stale pid file (pid $(cat "$(pid_file "$1")") is not the process this script started)"
+    log "$1: dropped a stale pid file (pid $(cat "$(pid_file "$1")") is gone or is not the process this script started)"
   fi
   if ! pid_alive "$1"; then rm -f "$(pid_file "$1")" "$(started_file "$1")"; fi
 }
@@ -205,7 +205,7 @@ status() {
   for name in mongod redis um-api pos-api; do
     if pid_alive "$name"; then log "$name running (pid $(cat "$(pid_file "$name")"))"
     elif [ -f "$(pid_file "$name")" ]; then
-      log "$name stale (pid $(cat "$(pid_file "$name")") is not the process this script started)"
+      log "$name stale (pid $(cat "$(pid_file "$name")") is gone or is not the process this script started)"
     else log "$name stopped"; fi
   done
 }
