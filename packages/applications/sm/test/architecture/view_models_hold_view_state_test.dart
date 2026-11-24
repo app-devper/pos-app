@@ -3,21 +3,26 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('a view model publishes through ViewState, never a bare ValueNotifier',
-      () {
-    final offenders = Directory('lib/presentation')
+  test('presentation state is published through ViewState, never a bare '
+      'ValueNotifier', () {
+    final sources = Directory('lib/presentation')
         .listSync(recursive: true)
         .whereType<File>()
         .where((file) => file.path.endsWith('.dart'))
-        .where((file) => file.uri.pathSegments.last.contains('view_model'))
-        .where((file) => file.readAsStringSync().contains('ValueNotifier<'))
+        .toList();
+    final bare = RegExp(r'\bValueNotifier\b');
+
+    final offenders = sources
+        .where((file) => bare.hasMatch(file.readAsStringSync()))
         .map((file) => file.path)
         .toList()
       ..sort();
 
+    expect(sources, isNotEmpty,
+        reason: 'nothing was scanned, so this test would pass on anything');
     expect(offenders, isEmpty,
-        reason: 'a bare ValueNotifier asserts when a request answers after '
-            'the screen is gone; ViewState ignores it '
+        reason: 'a bare ValueNotifier asserts in debug when a request answers '
+            'after the screen is gone; ViewState ignores it '
             '(common/core/state/view_state.dart)');
   });
 }

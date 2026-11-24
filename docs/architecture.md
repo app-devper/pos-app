@@ -55,13 +55,16 @@ the submitted Sale through Order confirmation, independently of the current Till
 slot or view subscription. CartViewModel suppresses publication after disposal;
 an already-submitted Sale still finishes.
 
-A request can outlive its screen, so every POS and SM view model holds its state
+A request can outlive its screen, so POS and SM presentation code — every view
+model, and `CatalogueEdit` behind the six catalogue dialogs — holds its state
 in a `ViewState` (`common/core/state/view_state.dart`), which ignores a value set
 after dispose; `OneShot` likewise drops an event emitted after dispose. A view
 model's `try / on Exception catch / finally` is therefore safe as written and
 needs no flag of its own. CartViewModel keeps `_disposed` as well because it
 also guards edits to a Sale that is being submitted. A test in each app
-(`test/architecture/`) fails on a view model that holds a bare `ValueNotifier`.
+(`test/architecture/`) fails on any file under `lib/presentation` that names a
+bare `ValueNotifier`. The assert this removes fires only in debug builds and in
+tests; a release build already ignored the late value.
 There is deliberately no shared helper that runs a command and sets its busy
 and error state: each screen owns its task type (see the audit below).
 

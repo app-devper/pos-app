@@ -5,9 +5,9 @@ import 'package:flutter/foundation.dart';
 ///
 /// A request can outlive its screen: the user opens a list, leaves before it
 /// loads, and the answer arrives after `dispose()`. A plain [ValueNotifier]
-/// asserts when it is set then, so every view model would have to check a
-/// flag after every `await` — and the one that forgets fails only when
-/// somebody navigates away at the wrong moment.
+/// asserts (in debug builds and tests) when it is set then, so every view
+/// model would have to check a flag after every `await` — and the one that
+/// forgets fails only when somebody navigates away at the wrong moment.
 ///
 /// This holds the check instead. Once disposed, setting [value] does nothing
 /// and the last value stays readable, so a view model's
