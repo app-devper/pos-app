@@ -6,6 +6,7 @@ import 'dart:io';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 // Package imports:
 import 'package:common/config/app_config.dart';
@@ -26,6 +27,21 @@ import 'pump.dart';
 
 /// 1400 wide keeps the sidebar expanded (labels shown) and the grid inline.
 const _surfaceSize = Size(1400, 900);
+
+/// The fonts pubspec.yaml declares. Without them flutter_test draws every
+/// glyph as a square one em wide, and Thai labels overflow rows that fit on
+/// a real screen.
+const _fonts = {
+  'Sarabun': [
+    'packages/common/assets/font/Sarabun-Regular.ttf',
+    'packages/common/assets/font/Sarabun-Medium.ttf',
+    'packages/common/assets/font/Sarabun-Bold.ttf',
+  ],
+  'Roboto': [
+    'packages/common/assets/font/roboto_regular.ttf',
+    'packages/common/assets/font/roboto_bold.ttf',
+  ],
+};
 const _signInTimeout = Duration(seconds: 30);
 
 /// um-api allows 5 `/auth/login` calls a minute per address and refuses the
@@ -51,7 +67,18 @@ void initE2E() {
   // ignore: invalid_use_of_visible_for_testing_member
   SharedPreferences.setMockInitialValues({});
   E2EEnv.require();
+  setUpAll(_loadAppFonts);
   Cleanup.reportLeftoversAtEnd();
+}
+
+Future<void> _loadAppFonts() async {
+  for (final MapEntry(key: family, value: assets) in _fonts.entries) {
+    final loader = FontLoader(family);
+    for (final asset in assets) {
+      loader.addFont(rootBundle.load(asset));
+    }
+    await loader.load();
+  }
 }
 
 /// Runs the app's startup once per file (get_it registrations cannot run
@@ -63,13 +90,7 @@ void initE2E() {
 /// logging interceptor prints request and response bodies and every header,
 /// which would put passwords and tokens in the test log.
 Future<void> launchApp(WidgetTester tester) async {
-  // Set once per test: a test that launches the app again keeps the size
-  // and registers no second reset.
-  if (tester.view.physicalSize != _surfaceSize) {
-    tester.view.physicalSize = _surfaceSize;
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-  }
+  await _useWideSurface(tester);
   if (!_started) {
     final config = await AppConfig.forEnvironment(E2EEnv.config);
     await um.initCore(config);
@@ -79,7 +100,29 @@ Future<void> launchApp(WidgetTester tester) async {
   }
   await _forgetSession();
   await tester.pumpWidget(const DevperPos());
+  _expectWideLayout(tester);
   await pumpUntilFound(tester, _signInButton);
+}
+
+/// LiveTestWidgetsFlutterBinding lays the app out at its surface size
+/// (800x600 unless set) and ignores view.physicalSize, which reaches only
+/// MediaQuery; both are set so that layout and MediaQuery agree. Set once
+/// per test: a test that launches the app again registers no second reset.
+Future<void> _useWideSurface(WidgetTester tester) async {
+  if (tester.view.physicalSize == _surfaceSize) return;
+  tester.view.physicalSize = _surfaceSize;
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  await tester.binding.setSurfaceSize(_surfaceSize);
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+}
+
+/// Fails at once if the app is not laid out, or not told, at 1400x900.
+void _expectWideLayout(WidgetTester tester) {
+  final app = find.byType(MaterialApp);
+  expect(tester.getSize(app), _surfaceSize, reason: 'laid-out app size');
+  expect(MediaQuery.sizeOf(tester.element(app)), _surfaceSize,
+      reason: 'MediaQuery size');
 }
 
 /// Leaves no session behind from an earlier test that stopped half-way, the

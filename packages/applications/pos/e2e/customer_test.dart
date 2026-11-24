@@ -12,7 +12,6 @@ import 'support/cleanup.dart';
 import 'support/robots/customer_robot.dart';
 import 'support/robots/shell_robot.dart';
 import 'support/run_data.dart';
-import 'support/screen.dart';
 
 /// Test data only; no real person has these numbers.
 const _phone = '0800000000';
@@ -20,14 +19,10 @@ const _changedPhone = '0800000001';
 
 void main() {
   initE2E();
-  // launchApp (Task 1) neither loads the app's fonts nor gets its 1400x900
-  // size through to layout; screen.dart supplies both.
-  setUpAll(loadAppFonts);
 
   testWidgets('a customer can be added, seen, changed and removed',
       (tester) async {
     // Arrange
-    await useWideSurface(tester);
     await launchApp(tester);
     await signIn(tester);
     final customers = CustomerRobot(ShellRobot(tester));
@@ -86,7 +81,6 @@ void main() {
     testWidgets('a new customer appears in the list without leaving the page',
         (tester) async {
       // Arrange
-      await useWideSurface(tester);
       await launchApp(tester);
       await signIn(tester);
       final customers = CustomerRobot(ShellRobot(tester));
@@ -112,7 +106,6 @@ void main() {
   group('customer removal', () {
     testWidgets('a removed customer is no longer listed', (tester) async {
       // Arrange
-      await useWideSurface(tester);
       await launchApp(tester);
       await signIn(tester);
       final customers = CustomerRobot(ShellRobot(tester));
@@ -136,7 +129,6 @@ void main() {
 
   testWidgets('saving without a name asks for one', (tester) async {
     // Arrange
-    await useWideSurface(tester);
     await launchApp(tester);
     await signIn(tester);
     final customers = CustomerRobot(ShellRobot(tester));
