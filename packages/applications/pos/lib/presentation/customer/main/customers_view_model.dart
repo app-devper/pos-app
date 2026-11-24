@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 
 // Package imports:
 import 'package:common/core/error/failure.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/presentation/customer/main/customers_state.dart';
@@ -16,7 +17,7 @@ class CustomersViewModel {
     required this.customerRepo,
   });
 
-  final _state = ValueNotifier<CustomersState>(const CustomersState());
+  final _state = ViewState<CustomersState>(const CustomersState());
 
   ValueListenable<CustomersState> get state => _state;
 

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 // Package imports:
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'category_state.dart';
@@ -17,7 +18,7 @@ class CategoryViewModel {
     required this.categoryRepo,
   });
 
-  final _state = ValueNotifier<CategoryState>(const CategoryState());
+  final _state = ViewState<CategoryState>(const CategoryState());
 
   /// Shown as a snackbar and then gone. It never belonged in state: a message
   /// the view had to remember to clear is one it can forget to clear.

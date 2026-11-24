@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 // Package imports:
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/domain/model/receive/param.dart';
@@ -27,7 +28,7 @@ class ReceiveManageViewModel {
     required this.supplierRepo,
   });
 
-  final _state = ValueNotifier<ReceiveManageState>(const ReceiveManageState());
+  final _state = ViewState<ReceiveManageState>(const ReceiveManageState());
   final _loaded = OneShot<Receive>();
   final _created = OneShot<Receive>();
   final _updated = OneShot<Receive>();

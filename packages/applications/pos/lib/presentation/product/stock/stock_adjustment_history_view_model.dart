@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 
 // Package imports:
 import 'package:common/core/error/failure.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/presentation/product/stock/stock_adjustment_history_state.dart';
@@ -15,7 +16,7 @@ class StockAdjustmentHistoryViewModel {
     required this.stockAdjustmentRepo,
   });
 
-  final _state = ValueNotifier<StockAdjustmentHistoryState>(
+  final _state = ViewState<StockAdjustmentHistoryState>(
       const StockAdjustmentHistoryState());
 
   ValueListenable<StockAdjustmentHistoryState> get state => _state;

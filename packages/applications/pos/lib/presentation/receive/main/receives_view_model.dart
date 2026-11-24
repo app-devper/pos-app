@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 
 // Package imports:
 import 'package:common/core/error/failure.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/domain/model/receive/param.dart';
@@ -18,7 +19,7 @@ class ReceivesViewModel {
     required this.receiveRepo,
   });
 
-  final _state = ValueNotifier<ReceivesState>(const ReceivesState());
+  final _state = ViewState<ReceivesState>(const ReceivesState());
 
   ValueListenable<ReceivesState> get state => _state;
 

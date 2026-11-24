@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 // Package imports:
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'order_history_state.dart';
@@ -16,7 +17,7 @@ class OrderHistoryViewModel {
     required this.orderRepo,
   });
 
-  final _state = ValueNotifier<OrderHistoryState>(const OrderHistoryState());
+  final _state = ViewState<OrderHistoryState>(const OrderHistoryState());
 
   /// Shown as a snackbar and then gone. It never belonged in state: a message
   /// the view had to remember to clear is one it can forget to clear.

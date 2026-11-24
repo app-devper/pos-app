@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 // Package imports:
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/domain/model/supplier/supplier.dart';
@@ -19,7 +20,7 @@ class SupplierEditViewModel {
     required this.supplierRepo,
   });
 
-  final _state = ValueNotifier<SupplierEditState>(const SupplierEditState());
+  final _state = ViewState<SupplierEditState>(const SupplierEditState());
 
   /// Each outcome reaches the view once: a snackbar, or a pop with the record.
   /// Neither is drawn, so neither sits in state waiting to be cleared.

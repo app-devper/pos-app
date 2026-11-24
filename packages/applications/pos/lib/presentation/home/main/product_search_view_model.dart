@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 
 // Package imports:
 import 'package:common/core/error/failure.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/domain/model/core/core.dart';
@@ -16,14 +17,14 @@ class ProductSearchViewModel {
     required this.productRepo,
   });
 
-  final _items = ValueNotifier<List<ProductUnitItem>?>(null);
+  final _items = ViewState<List<ProductUnitItem>?>(null);
 
   ValueListenable<List<ProductUnitItem>?> get items => _items;
 
   /// Non-null when the inventory could not be loaded. The grid renders this
   /// instead of spinning forever, and the message says the shop is offline
   /// rather than leaving the till to conclude it stocks nothing.
-  final _error = ValueNotifier<String?>(null);
+  final _error = ViewState<String?>(null);
 
   ValueListenable<String?> get error => _error;
 

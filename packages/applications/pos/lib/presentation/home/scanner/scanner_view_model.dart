@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 // Package imports:
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/domain/model/product/product.dart';
@@ -17,7 +18,7 @@ class ScannerViewModel {
     required this.productRepo,
   });
 
-  final _state = ValueNotifier<ScannerState>(const ScannerState());
+  final _state = ViewState<ScannerState>(const ScannerState());
 
   /// Delivered once each: a hit opens the edit screen, a miss or a failure
   /// flashes a dialog and resumes the camera.
