@@ -45,6 +45,7 @@ void main() {
     expect(find.text('เพิ่มสินค้า').hitTestable(), findsOneWidget);
 
     await shell.openManage();
+    await shell.expectScreenWithoutError(find.text(_manageTiles.first));
     for (final tile in _manageTiles) {
       expect(find.text(tile).hitTestable(), findsOneWidget, reason: tile);
     }
@@ -60,31 +61,38 @@ void main() {
   // FINDING (Task 7): OrderViewModel.checkLogin reads _state.value before it
   // awaits the role, then writes that stale copy back, wiping the ranges
   // initData set meanwhile; so no one ever gets the range dropdown. Unskip
-  // when the app is fixed. Skipped tests do not sign in.
-  testWidgets('an admin can choose the date range of the bills',
-      (tester) async {
-    // Arrange
-    await launchApp(tester);
-    await signIn(tester);
-    final shell = ShellRobot(tester);
+  // when the app is fixed, and add `expect(shell.rangeDropdown, findsNothing)`
+  // back to _expectSellingAndBillsWithoutAdminTools: until then it would pass
+  // for every role and prove nothing. Skipped tests do not sign in.
+  // testWidgets takes no skip reason; a group does, and the runner prints it.
+  group('bills date range', () {
+    testWidgets('an admin can choose the date range of the bills',
+        (tester) async {
+      // Arrange
+      await launchApp(tester);
+      await signIn(tester);
+      final shell = ShellRobot(tester);
 
-    // Act
-    await shell.openOrders();
-    await shell.expectScreenWithoutError(find.text('สรุปรายการ'));
+      // Act
+      await shell.openOrders();
+      await shell.expectScreenWithoutError(find.text('สรุปรายการ'));
 
-    // Assert
-    expect(shell.rangeDropdown, findsOneWidget);
-  }, skip: true);
+      // Assert
+      expect(shell.rangeDropdown, findsOneWidget);
+    });
+  },
+      skip: 'FINDING: an admin never gets the bills date-range dropdown '
+          '(OrderViewModel.checkLogin overwrites ranges)');
 
   testWidgets(
-      "a user sees selling and bills only, and only today's bills "
-      'without cost or profit', (tester) async {
+      'a user sees selling and bills only, '
+      'and the bills without the store filter or total cost', (tester) async {
     // Arrange
     await launchApp(tester);
     await signIn(tester, role: E2ERole.user);
 
     // Act / Assert
-    await _expectSellingAndTodaysBillsOnly(ShellRobot(tester));
+    await _expectSellingAndBillsWithoutAdminTools(ShellRobot(tester));
   });
 
   testWidgets('a manager sees what a user sees', (tester) async {
@@ -93,16 +101,17 @@ void main() {
     await signIn(tester, role: E2ERole.manager);
 
     // Act / Assert
-    await _expectSellingAndTodaysBillsOnly(ShellRobot(tester));
+    await _expectSellingAndBillsWithoutAdminTools(ShellRobot(tester));
   });
 }
 
 /// FINDING (Task 7): with no shop profile yet, 'ร้านของฉัน' shows the red
 /// snackbar "Error: ไม่พบข้อมูลที่ต้องการ [SY-404-002]" over an empty form,
 /// although this is the screen that creates the profile (order detail sends
-/// the user here on exactly that 404). Only that 404 is let through, so the
-/// stop passes on an empty and on a populated database.
-const _noShopProfileYet = '[SY-404-';
+/// the user here on exactly that 404). Only that code is let through, and
+/// the screen is watched again once it has closed, so the stop passes on an
+/// empty and on a populated database and still catches any other error.
+const _noShopProfileYet = '[SY-404-002]';
 
 /// Opened and read only: the profile may be the shop's real one, so its
 /// Update button is checked for and never pressed.
@@ -110,12 +119,11 @@ Future<void> _shopProfileOpensUntouched(ShellRobot shell) async {
   await shell.openManageTile('ร้านค้าของฉัน');
   await shell.expectScreenWithoutError(
     shell.appBarTitle('ร้านของฉัน'),
-    knownFinding: _noShopProfileYet,
+    tolerated: _noShopProfileYet,
   );
   expect(find.byKey(const Key('update')).hitTestable(), findsOneWidget);
   await shell.pageBack();
   await pumpUntilFound(shell.tester, find.text('ร้านค้าของฉัน').hitTestable());
-  await shell.waitForSnackbarToClose();
 }
 
 Future<void> _customersOpenAndReturn(ShellRobot shell) async {
@@ -147,7 +155,7 @@ Future<void> _userInfoOpensAndReturns(ShellRobot shell) async {
   await pumpUntilGone(shell.tester, find.text('ข้อมูลของฉัน'));
 }
 
-Future<void> _expectSellingAndTodaysBillsOnly(ShellRobot shell) async {
+Future<void> _expectSellingAndBillsWithoutAdminTools(ShellRobot shell) async {
   await shell.openOrders();
   await shell.expectScreenWithoutError(find.text('สรุปรายการ'));
   // The role is read after the screen first draws; give it time to arrive
@@ -159,6 +167,5 @@ Future<void> _expectSellingAndTodaysBillsOnly(ShellRobot shell) async {
   expect(shell.sidebarItem('สินค้า'), findsNothing);
   expect(shell.sidebarItem('จัดการ'), findsNothing);
   expect(shell.choiceChip('All'), findsNothing);
-  expect(shell.rangeDropdown, findsNothing);
   expect(find.text('Total Cost'), findsNothing);
 }
