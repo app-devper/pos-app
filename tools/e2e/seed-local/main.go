@@ -1,23 +1,22 @@
 // Command seed-local prepares the local e2e stack's UM database for a POS
 // sign-in: System POS for Client 000 and one ACTIVE user per role, each with
-// a freshly generated password. The names and passwords are written only to
-// the env file given by -env-file; nothing secret is printed.
+// a password. The names and passwords are written only to the env file given
+// by -env-file; nothing secret is printed.
 //
 // The documents follow um-api's model.User and model.System (collections
 // "users" and "systems"); passwords are bcrypt at bcrypt.DefaultCost, as
-// um-api's utils.HashPassword makes them. Running it again replaces the
-// passwords and leaves every other document as it is.
+// um-api's utils.HashPassword makes them. Running it again keeps every
+// password the env file already holds and the stored hash verifies, so runs
+// may overlap; only a missing user or a password that does not verify gets a
+// new one, and only then is the env file rewritten.
 package main
 
 import (
 	"context"
-	"crypto/rand"
 	"errors"
 	"flag"
 	"fmt"
-	"math/big"
 	"os"
-	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -28,13 +27,11 @@ import (
 )
 
 const (
-	clientID       = "000"
-	systemCode     = "POS"
-	systemName     = "Devper POS"
-	statusActive   = "ACTIVE"
-	passwordLength = 24
-	passwordChars  = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789"
-	seedTimeout    = 20 * time.Second
+	clientID     = "000"
+	systemCode   = "POS"
+	systemName   = "Devper POS"
+	statusActive = "ACTIVE"
+	seedTimeout  = 20 * time.Second
 )
 
 // seededUser is one user the e2e suite signs in as.
@@ -82,6 +79,10 @@ func run(opts seedOptions) error {
 	if opts.mongoURI == "" || opts.envFile == "" || opts.posHost == "" {
 		return errors.New("-mongo, -pos-host and -env-file are required")
 	}
+	known, err := readEnvFile(opts.envFile)
+	if err != nil {
+		return err
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), seedTimeout)
 	defer cancel()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(opts.mongoURI))
@@ -95,14 +96,29 @@ func run(opts seedOptions) error {
 		return err
 	}
 	lines := make([]string, 0, 2*len(users))
+	rotatedAny := false
 	for _, u := range users {
-		password, err := upsertUser(ctx, db, u)
+		password, rotated, err := upsertUser(ctx, db, u, knownPassword(known, u))
 		if err != nil {
 			return err
 		}
+		rotatedAny = rotatedAny || rotated
 		lines = append(lines, u.envPrefix+"_USERNAME="+u.username, u.envPrefix+"_PASSWORD="+password)
 	}
-	return os.WriteFile(opts.envFile, []byte(strings.Join(lines, "\n")+"\n"), 0o600)
+	if !rotatedAny {
+		fmt.Println("seed-local: kept the existing passwords")
+		return nil
+	}
+	fmt.Println("seed-local: generated new passwords")
+	return writeEnvFileAtomically(opts.envFile, lines)
+}
+
+// knownPassword is u's password in the env file, if the file names u.
+func knownPassword(known map[string]string, u seededUser) string {
+	if known[u.envPrefix+"_USERNAME"] != u.username {
+		return ""
+	}
+	return known[u.envPrefix+"_PASSWORD"]
 }
 
 // upsertSystem gives Client 000 the System POS (um-api model.System), which
@@ -123,44 +139,53 @@ func upsertSystem(ctx context.Context, db *mongo.Database, host string) error {
 	return nil
 }
 
-// upsertUser makes u an ACTIVE user of Client 000 with a new password and
-// returns that password.
-func upsertUser(ctx context.Context, db *mongo.Database, u seededUser) (string, error) {
-	password, err := generatePassword()
-	if err != nil {
-		return "", err
+// storedHash is u's password hash in the database, or "" when u is not there.
+func storedHash(ctx context.Context, db *mongo.Database, u seededUser) (string, error) {
+	var doc struct {
+		Password string `bson:"password"`
 	}
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	err := db.Collection("users").FindOne(ctx, bson.M{"username": u.username}).Decode(&doc)
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return "", nil
+	}
 	if err != nil {
-		return "", fmt.Errorf("hash password of %s: %w", u.username, err)
+		return "", fmt.Errorf("find user %s: %w", u.username, err)
+	}
+	return doc.Password, nil
+}
+
+// upsertUser makes u an ACTIVE user of Client 000, keeping [known] as its
+// password when the stored hash verifies it, and returns the password and
+// whether it changed.
+func upsertUser(ctx context.Context, db *mongo.Database, u seededUser, known string) (string, bool, error) {
+	hash, err := storedHash(ctx, db, u)
+	if err != nil {
+		return "", false, err
+	}
+	password, rotated, err := choosePassword(known, hash, generatePassword)
+	if err != nil {
+		return "", false, err
 	}
 	now := time.Now()
+	set := bson.M{
+		"firstName": u.firstName, "lastName": "", "clientId": clientID,
+		"role": u.role, "status": statusActive, "phone": "", "email": "",
+		"updatedBy": primitive.NilObjectID, "updatedDate": now,
+	}
+	if rotated {
+		newHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			return "", false, fmt.Errorf("hash password of %s: %w", u.username, err)
+		}
+		set["password"] = string(newHash)
+	}
 	update := bson.M{
-		"$set": bson.M{
-			"firstName": u.firstName, "lastName": "", "clientId": clientID, "password": string(hash),
-			"role": u.role, "status": statusActive, "phone": "", "email": "",
-			"updatedBy": primitive.NilObjectID, "updatedDate": now,
-		},
-		"$setOnInsert": bson.M{
-			"_id": primitive.NewObjectID(), "createdBy": primitive.NilObjectID, "createdDate": now,
-		},
+		"$set":         set,
+		"$setOnInsert": bson.M{"_id": primitive.NewObjectID(), "createdBy": primitive.NilObjectID, "createdDate": now},
 	}
 	filter := bson.M{"username": u.username}
 	if _, err := db.Collection("users").UpdateOne(ctx, filter, update, options.Update().SetUpsert(true)); err != nil {
-		return "", fmt.Errorf("upsert user %s: %w", u.username, err)
+		return "", false, fmt.Errorf("upsert user %s: %w", u.username, err)
 	}
-	return password, nil
-}
-
-func generatePassword() (string, error) {
-	var b strings.Builder
-	limit := big.NewInt(int64(len(passwordChars)))
-	for i := 0; i < passwordLength; i++ {
-		n, err := rand.Int(rand.Reader, limit)
-		if err != nil {
-			return "", fmt.Errorf("generate password: %w", err)
-		}
-		b.WriteByte(passwordChars[n.Int64()])
-	}
-	return b.String(), nil
+	return password, rotated, nil
 }
