@@ -38,4 +38,25 @@ void main() {
 
     expect(state.dispose, returnsNormally);
   });
+
+  test('a listener added after dispose is ignored instead of throwing', () {
+    final state = ViewState<int>(0);
+    var calls = 0;
+
+    state.dispose();
+
+    expect(() => state.addListener(() => calls++), returnsNormally);
+    expect(calls, 0);
+  });
+
+  test('notifying after dispose does nothing instead of throwing', () {
+    final state = ViewState<int>(0);
+    var calls = 0;
+    state.addListener(() => calls++);
+
+    state.dispose();
+
+    expect(state.notifyListeners, returnsNormally);
+    expect(calls, 0);
+  });
 }
