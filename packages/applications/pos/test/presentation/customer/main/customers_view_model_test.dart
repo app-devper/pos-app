@@ -157,8 +157,10 @@ void main() {
 
     final load = vm.getCustomers();
     vm.dispose();
-    pending.complete(const []);
+    pending.complete([buildCustomer('1')]);
 
     await expectLater(load, completes);
+    expect(vm.state.value.items, isEmpty);
+    expect(vm.state.value.loading, isTrue);
   });
 }

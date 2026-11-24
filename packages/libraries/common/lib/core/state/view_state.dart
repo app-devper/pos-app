@@ -9,8 +9,9 @@ import 'package:flutter/foundation.dart';
 /// model would have to check a flag after every `await` — and the one that
 /// forgets fails only when somebody navigates away at the wrong moment.
 ///
-/// This holds the check instead. Once disposed, setting [value] does nothing
-/// and the last value stays readable, so a view model's
+/// This holds the check instead. Once disposed, setting [value], adding a
+/// listener and notifying do nothing, and the last value stays readable, so a
+/// view model's
 /// `try / on Exception catch / finally` is safe exactly as written. Paired
 /// with `OneShot`, which drops an event emitted after dispose, a view model
 /// needs no publication policy of its own.
@@ -30,6 +31,18 @@ class ViewState<S> extends ValueNotifier<S> {
   set value(S newValue) {
     if (_disposed) return;
     super.value = newValue;
+  }
+
+  @override
+  void addListener(VoidCallback listener) {
+    if (_disposed) return;
+    super.addListener(listener);
+  }
+
+  @override
+  void notifyListeners() {
+    if (_disposed) return;
+    super.notifyListeners();
   }
 
   @override

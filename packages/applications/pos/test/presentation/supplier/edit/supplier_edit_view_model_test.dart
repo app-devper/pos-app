@@ -162,18 +162,16 @@ void main() {
     expect(updated, hasLength(1));
   });
 
-  test('a save that fails after dispose reports nothing and does not throw',
+  test('a save that fails after dispose changes nothing and does not throw',
       () async {
     final pending = Completer<Supplier>();
     final vm = buildViewModel(FakeSupplierRepository(pendingUpdate: pending));
-    final errors = <String>[];
-    vm.errors.listen(errors.add);
 
     final save = vm.updateSupplierById('7', buildParam());
     vm.dispose();
     pending.completeError(const NetworkException(message: 'offline'));
 
     await expectLater(save, completes);
-    expect(errors, isEmpty);
+    expect(vm.state.value.busy, isTrue);
   });
 }
