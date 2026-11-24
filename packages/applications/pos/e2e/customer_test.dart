@@ -223,10 +223,11 @@ void main() {
   });
 }
 
-/// Launches the app, signs in as admin and opens the customer list.
+/// Launches the app signed in as admin (once per file) and opens the
+/// customer list.
 Future<CustomerRobot> _openCustomers(WidgetTester tester) async {
-  await launchApp(tester);
-  await signIn(tester);
+  await launchApp(tester, keepSession: true);
+  await continueSignedIn(tester);
   final customers = CustomerRobot(ShellRobot(tester));
   await customers.openList();
   return customers;

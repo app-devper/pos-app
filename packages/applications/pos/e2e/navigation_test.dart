@@ -26,8 +26,8 @@ void main() {
 
   testWidgets('every area an admin can open shows its screen', (tester) async {
     // Arrange
-    await launchApp(tester);
-    await signIn(tester);
+    await launchApp(tester, keepSession: true);
+    await continueSignedIn(tester);
     final shell = ShellRobot(tester);
 
     // Act / Assert: the sidebar areas
@@ -69,8 +69,8 @@ void main() {
     testWidgets('an admin can choose the date range of the bills',
         (tester) async {
       // Arrange
-      await launchApp(tester);
-      await signIn(tester);
+      await launchApp(tester, keepSession: true);
+      await continueSignedIn(tester);
       final shell = ShellRobot(tester);
 
       // Act
@@ -88,8 +88,8 @@ void main() {
       'a user sees selling and bills only, '
       'and the bills without the store filter or total cost', (tester) async {
     // Arrange
-    await launchApp(tester);
-    await signIn(tester, role: E2ERole.user);
+    await launchApp(tester, keepSession: true);
+    await continueSignedIn(tester, role: E2ERole.user);
 
     // Act / Assert
     await _expectSellingAndBillsWithoutAdminTools(ShellRobot(tester));
@@ -97,8 +97,8 @@ void main() {
 
   testWidgets('a manager sees what a user sees', (tester) async {
     // Arrange
-    await launchApp(tester);
-    await signIn(tester, role: E2ERole.manager);
+    await launchApp(tester, keepSession: true);
+    await continueSignedIn(tester, role: E2ERole.manager);
 
     // Act / Assert
     await _expectSellingAndBillsWithoutAdminTools(ShellRobot(tester));

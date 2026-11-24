@@ -57,6 +57,12 @@ final _errorAlert = find.text('พบข้อผิดพลาด').hitTestabl
 
 bool _started = false;
 
+/// Who the app's stored session belongs to; null when there is none.
+E2ERole? _sessionRole;
+
+/// `/auth/login` calls this file made, printed at its end.
+int _signInCalls = 0;
+
 /// Call first in every e2e file's main().
 void initE2E() {
   LiveTestWidgetsFlutterBinding.ensureInitialized();
@@ -69,6 +75,7 @@ void initE2E() {
   E2EEnv.require();
   setUpAll(_loadAppFonts);
   Cleanup.reportLeftoversAtEnd();
+  tearDownAll(() => debugPrint('E2E: sign-ins this file: $_signInCalls'));
 }
 
 Future<void> _loadAppFonts() async {
@@ -82,14 +89,19 @@ Future<void> _loadAppFonts() async {
 }
 
 /// Runs the app's startup once per file (get_it registrations cannot run
-/// twice) and, on every call, pumps the app signed out and waits for the
-/// sign-in screen. flutter_test unmounts the tree after each test, so every
-/// test calls this first.
+/// twice) and, on every call, pumps the app. flutter_test unmounts the tree
+/// after each test, so every test calls this first.
+///
+/// By default the app starts signed out and this waits for the sign-in
+/// screen. With [keepSession], a session an earlier test of this file left
+/// is kept: the app's splash restores it (keep-alive, no sign-in call) and
+/// this waits for the selling screen; follow with [continueSignedIn]. um-api
+/// allows 5 sign-ins a minute, which a hosted run cannot reset.
 ///
 /// The app's own `um.setupLogging()` is left out on purpose: its HTTP
 /// logging interceptor prints request and response bodies and every header,
 /// which would put passwords and tokens in the test log.
-Future<void> launchApp(WidgetTester tester) async {
+Future<void> launchApp(WidgetTester tester, {bool keepSession = false}) async {
   await _useWideSurface(tester);
   if (!_started) {
     final config = await AppConfig.forEnvironment(E2EEnv.config);
@@ -98,10 +110,37 @@ Future<void> launchApp(WidgetTester tester) async {
     await pos.initPos();
     _started = true;
   }
-  await _forgetSession();
+  final restoring = keepSession && _sessionRole != null;
+  if (!restoring) await _forgetSession();
   await tester.pumpWidget(const DevperPos());
   _expectWideLayout(tester);
-  await pumpUntilFound(tester, _signInButton);
+  if (!restoring) {
+    await pumpUntilFound(tester, _signInButton);
+    return;
+  }
+  await pumpUntil(
+    tester,
+    () =>
+        _sellingScreen.evaluate().isNotEmpty ||
+        _signInButton.evaluate().isNotEmpty,
+    'the restored session or the sign-in screen',
+    timeout: _signInTimeout,
+  );
+  // The server no longer accepts the session: sign in again.
+  if (_sellingScreen.evaluate().isEmpty) _sessionRole = null;
+}
+
+/// Signs in as [role] unless the app is already signed in as [role]; signs
+/// out first when it is signed in as someone else. Use after
+/// `launchApp(tester, keepSession: true)`.
+Future<void> continueSignedIn(
+  WidgetTester tester, {
+  E2ERole role = E2ERole.admin,
+}) async {
+  final signedIn = _sessionRole != null && _sellingScreen.evaluate().isNotEmpty;
+  if (signedIn && _sessionRole == role) return;
+  if (signedIn) await signOut(tester);
+  await signIn(tester, role: role);
 }
 
 /// LiveTestWidgetsFlutterBinding lays the app out at its surface size
@@ -128,17 +167,20 @@ void _expectWideLayout(WidgetTester tester) {
 /// Leaves no session behind from an earlier test that stopped half-way, the
 /// way the app's own 401 handling does, so the splash goes to sign-in.
 Future<void> _forgetSession() async {
+  _sessionRole = null;
   getIt()<KeepAliveScheduler>().stop();
   await getIt()<TokenStorage>().clear();
   getIt()<AppSession>().clear();
 }
 
-/// Types [username] and [password] into the sign-in form and submits it.
+/// Types [username] and [password] into the sign-in form and submits it;
+/// each call is one `/auth/login` call and counts as a sign-in.
 Future<void> submitCredentials(
   WidgetTester tester,
   String username,
   String password,
 ) async {
+  _signInCalls++;
   await tester.enterText(_field('ชื่อผู้ใช้'), username);
   await tester.enterText(_field('รหัสผ่าน'), password);
   await tester.tap(_signInButton);
@@ -166,6 +208,7 @@ Future<void> signIn(
   if (refusal != null) {
     fail('Signing in as ${role.name} was refused: $refusal');
   }
+  _sessionRole = role;
 }
 
 /// Submits [role]'s credentials; returns null on reaching the selling
@@ -211,6 +254,7 @@ String _alertText(WidgetTester tester) => find
 
 /// Signs out from the sidebar and waits for the sign-in screen.
 Future<void> signOut(WidgetTester tester) async {
+  _sessionRole = null;
   await tester.tap(find.byTooltip('ออกจากระบบ').hitTestable());
   await pumpUntilFound(tester, find.text('ยินดีต้อนรับ').hitTestable());
   // The home route animates out after sign-in shows; wait until it has gone.

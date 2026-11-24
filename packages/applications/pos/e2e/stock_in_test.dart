@@ -296,10 +296,10 @@ final _receipt = Receipt(
 Future<void> _step(String name, Future<void> Function() body) =>
     _chain.run(name, () => toleratingSupplierPickerOverflow(body));
 
-/// Launches the app and signs in as admin.
+/// Launches the app signed in as admin (once per file).
 Future<ShellRobot> _signedInShell(WidgetTester tester) async {
-  await launchApp(tester);
-  await signIn(tester);
+  await launchApp(tester, keepSession: true);
+  await continueSignedIn(tester);
   return ShellRobot(tester);
 }
 
