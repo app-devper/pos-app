@@ -20,6 +20,7 @@ const _listTitle = 'ข้อมูลลูกค้า';
 const _addMenuItem = 'เพิ่มลูกค้า';
 const _nameField = 'ชื่อลูกค้า';
 const _phoneField = 'โทรศัพท์';
+const _typeField = 'ประเภทลูกค้า';
 const _deleteButton = 'ลบลูกค้า';
 const _deleteQuestion = 'ต้องการลบลูกค้าใช่หรือไม่?';
 
@@ -73,14 +74,23 @@ class CustomerRobot {
         reason: 'the customer list failed to load');
   }
 
-  Finder _listRow(String name) =>
-      find.descendant(of: _list, matching: find.widgetWithText(ListTile, name));
+  /// The list row titled [name] and, if given, subtitled [code]. Removed
+  /// customers stay listed under the same name, so [code] (unique per
+  /// customer) picks the one meant.
+  Finder _listRow(String name, String? code) => find.descendant(
+      of: _list,
+      matching: find.byWidgetPredicate((w) =>
+          w is ListTile &&
+          _textOf(w.title) == name &&
+          (code == null || _textOf(w.subtitle) == code)));
 
-  /// Scrolls the list from where it is to its end looking for [name]; true
-  /// once its row is on screen. The list may hold real customers, in any
-  /// order, so the E2E one is found by its exact name.
-  Future<bool> scrollListTo(String name) async {
-    final row = _listRow(name);
+  static String? _textOf(Widget? widget) => widget is Text ? widget.data : null;
+
+  /// Scrolls the list from where it is to its end looking for [name] (and
+  /// [code]); true once its row is on screen. The list may hold real
+  /// customers, in any order, so the E2E one is found by its exact name.
+  Future<bool> scrollListTo(String name, {String? code}) async {
+    final row = _listRow(name, code);
     final scrollable =
         find.descendant(of: _list, matching: find.byType(Scrollable));
     while (row.hitTestable().evaluate().isEmpty) {
@@ -92,10 +102,11 @@ class CustomerRobot {
     return true;
   }
 
-  /// Opens [name]'s detail from the list.
-  Future<void> open(String name) async {
-    expect(await scrollListTo(name), isTrue, reason: '$name is not listed');
-    await tester.tap(_listRow(name).hitTestable());
+  /// Opens the detail of [name] (with [code]) from the list.
+  Future<void> open(String name, {String? code}) async {
+    expect(await scrollListTo(name, code: code), isTrue,
+        reason: '$name $code is not listed');
+    await tester.tap(_listRow(name, code).hitTestable());
     await tester.pump();
     await _awaitOutcome(detailRow(_nameField, name));
   }
@@ -112,9 +123,11 @@ class CustomerRobot {
     await pumpUntilFound(tester, addFormTitle);
   }
 
-  /// Adds a general customer; returns once the menu is back.
-  Future<void> add(String name, {required String phone}) async {
+  /// Adds a customer, of [type] if given (else the form's default,
+  /// 'ลูกค้าทั่วไป'); returns once the menu is back.
+  Future<void> add(String name, {required String phone, String? type}) async {
     await openAddForm();
+    if (type != null) await _chooseType(type);
     await _enter(_nameField, name);
     await _enter(_phoneField, phone);
     await submitForm();
@@ -169,6 +182,22 @@ class CustomerRobot {
       .byWidgetPredicate(
           (w) => w is TextField && w.decoration?.labelText == label)
       .hitTestable();
+
+  /// Opens the customer-type dropdown and picks [type].
+  Future<void> _chooseType(String type) async {
+    await tester.tap(find
+        .byWidgetPredicate(
+            (w) => w is InputDecorator && w.decoration.labelText == _typeField)
+        .hitTestable());
+    await tester.pump();
+    final option = find.text(type).hitTestable();
+    await pumpUntilFound(tester, option);
+    await tester.tap(option.last);
+    await tester.pump();
+    // Once the menu has closed only the field shows the choice.
+    await pumpUntil(tester, () => find.text(type).evaluate().length == 1,
+        'the type menu to close on $type');
+  }
 
   /// The field [label] showing the validation message [error].
   Finder fieldError(String label, String error) => find
