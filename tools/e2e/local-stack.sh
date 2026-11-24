@@ -9,19 +9,28 @@
 #   local-stack.sh status        say what is running
 #   local-stack.sh reset-limits  forget um-api's sign-in rate-limit counters
 #
-# Sibling checkouts default to ../../UM/um-api and ../../Devper/pos-api next to
-# this repo's parent; override with UM_API_DIR and POS_API_DIR.
+# um-api and pos-api are found next to this repo's main checkout, laid out as
+# <workspace>/Devper/pos-app, <workspace>/Devper/pos-api and
+# <workspace>/UM/um-api (from a git worktree the main checkout is found
+# through git). Override with E2E_WORKSPACE, or UM_API_DIR and POS_API_DIR.
 set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-WORKSPACE="${E2E_WORKSPACE:-/Users/admin/ProjectPos}"
+
+# <workspace>/Devper/pos-app is the main checkout, also for a worktree.
+default_workspace() {
+  common="$(git -C "$REPO_ROOT" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" || return 0
+  (cd "$(dirname "$common")/../.." && pwd)
+}
+
+WORKSPACE="${E2E_WORKSPACE:-$(default_workspace)}"
 UM_API_DIR="${UM_API_DIR:-$WORKSPACE/UM/um-api}"
 POS_API_DIR="${POS_API_DIR:-$WORKSPACE/Devper/pos-api}"
 ENV_FILE="$REPO_ROOT/packages/applications/pos/.env.e2e.local"
 
 TMP_ROOT="${TMPDIR:-/tmp}"
-STATE="${TMP_ROOT%/}/pos-e2e-stack"
+STATE="${E2E_STACK_STATE:-${TMP_ROOT%/}/pos-e2e-stack}"
 MONGO_PORT=27719
 REDIS_PORT=6390
 UM_PORT=8585
@@ -36,8 +45,34 @@ HEALTH_TIMEOUT_SEC=90
 log() { printf 'local-stack: %s\n' "$*"; }
 die() { printf 'local-stack: %s\n' "$*" >&2; exit 1; }
 
+# A pid file counts as ours only while that pid is the very process we
+# started: alive, with the start time recorded when we started it. After a
+# crash the pid may belong to something else by now, which must never be
+# taken for the stack, let alone killed.
+pid_file() { printf '%s/pids/%s.pid' "$STATE" "$1"; }
+started_file() { printf '%s/pids/%s.started' "$STATE" "$1"; }
+
+start_time() { ps -p "$1" -o lstart= 2>/dev/null; }
+
 pid_alive() {
-  [ -f "$STATE/pids/$1.pid" ] && kill -0 "$(cat "$STATE/pids/$1.pid")" 2>/dev/null
+  local pid now
+  [ -f "$(pid_file "$1")" ] && [ -f "$(started_file "$1")" ] || return 1
+  pid="$(cat "$(pid_file "$1")")"
+  now="$(start_time "$pid")" || return 1
+  [ -n "$now" ] && [ "$now" = "$(cat "$(started_file "$1")")" ]
+}
+
+record_start() {
+  started="$(start_time "$(cat "$(pid_file "$1")")")" || die "$1 exited right after starting (logs: $STATE/logs)"
+  printf '%s\n' "$started" > "$(started_file "$1")"
+}
+
+# Forgets a pid file that does not name our process, without killing it.
+drop_stale() {
+  if [ -f "$(pid_file "$1")" ] && ! pid_alive "$1"; then
+    log "$1: dropped a stale pid file (pid $(cat "$(pid_file "$1")") is not the process this script started)"
+  fi
+  if ! pid_alive "$1"; then rm -f "$(pid_file "$1")" "$(started_file "$1")"; fi
 }
 
 port_busy() {
@@ -47,6 +82,7 @@ port_busy() {
 # A port someone else holds is an error, not a cue to pick another one.
 require_free_port() {
   name="$1"; port="$2"
+  drop_stale "$name"
   if pid_alive "$name"; then return 0; fi
   if port_busy "$port"; then
     die "port $port (for $name) is already in use by another process; free it and retry"
@@ -76,6 +112,7 @@ start_mongo() {
   mongod --replSet "$REPLICA_SET" --port "$MONGO_PORT" --bind_ip 127.0.0.1 \
     --dbpath "$STATE/mongo" --logpath "$STATE/logs/mongod.log" --logappend \
     --pidfilepath "$STATE/pids/mongod.pid" --fork >/dev/null
+  record_start mongod
   wait_until "mongod" mongosh --quiet --port "$MONGO_PORT" --eval 'db.runCommand({ping:1}).ok'
   mongosh --quiet --port "$MONGO_PORT" --eval "
     try { rs.status().ok } catch (e) {
@@ -92,6 +129,8 @@ start_redis() {
     --save '' --appendonly no --daemonize yes \
     --pidfile "$STATE/pids/redis.pid" --logfile "$STATE/logs/redis.log"
   wait_until "redis" redis-cli -p "$REDIS_PORT" ping
+  wait_until "redis pid file" test -s "$(pid_file redis)"
+  record_start redis
 }
 
 seed() {
@@ -104,7 +143,6 @@ seed() {
 start_service() {
   name="$1"; src="$2"; port="$3"; shift 3
   if pid_alive "$name"; then return 0; fi
-  [ -d "$src" ] || die "$name checkout not found at $src"
   (cd "$src" && go build -o "$STATE/bin/$name" .)
   # Run from the state dir: both services load a ./.env if one is there.
   # The job is one simple command, so $! is the service's own pid (env and
@@ -114,10 +152,18 @@ start_service() {
     env "$@" PORT="$port" nohup "$STATE/bin/$name" >"$STATE/logs/$name.log" 2>&1 &
     echo "$!" > "$STATE/pids/$name.pid"
   )
+  record_start "$name"
   wait_until "$name /health" curl -fsS "http://127.0.0.1:$port/health"
 }
 
+require_checkouts() {
+  for dir in "$UM_API_DIR" "$POS_API_DIR"; do
+    [ -f "$dir/go.mod" ] || die "no Go checkout at $dir; set E2E_WORKSPACE, or UM_API_DIR and POS_API_DIR"
+  done
+}
+
 start() {
+  require_checkouts
   mkdir -p "$STATE/pids" "$STATE/logs" "$STATE/bin"
   require_free_port mongod "$MONGO_PORT"
   require_free_port redis "$REDIS_PORT"
@@ -137,8 +183,9 @@ start() {
 
 stop_one() {
   name="$1"
-  if ! pid_alive "$name"; then rm -f "$STATE/pids/$name.pid"; return 0; fi
-  pid="$(cat "$STATE/pids/$name.pid")"
+  drop_stale "$name"
+  if ! pid_alive "$name"; then return 0; fi
+  pid="$(cat "$(pid_file "$name")")"
   kill "$pid"
   waited=0
   while kill -0 "$pid" 2>/dev/null; do
@@ -146,7 +193,7 @@ stop_one() {
     [ "$waited" -le 30 ] || die "$name (pid $pid) did not stop"
     sleep 1
   done
-  rm -f "$STATE/pids/$name.pid"
+  rm -f "$(pid_file "$name")" "$(started_file "$name")"
   log "stopped $name"
 }
 
@@ -156,7 +203,9 @@ stop() {
 
 status() {
   for name in mongod redis um-api pos-api; do
-    if pid_alive "$name"; then log "$name running (pid $(cat "$STATE/pids/$name.pid"))"
+    if pid_alive "$name"; then log "$name running (pid $(cat "$(pid_file "$name")"))"
+    elif [ -f "$(pid_file "$name")" ]; then
+      log "$name stale (pid $(cat "$(pid_file "$name")") is not the process this script started)"
     else log "$name stopped"; fi
   done
 }
