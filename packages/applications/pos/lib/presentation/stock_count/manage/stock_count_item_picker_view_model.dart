@@ -1,6 +1,9 @@
 // Flutter imports:
 import 'package:flutter/foundation.dart';
 
+// Package imports:
+import 'package:common/core/state/view_state.dart';
+
 // Project imports:
 import 'package:pos/domain/model/core/core.dart';
 import 'package:pos/domain/model/product/product.dart';
@@ -14,7 +17,7 @@ class StockCountItemPickerViewModel {
     required this.productRepo,
   });
 
-  final _state = ValueNotifier<StockCountItemPickerState>(
+  final _state = ViewState<StockCountItemPickerState>(
       const StockCountItemPickerState());
 
   ValueListenable<StockCountItemPickerState> get state => _state;

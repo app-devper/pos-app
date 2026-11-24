@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:common/core/error/exception.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pos/domain/model/customer/customer.dart';
@@ -10,11 +12,21 @@ class FakeCustomerRepository implements CustomerRepository {
   final List<Customer> customers;
   final Customer? byId;
   final Object? throws;
+  final Completer<List<Customer>>? pendingLocal;
 
-  FakeCustomerRepository({this.customers = const [], this.byId, this.throws});
+  FakeCustomerRepository({
+    this.customers = const [],
+    this.byId,
+    this.throws,
+    this.pendingLocal,
+  });
 
   @override
   Future<List<Customer>> getLocalCustomers() async {
+    final pending = pendingLocal;
+    if (pending != null) {
+      return pending.future;
+    }
     final error = throws;
     if (error != null) {
       throw error;
@@ -134,5 +146,19 @@ void main() {
       expect(errors, hasLength(1));
       expect(loaded, isEmpty);
     });
+  });
+
+  test('a load that finishes after dispose changes nothing and does not throw',
+      () async {
+    final pending = Completer<List<Customer>>();
+    final vm = buildCustomersViewModel(
+      FakeCustomerRepository(pendingLocal: pending),
+    );
+
+    final load = vm.getCustomers();
+    vm.dispose();
+    pending.complete(const []);
+
+    await expectLater(load, completes);
   });
 }

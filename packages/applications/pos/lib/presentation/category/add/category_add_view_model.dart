@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' hide Category;
 // Package imports:
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/domain/model/category/category.dart';
@@ -19,7 +20,7 @@ class CategoryAddViewModel {
     required this.categoryRepo,
   });
 
-  final _state = ValueNotifier<CategoryAddState>(const CategoryAddState());
+  final _state = ViewState<CategoryAddState>(const CategoryAddState());
 
   /// The two things the screen reacts to once each. Neither is drawn, so
   /// neither belongs in state, and there is nothing for the view to clear.

@@ -51,4 +51,18 @@ void main() {
     expect(edit.state.value.loading, isFalse);
     edit.dispose();
   });
+
+  test('an edit that answers after the dialog is gone does not throw',
+      () async {
+    final edit = CatalogueEdit<String>();
+    final answer = Completer<String>();
+
+    final run = edit.run(() => answer.future);
+    edit.dispose();
+    answer.complete('saved');
+
+    await expectLater(run, completes);
+    expect(edit.state.value.loading, isTrue,
+        reason: 'the last value stays as it was; nothing is published');
+  });
 }

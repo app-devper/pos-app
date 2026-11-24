@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 // Package imports:
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/domain/model/supplier/supplier.dart';
@@ -19,7 +20,7 @@ class SupplierInfoViewModel {
     required this.supplierRepo,
   });
 
-  final _state = ValueNotifier<SupplierInfoState>(const SupplierInfoState());
+  final _state = ViewState<SupplierInfoState>(const SupplierInfoState());
 
   /// Delivered once: the screen closes on it, nothing draws it.
   final _updated = OneShot<Supplier>();

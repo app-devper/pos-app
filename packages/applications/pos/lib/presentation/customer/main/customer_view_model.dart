@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 // Package imports:
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/domain/model/customer/customer.dart';
@@ -18,7 +19,7 @@ class CustomerViewModel {
     required this.customerRepo,
   });
 
-  final _state = ValueNotifier<CustomerState>(const CustomerState());
+  final _state = ViewState<CustomerState>(const CustomerState());
 
   /// Delivered once: the page swaps to the info panel on it.
   final _loaded = OneShot<Customer>();

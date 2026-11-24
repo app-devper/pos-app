@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:common/core/error/exception.dart';
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 import 'package:um/domain/entities/auth/role.dart';
 import 'package:um/domain/usecase/auth_use_cases.dart';
 
@@ -31,7 +32,7 @@ class OrderDetailViewModel {
     required this.customerRepo,
   });
 
-  final _state = ValueNotifier<OrderDetailState>(const OrderDetailState());
+  final _state = ViewState<OrderDetailState>(const OrderDetailState());
   final _errors = OneShot<String>();
   final _removals = OneShot<OrderDetail>();
   final _receipts = OneShot<SupplierResult>();

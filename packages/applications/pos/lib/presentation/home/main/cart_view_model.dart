@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 // Package imports:
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/domain/model/customer/customer.dart';
@@ -27,7 +28,7 @@ class CartViewModel {
     required this.checkoutSaleUseCase,
   });
 
-  final _state = ValueNotifier<CartState>(const CartState());
+  final _state = ViewState<CartState>(const CartState());
 
   /// A finished order empties the sale and closes the payment sheet; the two
   /// failure channels stay separate because the screen treats them

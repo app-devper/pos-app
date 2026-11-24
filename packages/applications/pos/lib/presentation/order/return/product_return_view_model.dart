@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 // Package imports:
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/domain/model/product_return/product_return.dart';
@@ -18,7 +19,7 @@ class ProductReturnViewModel {
     required this.productReturnRepo,
   });
 
-  final _state = ValueNotifier<ProductReturnState>(const ProductReturnState());
+  final _state = ViewState<ProductReturnState>(const ProductReturnState());
 
   /// Delivered once: the sheet closes on it, nothing draws it.
   final _created = OneShot<ProductReturn>();

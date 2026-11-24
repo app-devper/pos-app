@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 // Package imports:
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/domain/model/customer/customer.dart';
@@ -19,7 +20,7 @@ class CustomerAddViewModel {
     required this.customerRepo,
   });
 
-  final _state = ValueNotifier<CustomerAddState>(const CustomerAddState());
+  final _state = ViewState<CustomerAddState>(const CustomerAddState());
 
   /// The two things the screen reacts to once each. Neither is drawn, so
   /// neither belongs in state, and there is nothing for the view to clear.

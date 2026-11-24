@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 // Package imports:
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 import 'package:um/domain/entities/auth/role.dart';
 import 'package:um/domain/usecase/auth_use_cases.dart';
 
@@ -24,7 +25,7 @@ class OrderViewModel {
     required this.getRoleUseCase,
   });
 
-  final _state = ValueNotifier<OrderState>(const OrderState());
+  final _state = ViewState<OrderState>(const OrderState());
 
   /// Picking a range tells the page to move its date fields and reload; a
   /// failure flashes a message. Neither is drawn.

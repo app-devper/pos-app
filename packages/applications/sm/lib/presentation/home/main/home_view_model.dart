@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 // Package imports:
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 import 'package:um/domain/usecase/auth_use_cases.dart';
 
 // Project imports:
@@ -31,7 +32,7 @@ class HomeViewModel {
     required this.logoutUseCase,
   });
 
-  final _state = ValueNotifier<HomeState>(const HomeState());
+  final _state = ViewState<HomeState>(const HomeState());
   final _errors = OneShot<String>();
   final _loggedOut = OneShot<void>();
 

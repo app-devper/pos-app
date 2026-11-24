@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' hide Category;
 // Package imports:
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/domain/model/category/category.dart';
@@ -19,7 +20,7 @@ class CategoryEditViewModel {
     required this.categoryRepo,
   });
 
-  final _state = ValueNotifier<CategoryEditState>(const CategoryEditState());
+  final _state = ViewState<CategoryEditState>(const CategoryEditState());
 
   /// Each outcome reaches the view once: a snackbar, or a pop with the record.
   /// Neither is drawn, so neither sits in state waiting to be cleared.

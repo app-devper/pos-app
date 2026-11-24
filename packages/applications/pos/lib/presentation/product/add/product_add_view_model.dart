@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' hide Category;
 // Package imports:
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/domain/model/product/product.dart';
@@ -22,7 +23,7 @@ class ProductAddViewModel {
     required this.categoryRepo,
   });
 
-  final _state = ValueNotifier<ProductAddState>(const ProductAddState());
+  final _state = ViewState<ProductAddState>(const ProductAddState());
 
   /// The product it created and the serial number it generated. Each is acted
   /// on once and never drawn.

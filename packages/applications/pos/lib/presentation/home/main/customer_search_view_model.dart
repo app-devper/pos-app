@@ -1,6 +1,9 @@
 // Flutter imports:
 import 'package:flutter/foundation.dart';
 
+// Package imports:
+import 'package:common/core/state/view_state.dart';
+
 // Project imports:
 import 'package:pos/domain/model/customer/customer.dart';
 
@@ -13,7 +16,7 @@ class CustomerSearchViewModel {
     required this.customerRepo,
   });
 
-  final _items = ValueNotifier<List<Customer>?>(null);
+  final _items = ViewState<List<Customer>?>(null);
 
   ValueListenable<List<Customer>?> get items => _items;
 

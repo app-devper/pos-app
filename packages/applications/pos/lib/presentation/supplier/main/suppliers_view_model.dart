@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 // Package imports:
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/presentation/supplier/main/suppliers_state.dart';
@@ -17,7 +18,7 @@ class SuppliersViewModel {
     required this.supplierRepo,
   });
 
-  final _state = ValueNotifier<SuppliersState>(const SuppliersState());
+  final _state = ViewState<SuppliersState>(const SuppliersState());
 
   /// Shown as a snackbar and then gone. It never belonged in state: a message
   /// the view had to remember to clear is one it can forget to clear.

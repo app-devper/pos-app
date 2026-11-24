@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:common/core/error/exception.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pos/domain/model/supplier/param.dart';
@@ -10,11 +12,17 @@ class FakeSupplierRepository implements SupplierRepository {
   String? updatedSupplierId;
   String? removedSupplierId;
 
-  FakeSupplierRepository({this.throws});
+  final Completer<Supplier>? pendingUpdate;
+
+  FakeSupplierRepository({this.throws, this.pendingUpdate});
 
   @override
   Future<Supplier> updateSupplierById(
       String supplierId, SupplierParam param) async {
+    final pending = pendingUpdate;
+    if (pending != null) {
+      return pending.future;
+    }
     final error = throws;
     if (error != null) {
       throw error;
@@ -152,5 +160,20 @@ void main() {
     await Future<void>.delayed(Duration.zero);
 
     expect(updated, hasLength(1));
+  });
+
+  test('a save that fails after dispose reports nothing and does not throw',
+      () async {
+    final pending = Completer<Supplier>();
+    final vm = buildViewModel(FakeSupplierRepository(pendingUpdate: pending));
+    final errors = <String>[];
+    vm.errors.listen(errors.add);
+
+    final save = vm.updateSupplierById('7', buildParam());
+    vm.dispose();
+    pending.completeError(const NetworkException(message: 'offline'));
+
+    await expectLater(save, completes);
+    expect(errors, isEmpty);
   });
 }
