@@ -10,6 +10,7 @@ import 'package:design_system/widgets/title_bar.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // Project imports:
+import '../error_check.dart';
 import '../pump.dart';
 
 /// Long enough for a screen's first load to answer and, if it fails, for the
@@ -21,6 +22,9 @@ const _roleWatch = Duration(seconds: 1);
 const _step = Duration(milliseconds: 100);
 
 final _snackbar = find.byKey(const Key('snackbar'));
+
+/// CustomSnackBar.showErrorSnackBar: red, text "Error: …".
+final _errorRed = Colors.red[400];
 final _errorAlertTitle = find.text('พบข้อผิดพลาด').hitTestable();
 final _confirmTitle = find.text('แจ้งเตือน').hitTestable();
 
@@ -100,23 +104,21 @@ class ShellRobot {
       find.byWidgetPredicate((w) => w is DropdownButton).hitTestable();
 
   /// Waits for [screen], then watches it for [_errorWatch] and fails on the
-  /// first red `Error:` snackbar or `'พบข้อผิดพลาด'` alert.
+  /// first error snackbar or alert dialog.
   ///
-  /// [knownFinding] lets through one error snackbar whose text contains it,
-  /// for an app fault already reported; it is logged each time it shows, so
-  /// it never passes silently.
+  /// [tolerated] is an exact error code, e.g. `[SY-404-002]`, for an app
+  /// fault already reported: a snackbar carrying it is logged, not failed,
+  /// and once it has closed the screen is watched again, so an error queued
+  /// behind it is still caught.
   Future<void> expectScreenWithoutError(
     Finder screen, {
-    String? knownFinding,
+    String? tolerated,
   }) async {
     await pumpUntilFound(tester, screen.hitTestable());
-    final clock = Stopwatch()..start();
-    var logged = false;
-    while (clock.elapsed < _errorWatch) {
-      logged = _failOnError(knownFinding, logged);
-      await tester.pump(_step);
-    }
-    _failOnError(knownFinding, logged);
+    final sawTolerated = await _watchForErrors(tolerated);
+    if (!sawTolerated) return;
+    await waitForSnackbarToClose();
+    await _watchForErrors(null);
   }
 
   /// Gives the signed-in role time to reach the shell, so that an absence
@@ -128,19 +130,44 @@ class ShellRobot {
     }
   }
 
-  /// Returns whether the known finding has been logged.
-  bool _failOnError(String? knownFinding, bool logged) {
-    if (_errorAlertTitle.evaluate().isNotEmpty) {
-      fail('Error alert: ${_texts(find.byType(AlertDialog)).join(' | ')}');
+  /// Returns whether the tolerated error was shown.
+  Future<bool> _watchForErrors(String? tolerated) async {
+    String? seen;
+    final clock = Stopwatch()..start();
+    while (true) {
+      final shown = _checkErrors(tolerated);
+      if (shown != null && seen == null) {
+        debugPrint('E2E known finding shown: $shown');
+      }
+      seen ??= shown;
+      if (clock.elapsed >= _errorWatch) return seen != null;
+      await tester.pump(_step);
     }
-    final error =
-        _texts(_snackbar).where((t) => t.startsWith('Error:')).firstOrNull;
-    if (error == null) return logged;
-    if (knownFinding == null || !error.contains(knownFinding)) {
-      fail('Error snackbar: $error');
+  }
+
+  /// Fails on any alert dialog, or any error snackbar but a [tolerated] one;
+  /// returns the tolerated one if it is showing.
+  String? _checkErrors(String? tolerated) {
+    final alerts = find.byType(AlertDialog);
+    if (alerts.evaluate().isNotEmpty) {
+      fail('Alert dialog: ${_texts(alerts).join(' | ')}');
     }
-    if (!logged) debugPrint('E2E known finding shown: $error');
-    return true;
+    final errors = [
+      for (final element in find.byType(SnackBar).evaluate())
+        if (_errorText(element) case final text?) text,
+    ];
+    final unexpected = unexpectedErrors(errors, tolerated: tolerated);
+    if (unexpected.isNotEmpty) fail('Error snackbar: ${unexpected.first}');
+    return errors.firstOrNull;
+  }
+
+  /// The text of an error snackbar (red, or saying "Error:"), else null.
+  String? _errorText(Element element) {
+    final snackbar = element.widget as SnackBar;
+    final text = _texts(find.byElementPredicate((e) => e == element)).join(' ');
+    final isError =
+        snackbar.backgroundColor == _errorRed || text.contains('Error:');
+    return isError ? text : null;
   }
 
   // --- Snackbars and dialogs ------------------------------------------------
@@ -182,8 +209,10 @@ class ShellRobot {
     await tester.pump();
   }
 
-  Iterable<String> _texts(Finder within) => find
-      .descendant(of: within, matching: find.byType(Text))
+  /// Every text under [within], plain or rich.
+  List<String> _texts(Finder within) => find
+      .descendant(of: within, matching: find.byType(RichText))
       .evaluate()
-      .map((e) => (e.widget as Text).data ?? '');
+      .map((e) => (e.widget as RichText).text.toPlainText())
+      .toList();
 }
