@@ -39,7 +39,8 @@ case "$target" in
   *) usage ;;
 esac
 
-run_id="$(date +%Y%m%d%H%M%S)-$$"
+# run-all.sh passes one run id for all its files.
+run_id="${E2E_RUN_ID:-$(date +%Y%m%d%H%M%S)-$$}"
 cd "$APP_DIR"
 # Only the file's path is passed: the test reads the credentials at run time,
 # so they are neither compiled into the test nor visible in `ps`.
