@@ -26,6 +26,8 @@ Future<void> removeCustomersNamed(String name) async {
 
 /// Creates a customer the way the add form does, without the screens; for
 /// arranging a test that starts from an existing customer.
+/// It carries the suite's marker as its address, like every customer the
+/// suite creates.
 Future<Customer> createCustomer(
   String name, {
   required String phone,
@@ -33,7 +35,7 @@ Future<Customer> createCustomer(
 }) =>
     getIt()<CustomerRepository>().createCustomer(CustomerParam(
       name: name,
-      address: '',
+      address: keptCustomerMarker,
       phone: phone,
       email: '',
       customerType: customerType,

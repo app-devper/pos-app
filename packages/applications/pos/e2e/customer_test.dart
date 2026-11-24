@@ -33,8 +33,12 @@ const _general = 'ลูกค้าทั่วไป';
 const _wholesale = 'ลูกค้าขายส่ง';
 const _typeRow = 'ประเภทลูกค้า';
 
+const _addressRow = 'ที่อยู่';
+
 const _removalLocalOnly = 'E2E: customer removal is checked on the local '
-    'target only (a removed customer stays listed as archived)';
+    'target only (a removed customer stays listed as archived); the kept '
+    'customer is reused instead, its phone changed each run, and the edit '
+    'also resets its type to ลูกค้าทั่วไป (FINDING, customer_edit_page.dart:59)';
 
 void main() {
   initE2E();
@@ -48,7 +52,7 @@ void main() {
     _registerCleanup(plan);
 
     // Act: add, unless the hosted target's kept customer exists already
-    final customer = await _ensureListed(customers, plan);
+    final (:customer, created: _) = await _ensureListed(customers, plan);
 
     // Assert
     expect(await customers.scrollListTo(plan.name, code: customer.code), isTrue,
@@ -78,31 +82,54 @@ void main() {
   });
 
   testWidgets(
-      'the kept customer is reused when it exists, and editing its phone '
-      'resets its type', (tester) async {
-    // Arrange: the hosted target's starting point, an active kept customer
-    // (here a wholesale one, made through the API)
+      'the kept customer is created, marked, when absent and reused '
+      'when present', (tester) async {
+    // Arrange: no kept customer yet (local only: the hosted one is never
+    // removed)
     final customers = await _openCustomers(tester);
     const plan = CustomerPlan.kept();
-    // Local only: a stale one from an earlier run would hide the reuse.
     await removeCustomersNamed(plan.name);
     Cleanup.add(plan.name, () => removeCustomersNamed(plan.name));
-    await createCustomer(plan.name,
-        phone: _phone, customerType: customerTypeWholesaler);
 
-    // Act: the same steps the hosted target runs
-    final customer = await _ensureListed(customers, plan);
-    await _openAndCheck(customers, customer);
+    // Act: the steps the hosted target runs, twice
+    final first = await _ensureListed(customers, plan);
+    final second = await _ensureListed(customers, plan);
 
     // Assert
+    expect(first.created, isTrue, reason: 'none existed, so it is created');
+    expect(second.created, isFalse, reason: 'then it is reused');
+    expect(second.customer.code, first.customer.code);
+
+    // Act / Assert: the marker is on the customer, and the edit keeps it
+    await _openAndCheck(customers, second.customer);
+    expect(
+        customers.detailRow(_addressRow, keptCustomerMarker), findsOneWidget);
+    await _changePhone(customers, second.customer);
+    expect(
+        customers.detailRow(_addressRow, keptCustomerMarker), findsOneWidget);
+  }, skip: E2EEnv.isHosted);
+
+  testWidgets('editing a wholesale customer\'s phone resets its type',
+      (tester) async {
+    // Arrange: a wholesale customer, made through the API (local only)
+    final customers = await _openCustomers(tester);
+    final name = RunData.name('customer wholesale');
+    Cleanup.add(name, () => removeCustomersNamed(name));
+    await createCustomer(name,
+        phone: _phone, customerType: customerTypeWholesaler);
+    await customers.reenterList();
+    await customers.open(name);
     expect(customers.detailRow(_typeRow, _wholesale), findsOneWidget);
 
-    // Act / Assert
-    await _changePhone(customers, customer);
+    // Act
+    await customers.edit(phone: _changedPhone);
+
+    // Assert
     // FINDING: the edit form starts on the first type and never loads the
     // customer's (customer_edit_page.dart:59, 117-122), so saving a phone
     // change also turns the customer general. A skipped test below says what
     // a user expects.
+    expect(customers.detailRow('โทรศัพท์', _changedPhone), findsOneWidget);
     expect(customers.detailRow(_typeRow, _general), findsOneWidget,
         reason: 'the app currently resets the type on any edit');
   }, skip: E2EEnv.isHosted);
@@ -158,7 +185,7 @@ void main() {
       skip: 'FINDING: a removed customer stays in the list (pos-api archives '
           'it and lists archived customers; the app does not filter them)');
 
-  // FINDING (Task 7): see the type assertion in the reuse test above.
+  // FINDING (Task 7): see the running type test above.
   group('customer type on edit', () {
     testWidgets('editing only the phone keeps the customer type',
         (tester) async {
@@ -216,24 +243,41 @@ void _registerCleanup(CustomerPlan plan) {
   }
 }
 
-/// Adds [plan]'s customer through the form unless an active one exists, then
-/// re-enters the list (FINDING: on a wide screen it loads only on entry) and
-/// returns the active customer, as the server has it.
-Future<Customer> _ensureListed(
+/// Adds [plan]'s customer through the form, with the suite's marker, unless
+/// the suite's own one is active; refuses (fails, touching nothing) when
+/// only someone else's customer has the name. Then re-enters the list
+/// (FINDING: on a wide screen it loads only on entry) and returns the
+/// suite's customer as the server has it.
+Future<({Customer customer, bool created})> _ensureListed(
     CustomerRobot customers, CustomerPlan plan) async {
-  final existing = await customersNamed(plan.name);
-  final records = [for (final c in existing) (name: c.name, status: c.status)];
-  if (plan.needsCreating(records)) {
-    await customers.add(plan.name, phone: _phone);
-  } else {
-    debugPrint('E2E: reusing customer "${plan.name}"');
+  final decision = plan.decide(await _recordsNamed(plan.name));
+  switch (decision) {
+    case CreateCustomer():
+      await customers.add(plan.name,
+          phone: _phone, address: plan.markerOnCreate);
+    case ReuseCustomer(:final code, :final ownedCount):
+      if (ownedCount > 1) {
+        debugPrint('E2E: $ownedCount kept customers found, using $code');
+      }
+      debugPrint('E2E: reusing customer "${plan.name}" ($code)');
+    case RefuseCustomer(:final foreignCode):
+      fail('A customer named "${plan.name}" exists that the E2E suite did '
+          'not create (code $foreignCode); it was left untouched');
   }
   await customers.reenterList();
-  final active = (await customersNamed(plan.name))
-      .where((c) => c.status != archivedStatus);
-  expect(active, isNotEmpty, reason: 'no active customer "${plan.name}"');
-  return active.first;
+  final saved = plan.decide(await _recordsNamed(plan.name));
+  if (saved is! ReuseCustomer) {
+    fail('No active customer "${plan.name}" with the suite\'s marker');
+  }
+  final customer =
+      (await customersNamed(plan.name)).firstWhere((c) => c.code == saved.code);
+  return (customer: customer, created: decision is CreateCustomer);
 }
+
+Future<List<CustomerRecord>> _recordsNamed(String name) async => [
+      for (final c in await customersNamed(name))
+        (name: c.name, status: c.status, code: c.code, address: c.address),
+    ];
 
 /// Opens [customer] and checks the detail shows its name and phone.
 Future<void> _openAndCheck(CustomerRobot customers, Customer customer) async {

@@ -27,29 +27,73 @@ void main() {
     });
   });
 
-  group('CustomerPlan.needsCreating', () {
+  group('CustomerPlan.decide', () {
     const plan = CustomerPlan.kept();
+    CustomerRecord record(
+      String code, {
+      String name = keptCustomerName,
+      String status = 'ACTIVE',
+      String address = keptCustomerMarker,
+    }) =>
+        (name: name, status: status, code: code, address: address);
 
-    test('creates the customer when none has its name', () {
-      // Act / Assert
-      expect(plan.needsCreating([(name: 'Somchai', status: 'ACTIVE')]), isTrue);
-    });
+    test('creates the customer, with the marker, when none has its name', () {
+      // Act
+      final decision =
+          plan.decide([record('MB_1', name: 'Somchai', address: '')]);
 
-    test('reuses an active customer of that name', () {
-      // Act / Assert
-      expect(
-        plan.needsCreating([
-          (name: 'E2E customer', status: 'ARCHIVED'),
-          (name: 'E2E customer', status: 'ACTIVE'),
-        ]),
-        isFalse,
-      );
+      // Assert
+      expect(decision, isA<CreateCustomer>());
+      expect(plan.markerOnCreate, keptCustomerMarker);
     });
 
     test('creates it again when the only one of that name is archived', () {
       // Act / Assert
-      expect(plan.needsCreating([(name: 'E2E customer', status: 'ARCHIVED')]),
-          isTrue);
+      expect(plan.decide([record('MB_1', status: 'ARCHIVED')]),
+          isA<CreateCustomer>());
+    });
+
+    test('reuses the one active customer the suite created', () {
+      // Act
+      final decision = plan.decide([
+        record('MB_1', status: 'ARCHIVED'),
+        record('MB_2'),
+      ]);
+
+      // Assert
+      expect(decision, const ReuseCustomer(code: 'MB_2', ownedCount: 1));
+    });
+
+    test('refuses a customer of that name the suite did not create', () {
+      // Act
+      final decision = plan.decide([record('MB_7', address: 'Bangkok')]);
+
+      // Assert
+      expect(decision, const RefuseCustomer(foreignCode: 'MB_7'));
+    });
+
+    test('reuses its own customer and leaves a foreign one of that name alone',
+        () {
+      // Act
+      final decision = plan.decide([
+        record('MB_3', address: ''),
+        record('MB_5'),
+      ]);
+
+      // Assert
+      expect(decision, const ReuseCustomer(code: 'MB_5', ownedCount: 1));
+    });
+
+    test('picks the lowest code when the suite owns several', () {
+      // Act
+      final decision = plan.decide([
+        record('MB_20260012'),
+        record('MB_20260003'),
+        record('MB_20260009'),
+      ]);
+
+      // Assert
+      expect(decision, const ReuseCustomer(code: 'MB_20260003', ownedCount: 3));
     });
   });
 

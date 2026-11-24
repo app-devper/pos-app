@@ -20,6 +20,7 @@ const _listTitle = 'ข้อมูลลูกค้า';
 const _addMenuItem = 'เพิ่มลูกค้า';
 const _nameField = 'ชื่อลูกค้า';
 const _phoneField = 'โทรศัพท์';
+const _addressField = 'ที่อยู่';
 const _typeField = 'ประเภทลูกค้า';
 const _deleteButton = 'ลบลูกค้า';
 const _deleteQuestion = 'ต้องการลบลูกค้าใช่หรือไม่?';
@@ -86,13 +87,14 @@ class CustomerRobot {
 
   static String? _textOf(Widget? widget) => widget is Text ? widget.data : null;
 
-  /// Scrolls the list from where it is to its end looking for [name] (and
+  /// Scrolls the list from its top to its end looking for [name] (and
   /// [code]); true once its row is on screen. The list may hold real
   /// customers, in any order, so the E2E one is found by its exact name.
   Future<bool> scrollListTo(String name, {String? code}) async {
     final row = _listRow(name, code);
     final scrollable =
         find.descendant(of: _list, matching: find.byType(Scrollable));
+    await _scrollToTop(scrollable);
     while (row.hitTestable().evaluate().isEmpty) {
       final position = tester.state<ScrollableState>(scrollable).position;
       if (position.pixels >= position.maxScrollExtent) return false;
@@ -100,6 +102,15 @@ class CustomerRobot {
       await tester.pump(_step);
     }
     return true;
+  }
+
+  Future<void> _scrollToTop(Finder scrollable) async {
+    while (true) {
+      final position = tester.state<ScrollableState>(scrollable).position;
+      if (position.pixels <= position.minScrollExtent) return;
+      await tester.drag(scrollable, -_scrollStep);
+      await tester.pump(_step);
+    }
   }
 
   /// Opens the detail of [name] (with [code]) from the list.
@@ -125,10 +136,16 @@ class CustomerRobot {
 
   /// Adds a customer, of [type] if given (else the form's default,
   /// 'ลูกค้าทั่วไป'); returns once the menu is back.
-  Future<void> add(String name, {required String phone, String? type}) async {
+  Future<void> add(
+    String name, {
+    required String phone,
+    String? type,
+    String? address,
+  }) async {
     await openAddForm();
     if (type != null) await _chooseType(type);
     await _enter(_nameField, name);
+    if (address != null) await _enter(_addressField, address);
     await _enter(_phoneField, phone);
     await submitForm();
     await _awaitOutcome(_menu);
