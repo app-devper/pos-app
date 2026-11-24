@@ -83,8 +83,7 @@ void deleteProductAfterFile(String name) =>
 /// be deleted, so both are reported as kept. The supplier picker's known
 /// overflow is let through meanwhile.
 Future<String> receiveAndImport(ReceiveRobot receives, Receipt receipt) =>
-    toleratingSupplierPickerOverflow(
-        () => _receiveAndImport(receives, receipt));
+    onReceiptPage(() => _receiveAndImport(receives, receipt));
 
 Future<String> _receiveAndImport(ReceiveRobot receives, Receipt receipt) async {
   Cleanup.add('draft receive ${receipt.reference}',

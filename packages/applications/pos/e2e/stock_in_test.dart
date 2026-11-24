@@ -86,10 +86,16 @@ void main() {
       final code = await receiveAndImport(receives, _receipt);
 
       // Assert: the receipt, reopened from the list, shows it was imported
-      await receives.openListed(code);
-      await receives.expectImported();
+      await onReceiptPage(() async {
+        await receives.openListed(code);
+        await receives.expectImported();
+        await receives.leave();
+      });
       expect(await receiveStatus(code), importedReceiveStatus);
-      await receives.leave();
+      expect(supplierPickerOverflowsSwallowed, greaterThanOrEqualTo(1),
+          reason: 'The supplier picker no longer overflows: delete '
+              'onReceiptPage from known_faults.dart and its callers, and '
+              'unskip the "supplier picker layout" FINDING test.');
 
       // Assert: the product shows 10 on hand, and the lot's row
       final products = ProductRobot(shell);
@@ -149,15 +155,19 @@ void main() {
       await receives.openList();
       Cleanup.add('draft receive $_draftReference',
           () => cancelDraftReceivesWithReference(_draftReference));
-      await receives.create(
-          supplierName: keptSupplierName, reference: _draftReference);
-      final code = await receiveCodeFor(_draftReference);
-      await receives.leave();
+      final code = await onReceiptPage(() async {
+        await receives.create(
+            supplierName: keptSupplierName, reference: _draftReference);
+        await receives.leave();
+        return receiveCodeFor(_draftReference);
+      });
       expect(await receives.isListed(code), isTrue);
-      await receives.openListed(code);
 
       // Act
-      await receives.deleteDraft();
+      await onReceiptPage(() async {
+        await receives.openListed(code);
+        await receives.deleteDraft();
+      });
 
       // Assert
       // FINDING: pos-api only cancels a deleted receipt and lists cancelled
@@ -177,23 +187,23 @@ void main() {
   // list. Skipped tests do not sign in or write anything.
   group('receive removal', () {
     testWidgets('a deleted draft receive is no longer listed', (tester) async {
-      await toleratingSupplierPickerOverflow(() async {
-        // Arrange
-        final receives = ReceiveRobot(await _signedInShell(tester));
-        await receives.openList();
-        final reference = '${E2EEnv.runId}-removed';
-        Cleanup.add('draft receive $reference',
-            () => cancelDraftReceivesWithReference(reference));
+      // Arrange
+      final receives = ReceiveRobot(await _signedInShell(tester));
+      await receives.openList();
+      final reference = '${E2EEnv.runId}-removed';
+      Cleanup.add('draft receive $reference',
+          () => cancelDraftReceivesWithReference(reference));
+
+      // Act
+      final code = await onReceiptPage(() async {
         await receives.create(
             supplierName: keptSupplierName, reference: reference);
-        final code = await receiveCodeFor(reference);
-
-        // Act
         await receives.deleteDraft();
-
-        // Assert
-        expect(await receives.isListed(code), isFalse);
+        return receiveCodeFor(reference);
       });
+
+      // Assert
+      expect(await receives.isListed(code), isFalse);
     });
   },
       skip: 'FINDING: a deleted draft receipt stays in the list (pos-api '
@@ -230,19 +240,19 @@ void main() {
   group('success snackbar', () {
     testWidgets('the receipt page success snackbar closes on its own',
         (tester) async {
-      await toleratingSupplierPickerOverflow(() async {
-        // Arrange
-        final receives = ReceiveRobot(await _signedInShell(tester));
-        await receives.openList();
-        final reference = '${E2EEnv.runId}-snackbar';
-        Cleanup.add('draft receive $reference',
-            () => cancelDraftReceivesWithReference(reference));
+      // Arrange
+      final receives = ReceiveRobot(await _signedInShell(tester));
+      await receives.openList();
+      final reference = '${E2EEnv.runId}-snackbar';
+      Cleanup.add('draft receive $reference',
+          () => cancelDraftReceivesWithReference(reference));
 
+      await onReceiptPage(() async {
         // Act: create shows 'Add success'
         await receives.create(
             supplierName: keptSupplierName, reference: reference);
 
-        // Assert
+        // Assert: its timer is 3 s; 20 s is ample
         await receives.shell.waitForSnackbarToClose();
       });
     });
@@ -291,10 +301,10 @@ final _receipt = Receipt(
   ),
 );
 
-/// One step of the chain. The receipt page's supplier picker overflow, a
-/// known finding, is let through; any other error fails the step.
+/// One step of the chain. Receipt-page steps inside it go through
+/// onReceiptPage; nothing else is tolerated.
 Future<void> _step(String name, Future<void> Function() body) =>
-    _chain.run(name, () => toleratingSupplierPickerOverflow(body));
+    _chain.run(name, body);
 
 /// Launches the app signed in as admin (once per file).
 Future<ShellRobot> _signedInShell(WidgetTester tester) async {
