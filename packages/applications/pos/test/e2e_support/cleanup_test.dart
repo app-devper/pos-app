@@ -138,6 +138,36 @@ void main() {
       // Act / Assert
       expect(ledger.report(), 'E2E leftovers: none');
     });
+
+    test('lists what is kept on purpose, once, marked as kept for reuse',
+        () async {
+      // Arrange
+      final tearDowns = <Future<void> Function()>[];
+      final ledger = CleanupLedger(registerTearDown: tearDowns.add)
+        ..add('product', () async => throw Exception('offline'))
+        ..keep('customer "E2E customer"')
+        ..keep('customer "E2E customer"');
+      await tearDowns.single();
+
+      // Act
+      final report = ledger.report();
+
+      // Assert
+      expect(report,
+          'E2E leftovers: product, customer "E2E customer" (kept for reuse)');
+    });
+
+    test('keeping something schedules no tear-down', () {
+      // Arrange
+      final tearDowns = <Future<void> Function()>[];
+      final ledger = CleanupLedger(registerTearDown: tearDowns.add);
+
+      // Act
+      ledger.keep('customer "E2E customer"');
+
+      // Assert
+      expect(tearDowns, isEmpty);
+    });
   });
 
   group('Cleanup, with the real test framework', () {

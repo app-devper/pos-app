@@ -67,6 +67,7 @@ class CleanupLedger {
   final void Function(Future<void> Function() tearDown) registerTearDown;
   final UndoStack _stack;
   final _failed = <String>[];
+  final _kept = <String>{};
   bool _tearDownRegistered = false;
 
   /// Queues [undo] and, on the first add of a test, schedules the tear-down
@@ -78,13 +79,21 @@ class CleanupLedger {
     registerTearDown(_runQueued);
   }
 
+  /// Records [label] as left on purpose; it is reported, never undone.
+  void keep(String label) => _kept.add(label);
+
   Future<void> _runQueued() async {
     _tearDownRegistered = false;
     _failed.addAll(await _stack.run());
   }
 
-  /// What failed, plus anything still queued (its tear-down never ran).
-  String report() => leftoversLine([..._failed, ..._stack.pending]);
+  /// What failed, anything still queued (its tear-down never ran), and what
+  /// was kept on purpose.
+  String report() => leftoversLine([
+        ..._failed,
+        ..._stack.pending,
+        for (final label in _kept) '$label (kept for reuse)',
+      ]);
 }
 
 /// The process-wide cleanup the e2e tests use.
@@ -94,6 +103,10 @@ class Cleanup {
   static final _ledger = CleanupLedger(registerTearDown: addTearDown);
 
   static void add(String label, Undo undo) => _ledger.add(label, undo);
+
+  /// Reports [label] as left behind on purpose, e.g. a record reused by
+  /// every run.
+  static void keep(String label) => _ledger.keep(label);
 
   /// Called by initE2E(): prints the report after the file's last test.
   static void reportLeftoversAtEnd() {

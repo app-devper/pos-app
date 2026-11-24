@@ -19,6 +19,10 @@ class E2EEnv {
   /// The `config/<name>.json` the app loads.
   static const String config = String.fromEnvironment('ENV');
 
+  /// The hosted API, where data a run leaves is seen by real users; data
+  /// policies that differ by target ask this, and only this.
+  static bool get isHosted => config == 'app';
+
   /// Unique per run, for naming the data a run creates.
   static const String runId = String.fromEnvironment('E2E_RUN_ID');
 
