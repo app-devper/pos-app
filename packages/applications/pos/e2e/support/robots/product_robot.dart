@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pos/presentation/product/history/product_history_widget.dart';
 import 'package:pos/presentation/product/main/product_detail_widget.dart';
 import 'package:pos/presentation/product/main/products_widget.dart';
+import 'package:pos/presentation/product/stock/stock_adjustment_history_widget.dart';
 import 'package:pos/presentation/product/stock/stock_adjustment_widget.dart';
 import '../pump.dart';
 import '../stock_plan.dart';
@@ -238,6 +239,17 @@ class ProductRobot {
               w is Text &&
               (w.data == description ||
                   (w.data?.startsWith('$description ') ?? false))))
+      .hitTestable();
+
+  /// On the ปรับสต็อก tab: an adjustment card's note.
+  Finder adjustmentNote(String note) => _inAdjustments(find.text(note));
+
+  /// On the ปรับสต็อก tab: an adjustment card's change, e.g. `+2` or `-2`.
+  Finder adjustmentDelta(String delta) => _inAdjustments(find.text(delta));
+
+  Finder _inAdjustments(Finder finder) => find
+      .descendant(
+          of: find.byType(StockAdjustmentHistoryWidget), matching: finder)
       .hitTestable();
 
   Finder textOnScreen(String text) => find.text(text).hitTestable();

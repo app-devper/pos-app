@@ -145,6 +145,13 @@ void main() {
           findsOneWidget);
       expect(products.historyRow('ปรับสต็อกสินค้า (อื่นๆ) จำนวน -2'),
           findsOneWidget);
+
+      // Assert: the note typed with each adjustment shows on the
+      // adjustments tab (the history description carries only the reason)
+      await products.openTab('ปรับสต็อก');
+      expect(products.adjustmentNote(_adjustNote), findsNWidgets(2));
+      expect(products.adjustmentDelta('+2'), findsOneWidget);
+      expect(products.adjustmentDelta('-2'), findsOneWidget);
     });
   });
 
