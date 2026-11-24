@@ -9,7 +9,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 // Project imports:
 import 'support/app.dart';
-import 'support/cleanup.dart';
 import 'support/env.dart';
 import 'support/pump.dart';
 import 'support/robots/shell_robot.dart';
@@ -24,7 +23,6 @@ const _manageTiles = [
 
 void main() {
   initE2E();
-  Cleanup.reportLeftoversAtEnd();
 
   testWidgets('every area an admin can open shows its screen', (tester) async {
     // Arrange

@@ -20,12 +20,18 @@ import 'package:um/data/datasource/session/keep_alive_scheduler.dart';
 // Project imports:
 import 'package:pos/container.dart' as pos;
 import 'package:pos/presentation/app.dart';
+import 'cleanup.dart';
 import 'env.dart';
 import 'pump.dart';
 
 /// 1400 wide keeps the sidebar expanded (labels shown) and the grid inline.
 const _surfaceSize = Size(1400, 900);
 const _signInTimeout = Duration(seconds: 30);
+
+/// um-api allows 5 `/auth/login` calls a minute per address and refuses the
+/// rest with HTTP 429 `UM-429-001`; the app shows that code in its alert.
+const _rateLimitCode = 'UM-429-001';
+const _rateLimitWindow = Duration(seconds: 65);
 
 // Both '/' and '/um-splash' build a splash at start, so a screen can be in
 // the tree twice; finders go through hitTestable() to take the one on top.
@@ -45,6 +51,7 @@ void initE2E() {
   // ignore: invalid_use_of_visible_for_testing_member
   SharedPreferences.setMockInitialValues({});
   E2EEnv.require();
+  Cleanup.reportLeftoversAtEnd();
 }
 
 /// Runs the app's startup once per file (get_it registrations cannot run
@@ -56,9 +63,13 @@ void initE2E() {
 /// logging interceptor prints request and response bodies and every header,
 /// which would put passwords and tokens in the test log.
 Future<void> launchApp(WidgetTester tester) async {
-  tester.view.physicalSize = _surfaceSize;
-  tester.view.devicePixelRatio = 1;
-  addTearDown(tester.view.reset);
+  // Set once per test: a test that launches the app again keeps the size
+  // and registers no second reset.
+  if (tester.view.physicalSize != _surfaceSize) {
+    tester.view.physicalSize = _surfaceSize;
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+  }
   if (!_started) {
     final config = await AppConfig.forEnvironment(E2EEnv.config);
     await um.initCore(config);
@@ -94,12 +105,29 @@ Future<void> submitCredentials(
 Finder _field(String label) =>
     find.widgetWithText(TextField, label).hitTestable();
 
-/// Signs in as [role] and waits for the selling screen. If the server
-/// refuses, fails with the alert the app shows instead of timing out.
+/// Signs in as [role] and waits for the selling screen. If um-api's sign-in
+/// rate limit refuses it, waits the window out and tries once more; any
+/// other refusal fails at once with the alert the app shows.
 Future<void> signIn(
   WidgetTester tester, {
   E2ERole role = E2ERole.admin,
 }) async {
+  var refusal = await _trySignIn(tester, role);
+  if (refusal != null && refusal.contains(_rateLimitCode)) {
+    debugPrint('E2E: sign-in rate limit reached, waiting '
+        '${_rateLimitWindow.inSeconds}s');
+    await _dismissAlert(tester);
+    await _wait(tester, _rateLimitWindow);
+    refusal = await _trySignIn(tester, role);
+  }
+  if (refusal != null) {
+    fail('Signing in as ${role.name} was refused: $refusal');
+  }
+}
+
+/// Submits [role]'s credentials; returns null on reaching the selling
+/// screen, or the text of the alert the app showed instead.
+Future<String?> _trySignIn(WidgetTester tester, E2ERole role) async {
   await submitCredentials(
     tester,
     E2EEnv.username(role),
@@ -113,9 +141,23 @@ Future<void> signIn(
     'the selling screen or an error alert',
     timeout: _signInTimeout,
   );
-  if (_errorAlert.evaluate().isNotEmpty) {
-    fail('Signing in as ${role.name} was refused: ${_alertText(tester)}');
-  }
+  return _errorAlert.evaluate().isEmpty ? null : _alertText(tester);
+}
+
+Future<void> _dismissAlert(WidgetTester tester) async {
+  await tester.tap(find.text('ตกลง').hitTestable());
+  await pumpUntilGone(tester, _errorAlert);
+}
+
+/// Keeps pumping frames for [duration] of real time.
+Future<void> _wait(WidgetTester tester, Duration duration) {
+  final clock = Stopwatch()..start();
+  return pumpUntil(
+    tester,
+    () => clock.elapsed >= duration,
+    'the end of a ${duration.inSeconds}s wait',
+    timeout: duration + const Duration(seconds: 5),
+  );
 }
 
 String _alertText(WidgetTester tester) => find
