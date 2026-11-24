@@ -15,6 +15,11 @@ import 'support/pump.dart';
 const _hostedApiUrl = 'https://api.devper.app';
 const _localApiUrl = 'http://127.0.0.1:8585';
 
+/// um-api's code for a wrong username or password (errs.ErrWrongCredentials,
+/// HTTP 401). Only a server that checked the password sends it; with no
+/// server the alert carries NETWORK_ERROR instead.
+const _wrongCredentialsCode = '[UM-401-004]';
+
 void main() {
   initE2E();
 
@@ -44,10 +49,15 @@ void main() {
       'x-not-the-password',
     );
     await pumpUntilFound(tester, find.text('พบข้อผิดพลาด').hitTestable());
+    final refusal = find.textContaining(_wrongCredentialsCode).hitTestable();
+    final refusedByServer = refusal.evaluate().length;
     await tester.tap(find.text('ตกลง').hitTestable());
     await pumpUntilGone(tester, find.text('พบข้อผิดพลาด'));
 
     // Assert
+    expect(refusedByServer, 1,
+        reason:
+            'the alert should carry the server code $_wrongCredentialsCode');
     expect(find.byKey(const Key('login')).hitTestable(), findsOneWidget);
     expect(find.text('ตะกร้าสินค้า #1'), findsNothing);
   });
