@@ -48,10 +48,10 @@ class Bill {
   final String totalText;
 }
 
-/// The ids of today's bills, as the bill list asks for them (local
-/// midnight to midnight).
-Future<Set<String>> todaysOrderIds() async =>
-    {for (final order in await _todaysOrders()) order.id};
+/// The ids of the bills in the file's window (see [billWindow]), as the
+/// server has them now.
+Future<Set<String>> fileOrderIds() async =>
+    {for (final order in await _fileOrders()) order.id};
 
 /// [id] as the server has it now (its total changes when a line is
 /// cancelled).
@@ -63,7 +63,7 @@ Future<List<OrderDetail>> billsOfProductSince(
     String productName, Set<String> before) async {
   final repository = getIt()<OrderRepository>();
   final bills = <OrderDetail>[];
-  for (final order in await _todaysOrders()) {
+  for (final order in await _fileOrders()) {
     if (before.contains(order.id)) continue;
     final detail = await repository.getOrderById(order.id);
     if (detail.items.any((item) => item.product?.name == productName)) {
@@ -83,12 +83,15 @@ class BillLedger {
   final String productName;
 
   final _standing = <Bill>[];
+
+  /// Every bill a test recorded, cancelled or not.
+  final _recorded = <String>{};
   Set<String>? _firstSnapshot;
 
-  /// Today's order ids, taken before a sale; [cancelAll] also sweeps every
-  /// bill of [productName] recorded since the first of these.
+  /// The window's order ids, taken before a sale; [cancelAll] also sweeps
+  /// every bill of [productName] recorded since the first of these.
   Future<Set<String>> beforeSale() async {
-    final ids = await todaysOrderIds();
+    final ids = await fileOrderIds();
     _firstSnapshot ??= ids;
     return ids;
   }
@@ -107,6 +110,7 @@ class BillLedger {
 
   Bill _track(Bill bill) {
     _standing.add(bill);
+    _recorded.add(bill.id);
     Cleanup.keep('order ${bill.code} (cancelled, cannot be deleted)');
     return bill;
   }
@@ -115,18 +119,24 @@ class BillLedger {
   void markCancelled(Bill bill) => _standing.remove(bill);
 
   /// Cancels every bill not yet cancelled, as the detail's delete does;
-  /// one cancelled meanwhile counts as done. Tries every one, then rethrows
-  /// the first failure.
+  /// one cancelled meanwhile counts as done. Tries every one, whatever
+  /// fails, then rethrows the first failure.
   Future<void> cancelAll() async {
-    await _sweep();
-    final repository = getIt()<OrderRepository>();
     Object? firstError;
     StackTrace? firstStack;
+    try {
+      await _sweep();
+    } on Object catch (error, stack) {
+      // The recorded bills are still cancelled below.
+      firstError = error;
+      firstStack = stack;
+    }
+    final repository = getIt()<OrderRepository>();
     for (final bill in List.of(_standing)) {
       try {
         await repository.removeOrderById(bill.id);
-      } on AppException catch (error, stack) {
-        if (!error.message.contains(_alreadyCancelled)) {
+      } on Object catch (error, stack) {
+        if (!_isAlreadyCancelled(error)) {
           firstError ??= error;
           firstStack ??= stack;
           continue;
@@ -137,27 +147,40 @@ class BillLedger {
     if (firstError != null) Error.throwWithStackTrace(firstError, firstStack!);
   }
 
+  static bool _isAlreadyCancelled(Object error) =>
+      error is AppException && error.message.contains(_alreadyCancelled);
+
   /// Tracks every bill of [productName] since the first snapshot that no
-  /// test recorded (a step failed between paying and recording it). One
-  /// already cancelled is tracked too; cancelling it again counts as done.
+  /// test recorded: a step failed between paying and recording it.
   Future<void> _sweep() async {
     final first = _firstSnapshot;
     if (first == null) return;
-    final tracked = {for (final bill in _standing) bill.id};
     for (final detail in await billsOfProductSince(productName, first)) {
-      if (tracked.contains(detail.id)) continue;
-      debugPrint('E2E: bill ${detail.code} of $productName found at clean-up');
+      if (_recorded.contains(detail.id)) continue;
+      debugPrint('E2E: bill ${detail.code} of $productName was never '
+          'recorded by a test; cancelling it at clean-up');
       _track(Bill.of(detail));
     }
   }
 }
 
-Future<List<OrderSummary>> _todaysOrders() {
+/// When the file first looked for bills; the window starts that day.
+DateTime? _firstLook;
+
+/// The range a file's bill look-ups ask for: from the local midnight that
+/// began the day of [firstLook] to a day after [now]. A bill paid just
+/// before midnight is still found, and cancelled, just after it.
+({DateTime start, DateTime end}) billWindow(DateTime firstLook, DateTime now) =>
+    (
+      start: DateTime(firstLook.year, firstLook.month, firstLook.day),
+      end: now.add(const Duration(days: 1)),
+    );
+
+Future<List<OrderSummary>> _fileOrders() {
   final now = DateTime.now();
-  final start = DateTime(now.year, now.month, now.day);
-  final end = DateTime(now.year, now.month, now.day + 1);
+  final window = billWindow(_firstLook ??= now, now);
   return getIt()<OrderRepository>().getOrderRange(GetOrderRangeParam(
-    startDate: start.toUtc().toIso8601String(),
-    endDate: end.toUtc().toIso8601String(),
+    startDate: window.start.toUtc().toIso8601String(),
+    endDate: window.end.toUtc().toIso8601String(),
   ));
 }
