@@ -72,14 +72,10 @@ appId: app.devper.pos
 - extendedWaitUntil:
     visible: "Name: ${PRODUCT_NAME}.*"
     timeout: 15000
-# Known finding: the green "Update success" bar never closes by itself and,
-# on a narrow screen, lies over the import button. A user presses Clear first.
+# The green "Update success" bar lies over the import button on a narrow
+# screen until it closes by itself (4 s).
 - extendedWaitUntil:
-    visible: "Clear"
-    timeout: 10000
-- tapOn: "Clear"
-- extendedWaitUntil:
-    notVisible: "Clear"
+    notVisible: ".*Update success.*"
     timeout: 10000
 - tapOn: "นำเข้าสต็อก"
 - tapOn: "ยืนยัน"

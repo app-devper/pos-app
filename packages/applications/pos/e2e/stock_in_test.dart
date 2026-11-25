@@ -241,9 +241,8 @@ void main() {
       skip: 'FINDING: the receipt page squeezes the supplier picker into '
           '50 px and it overflows (receive_manage_page.dart:225)');
 
-  // FINDING (Task 7): see ReceiveRobot.dismissSuccessSnackbar. The green
-  // success snackbars carry a 'Clear' action and so never close on their
-  // own; on the receipt page one covers 'นำเข้าสต็อก' until it is cleared.
+  // Was a finding (#11): the green success bars never closed on their own,
+  // and on the receipt page one covered 'นำเข้าสต็อก' until it was cleared.
   group('success snackbar', () {
     testWidgets('the receipt page success snackbar closes on its own',
         (tester) async {
@@ -259,13 +258,11 @@ void main() {
         await receives.create(
             supplierName: keptSupplierName, reference: reference);
 
-        // Assert: its timer is 3 s; 20 s is ample
+        // Assert: its timer is 4 s; the wait's bound is ample
         await receives.shell.waitForSnackbarToClose();
       });
     }, timeout: e2eTestTimeout);
-  },
-      skip: 'FINDING: success snackbars never close on their own and cover '
-          'the import button (design_system snack_bar.dart:48)');
+  });
 
   // FINDING (Task 7): the stock tab shows a lot's import date, expiry, cost,
   // price and quantities but never its lot number

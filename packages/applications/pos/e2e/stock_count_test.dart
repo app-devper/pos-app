@@ -129,30 +129,33 @@ void main() {
       skip: 'FINDING: the stock count detail shows the product id, not its '
           'name (stock_count_manage_page.dart:124)');
 
-  // FINDING (Task 7): CustomSnackBar's 'Clear' calls
-  // ScaffoldMessenger.of(context) with the context of the screen that showed
-  // it (design_system snack_bar.dart:65). The snackbar never closes on its
-  // own and outlives that screen; once the screen is gone, 'Clear' throws
-  // "Looking up a deactivated widget's ancestor is unsafe" and the snackbar
-  // stays. After a receipt is imported, 'นำเข้าสต็อกสำเร็จ' sits over the
-  // new stock count's 'เพิ่มสินค้า' until it is swiped away.
-  group('FINDING', () {
-    testWidgets('a success snackbar from an earlier screen can be cleared',
-        (tester) async {
+  // Was a finding (#12): a success bar outlived the screen that showed it,
+  // and its 'Clear' then threw "Looking up a deactivated widget's ancestor
+  // is unsafe" and left it over the stock count's 'เพิ่มสินค้า'. It now
+  // closes by itself, and its 'Clear' uses the messenger, not the screen.
+  group('success bar from an earlier screen', () {
+    testWidgets('closes, and can be cleared while it shows', (tester) async {
+      // Arrange: importing a receipt shows 'นำเข้าสต็อกสำเร็จ'
       final shell = await _signedInShell(tester);
       final name = RunData.name('count snackbar product');
       deleteProductAfterFile(name);
       await stockProduct(shell,
           what: 'count snackbar product', barcodeNumber: 8);
-      await StockCountRobot(shell).openList();
 
-      await tester.tap(find.text('Clear').hitTestable());
-      await tester.pump();
+      // Act: the receipt page is gone once the stock count is open
+      await StockCountRobot(shell).openList();
+      final clear = find.text('Clear').hitTestable();
+      if (clear.evaluate().isNotEmpty) {
+        await tester.tap(clear.first);
+        await tester.pump();
+      }
       await shell.waitForSnackbarToClose();
+
+      // Assert
+      expect(tester.takeException(), isNull);
+      expect(find.byKey(const Key('snackbar')), findsNothing);
     }, timeout: e2eTestTimeout);
-  },
-      skip: "FINDING: a success snackbar's Clear fails once its screen has "
-          'gone, and the snackbar stays (snack_bar.dart:65)');
+  });
 }
 
 /// The list, the stock tab and the adjustments tab after the count.

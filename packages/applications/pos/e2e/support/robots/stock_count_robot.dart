@@ -98,25 +98,16 @@ class StockCountRobot {
 
   Finder get newCountTitle => shell.appBarTitle(_newTitle);
 
-  /// The list's AppBar add. The receipt page's success snackbar outlives
-  /// it and never closes on its own; here it covers the form's
-  /// 'เพิ่มสินค้า'. Its 'Clear' cannot close it either (a finding, see
-  /// stock_count_test.dart), so it is swiped away first, as a user would.
+  /// The list's AppBar add. A success bar from the receipt page may still
+  /// show; it closes by itself, so the form's 'เพิ่มสินค้า' is waited for,
+  /// not cleared.
   Future<void> openNew() async {
-    await _swipeAwaySnackbar();
+    await shell.waitForSnackbarToClose();
     await tester.tap(find
         .descendant(of: find.byType(AppBar), matching: find.byIcon(Icons.add))
         .hitTestable());
     await tester.pump();
     await shell.expectScreenWithoutError(newCountTitle);
-  }
-
-  Future<void> _swipeAwaySnackbar() async {
-    final snackbar = find.byKey(const Key('snackbar')).hitTestable();
-    if (snackbar.evaluate().isEmpty) return;
-    await tester.drag(snackbar.first, const Offset(0, 200));
-    await tester.pump();
-    await shell.waitForSnackbarToClose();
   }
 
   /// The AppBar check, which submits the count.

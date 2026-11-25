@@ -29,7 +29,6 @@ final _createButton = find.byKey(const Key('add'));
 final _addItemButton = find.byKey(const Key('product'));
 final _importButton = find.byKey(const Key('import-receive'));
 final _importedMarker = find.byKey(const Key('receive-imported'));
-final _snackbar = find.byKey(const Key('snackbar'));
 final _itemDialog = find.ancestor(
     of: find.text(_itemDialogTitle), matching: find.byType(AlertDialog));
 
@@ -208,10 +207,9 @@ class ReceiveRobot {
 
   /// 'นำเข้าสต็อก' and its confirm; returns once the page says it imported.
   Future<void> import() async {
-    // FINDING: the 'Update success' snackbar from adding the line never
-    // closes on its own (see dismissSuccessSnackbar) and covers this
-    // button, so the user presses its 'Clear' first.
-    await dismissSuccessSnackbar();
+    // The 'Update success' bar from adding the line covers this button
+    // until it closes by itself.
+    await shell.waitForSnackbarToClose();
     await pumpUntilFound(tester, _importButton.hitTestable());
     await tester.tap(_importButton.hitTestable());
     await tester.pump();
@@ -225,23 +223,6 @@ class ReceiveRobot {
     await pumpUntilFound(tester, _importedMarker.hitTestable());
     await pumpUntilFound(tester, find.byIcon(Icons.lock).hitTestable());
     expect(_importButton, findsNothing);
-  }
-
-  /// Presses 'Clear' on the green success snackbar and waits for it to go.
-  ///
-  /// FINDING (Task 7): CustomSnackBar.showSnackBar adds a 'Clear' action by
-  /// default (design_system snack_bar.dart:44-69), and in the Flutter this
-  /// repo pins (3.38) a SnackBar with an action persists until dismissed
-  /// (SnackBar.persist defaults to `action != null`), so 'Add success' and
-  /// 'Update success' stay over the bottom of the page for good.
-  Future<void> dismissSuccessSnackbar() async {
-    final clear = find
-        .descendant(of: _snackbar, matching: find.text('Clear'))
-        .hitTestable();
-    await pumpUntilFound(tester, clear);
-    await tester.tap(clear);
-    await tester.pump();
-    await shell.waitForSnackbarToClose();
   }
 
   /// The AppBar's delete (the lines have delete icons too) and its confirm;
