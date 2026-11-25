@@ -17,7 +17,7 @@ import 'package:pos/domain/model/customer/customer.dart';
 import 'package:pos/domain/model/order/order_detail.dart';
 import 'package:pos/domain/model/order/order_item_detail.dart';
 import 'package:pos/domain/model/product/product.dart';
-import 'package:pos/domain/model/receipt/receipt.dart';
+import 'package:pos/presentation/order/detail/bill_receipt.dart';
 import 'package:pos/domain/model/supplier/supplier.dart';
 import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/constants.dart';
@@ -332,15 +332,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Future<void> _generateReceipt(Supplier supplier) async {
-    final receipt = Receipt(
-      supplier: supplier,
-      customer: _getCustomer(),
-      info: ReceiptInfo(
-        date: order?.getDate() ?? "",
-        number: order?.code ?? "",
-      ),
-      items: orderItem,
-    );
+    final bill = order;
+    if (bill == null) return;
+    final receipt =
+        billReceipt(order: bill, supplier: supplier, customer: _getCustomer());
 
     if (kIsWeb) {
       ExportPdf.download(receipt);
