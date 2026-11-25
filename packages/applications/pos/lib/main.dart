@@ -8,10 +8,14 @@ import 'package:um/container.dart' as um;
 import 'package:pos/container.dart' as pos;
 import 'presentation/app.dart';
 
+/// On only in a build made with `--dart-define=E2E_SEMANTICS=true`: the
+/// Maestro flows read a Flutter web page through its semantics tree, which is
+/// otherwise built only when assistive technology asks for it.
+const e2eSemanticsEnabled = bool.fromEnvironment('E2E_SEMANTICS');
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Test builds only (Maestro on the web): keep the semantics tree on.
-  if (const bool.fromEnvironment('E2E_SEMANTICS')) {
+  if (e2eSemanticsEnabled) {
     SemanticsBinding.instance.ensureSemantics();
   }
   // Use --dart-define=ENV=dev to load dev.json (local APIs)
