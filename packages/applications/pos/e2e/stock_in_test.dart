@@ -176,22 +176,17 @@ void main() {
         await receives.deleteDraft();
       });
 
-      // Assert
-      // FINDING: pos-api only cancels a deleted receipt and lists cancelled
-      // ones too, and the app does not filter them, so it stays listed.
-      // Asserted as the app behaves; the skipped test below says what a
-      // user expects. The server shows the deletion was recorded.
-      expect(await receives.isListed(code), isTrue,
-          reason: 'the app currently keeps listing a deleted receipt');
+      // Assert: pos-api only cancels a deleted receipt and still returns
+      // it; the app leaves cancelled receipts out of the list. The server
+      // shows the deletion was recorded.
+      expect(await receives.isListed(code), isFalse,
+          reason: 'a deleted draft receipt leaves the list');
       expect(await receiveStatus(code), cancelledReceiveStatus);
     });
   }, timeout: e2eTestTimeout);
 
-  // FINDING (Task 7): DELETE /receives/:id sets status CANCELLED
-  // (pos-api app/data/repositories/receive.go:522-535) and GET /receives
-  // returns every status (receive.go:117-142); ReceivesViewModel shows them
-  // all (receives_view_model.dart:48-50), so a deleted draft never leaves the
-  // list. Skipped tests do not sign in or write anything.
+  // Was a finding (#8): pos-api cancels a deleted draft and returns it
+  // from GET /receives; ReceivesViewModel now leaves cancelled ones out.
   group('receive removal', () {
     testWidgets('a deleted draft receive is no longer listed', (tester) async {
       // Arrange
@@ -212,10 +207,7 @@ void main() {
       // Assert
       expect(await receives.isListed(code), isFalse);
     }, timeout: e2eTestTimeout);
-  },
-      skip: 'FINDING: a deleted draft receipt stays in the list (pos-api '
-          'cancels it and lists cancelled receipts; receives_view_model.dart:48-50 '
-          'does not filter them)');
+  });
 
   // FINDING (Task 7): see known_faults.dart. Once a supplier exists, the
   // receipt page's picker overflows its 50 px box; the running tests let

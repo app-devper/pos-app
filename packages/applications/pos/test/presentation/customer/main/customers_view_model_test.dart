@@ -63,15 +63,16 @@ class FakeCustomerRepository implements CustomerRepository {
       throw UnimplementedError();
 }
 
-Customer buildCustomer(String id) {
+Customer buildCustomer(String id,
+    {String status = 'ACTIVE', String? name, String? code, String phone = ''}) {
   return Customer(
     id: id,
-    code: 'code-$id',
-    name: 'name-$id',
+    code: code ?? 'code-$id',
+    name: name ?? 'name-$id',
     address: '',
-    phone: '',
+    phone: phone,
     email: '',
-    status: 'ACTIVE',
+    status: status,
     type: 'GENERAL',
   );
 }
@@ -98,6 +99,20 @@ void main() {
 
       expect(vm.state.value.loading, isFalse);
       expect(vm.state.value.items, hasLength(1));
+    });
+
+    test('a removed (archived) customer is not listed', () async {
+      // Arrange
+      final vm = buildCustomersViewModel(FakeCustomerRepository(customers: [
+        buildCustomer('kept'),
+        buildCustomer('removed', status: 'ARCHIVED'),
+      ]));
+
+      // Act
+      await vm.getCustomers();
+
+      // Assert
+      expect(vm.state.value.items.map((c) => c.id), ['kept']);
     });
 
     test('getCustomers maps a typed exception to state.error', () async {

@@ -24,7 +24,10 @@ class CustomerSearchViewModel {
 
   Future<void> getCacheCustomers() async {
     try {
-      _customers = await customerRepo.getLocalCustomers();
+      final customers = await customerRepo.getLocalCustomers();
+      // A removed (archived) customer is not offered for a new sale.
+      _customers = List.unmodifiable(
+          customers.where((customer) => !customer.isArchived));
       _items.value = _customers;
     } on Exception catch (_) {}
   }

@@ -45,7 +45,9 @@ class ReceivesViewModel {
         startDate: startDate.toUtc().toIso8601String(),
         endDate: now.toUtc().toIso8601String(),
       );
-      _all = await receiveRepo.getReceives(param);
+      final receives = await receiveRepo.getReceives(param);
+      // A deleted draft is only cancelled by pos-api, which still returns it.
+      _all = List.unmodifiable(receives.where((r) => !r.isCancelled));
       _state.value =
           _state.value.copyWith(loading: false, items: _filter(_query));
     } on Exception catch (e) {

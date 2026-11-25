@@ -24,8 +24,9 @@ class FakeReceiveRepository implements ReceiveRepository {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
-Receive buildReceive(String id, String code) {
+Receive buildReceive(String id, String code, {String status = 'ACTIVE'}) {
   return Receive(
+      status: status,
       id: id,
       supplierId: 's1',
       code: code,
@@ -51,6 +52,25 @@ void main() {
 
     expect(vm.state.value.loading, isFalse);
     expect(vm.state.value.items, hasLength(2));
+  });
+
+  test('a deleted (cancelled) draft receipt is not listed', () async {
+    // Arrange
+    final vm = buildViewModel(FakeReceiveRepository(receives: [
+      buildReceive('draft', 'RC-1'),
+      buildReceive('imported', 'RC-2', status: 'IMPORTED'),
+      buildReceive('deleted', 'RC-3', status: 'CANCELLED'),
+    ]));
+
+    // Act
+    await vm.getReceives();
+    final listed = vm.state.value.items.map((r) => r.id).toList();
+    vm.searchReceive('RC');
+
+    // Assert
+    expect(listed, ['draft', 'imported']);
+    expect(vm.state.value.items.map((r) => r.id), ['draft', 'imported'],
+        reason: 'a search never brings a deleted receipt back');
   });
 
   test('searchReceive triggers the initial load when nothing is cached',
