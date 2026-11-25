@@ -10,6 +10,9 @@
 //
 // Stock on hand, read on the product list: 10 → count of 8 → 8.
 
+// Flutter imports:
+import 'package:flutter/foundation.dart';
+
 // Package imports:
 import 'package:flutter_test/flutter_test.dart';
 
@@ -70,6 +73,9 @@ void main() {
       final counts = StockCountRobot(shell);
       await counts.openList();
 
+      // Declared first: once saved, a count can never be deleted.
+      Cleanup.keep('stock count with note "$_note" (cannot be deleted)');
+
       // Act
       await counts.create(
         note: _note,
@@ -79,14 +85,15 @@ void main() {
         counted: _counted,
       );
       _countNo = await stockCountNoWithNote(_note);
-      Cleanup.keep('stock count $_countNo (cannot be deleted)');
+      debugPrint('E2E: the stock count noted "$_note" is $_countNo');
 
-      // Assert: the list's newest row is the count, of one line
-      expect(counts.firstRowTitle(), _countNo);
-      expect(counts.firstRowSubtitle(), startsWith('รายการ: 1, วันที่: '));
+      // Assert: the list holds the count, of one line. Found by its number,
+      // not by position: another admin may count in the same seconds.
+      expect(await counts.rowSubtitle(_countNo),
+          startsWith('รายการ: 1, วันที่: '));
 
       // Assert: its detail shows the line's figures and the difference
-      await counts.openLatest();
+      await counts.open(_countNo);
       expect(counts.detailShows(_countNo), findsOneWidget);
       expect(counts.detailShows(_note), findsOneWidget);
       expect(counts.detailShows('ในระบบ 10 / นับได้ 8'), findsOneWidget);
@@ -114,7 +121,7 @@ void main() {
         (tester) async {
       final counts = StockCountRobot(await _signedInShell(tester));
       await counts.openList();
-      await counts.openLatest();
+      await counts.open(_countNo);
 
       expect(counts.detailShows(_product), findsOneWidget);
     });

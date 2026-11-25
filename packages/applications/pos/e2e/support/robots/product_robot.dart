@@ -295,14 +295,20 @@ class ProductRobot {
 
   // --- Edit and delete --------------------------------------------------------
 
-  /// From the detail: its 'แก้ไข', until the edit form has filled itself in
-  /// (it reloads the product behind a loading dialog and then overwrites
-  /// its fields, so typing earlier would be lost).
+  /// From the detail: its 'แก้ไข', until the edit form has filled itself in.
+  /// It opens with the name already shown, then reloads the product behind
+  /// a loading dialog and overwrites its fields; only that reload sets the
+  /// status dropdown (product_edit_page.dart _onLoaded), so the suite's
+  /// products' status showing is the sign it is done. Typing earlier would
+  /// be lost, and saving would send no status.
   Future<void> openEditForm() async {
     await shell.tapTitleBarAction('แก้ไข');
     await pumpUntilFound(tester, _editPage.hitTestable());
-    await pumpUntilFound(tester, form.field('ชื่อสินค้า', within: _editPage));
-    await tester.pump(_editLoadSettle);
+    await pumpUntilFound(
+        tester,
+        find.descendant(
+            of: form.dropdown('การแสดงข้อมูลสินค้า', within: _editPage),
+            matching: find.text(_activeStatus)));
     await pumpUntilGone(tester, find.byType(LoadingDialog));
   }
 
@@ -325,6 +331,3 @@ class ProductRobot {
 }
 
 final _editPage = find.byType(ProductEditPage);
-
-/// The edit form's reload starts one frame after it opens.
-const _editLoadSettle = Duration(milliseconds: 300);

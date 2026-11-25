@@ -44,8 +44,8 @@ What it cannot see:
 | Customers (จัดการ → จัดการลูกค้า) | `customer_test.dart` | add, list, detail, edit phone, remove (local), the kept customer reused (hosted), a missing name is refused |
 | Products, Goods Receipt, stock adjustment | `stock_in_test.dart` | a product is created and listed (an empty name is refused); receiving 10 and importing gives exactly 10 on hand, on the list and the stock tab; +2/−2 adjustments give 12 then 10, with history rows and notes; a draft receipt can be deleted |
 | Selling, payment, bills, returns, cancelling | `selling_test.dart` | barcode + Enter adds a line, an unknown barcode says `Error: ไม่พบสินค้า`; a cash sale of 3 (`฿75.00`); a short payment is refused; a PromptPay sale with a customer and a per-unit discount (`฿40.00`); a return of 1; cancelling a line and a bill puts stock back: 10 → 7 → 7 → 5 → 6 → 7 → 10 |
-| Stock count (จัดการ → นับสต็อก) | `stock_count_test.dart` | an empty count is refused (`โปรดเพิ่มสินค้าอย่างน้อย 1 รายการ`); counting 8 of a lot of 10 sets the stock to 8 (list and stock tab), the list's newest row shows `รายการ: 1`, the detail shows `ในระบบ 10 / นับได้ 8` and `-2`, and the product shows the `นับสต็อก` adjustment of −2 |
-| Product edit, price, delete | `product_edit_test.dart` | a rename shows in the detail and the list; changing the General price to 30 and adding a wholesale price of 20 shows both on the ราคา tab; the selling grid and a scanned line show the new name at `฿30.00`; deleting the product removes it from the list and its barcode then gives `Error: ไม่พบสินค้า` |
+| Stock count (จัดการ → นับสต็อก) | `stock_count_test.dart` | an empty count is refused (`โปรดเพิ่มสินค้าอย่างน้อย 1 รายการ`); counting 8 of a lot of 10 sets the stock to 8 (list and stock tab), the count's list row (found by its number, not its position, since another admin may count at the same time) shows `รายการ: 1`, the detail shows `ในระบบ 10 / นับได้ 8` and `-2`, and the product shows the `นับสต็อก` adjustment of −2 |
+| Product edit, price, delete | `product_edit_test.dart` | a rename shows in the detail and the list; changing the General price to 30 and adding a wholesale price of 20 shows both on the ราคา tab; the selling grid and a scanned line show the new name at `฿30.00` (the selling screen is entered afresh, so the "grid does not refresh" finding is not met here); deleting the product removes it from the list and its barcode then gives `Error: ไม่พบสินค้า` |
 
 The helpers in `e2e/support/` that hold logic have unit tests in
 `packages/applications/pos/test/e2e_support/`. Those tests run with the
@@ -183,9 +183,10 @@ The suite deletes whatever it can. Some data cannot be deleted at all:
 receipts, bills, returns and stock counts have no delete. A deleted product
 also leaves its rows behind, because pos-api keeps them.
 
-**Every file except auth and navigation (which write nothing):** the fixed
-supplier `E2E supplier`. It is created once and reused. A supplier cannot be
-deleted from the app.
+**The four files that stock a product (stock_in, selling, stock_count,
+product_edit):** the fixed supplier `E2E supplier`. It is created once and
+reused. A supplier cannot be deleted from the app. (auth and navigation write
+nothing; customer touches only customers.)
 
 **`customer_test.dart`:** on hosted it does not create a customer per run.
 It reuses the kept customer `E2E customer` (address marked

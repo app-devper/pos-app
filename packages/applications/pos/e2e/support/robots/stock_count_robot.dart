@@ -47,24 +47,33 @@ class StockCountRobot {
         find.descendant(of: _list, matching: find.byType(ProgressIndicator)));
   }
 
-  /// The list's rows, newest first (pos-api sorts by createdDate).
-  List<ListTile> get _rows => find
-      .descendant(of: _list, matching: find.byType(ListTile))
-      .evaluate()
-      .map((e) => e.widget as ListTile)
-      .toList();
+  /// The list row titled [countNo]; the list is long on a shared Branch,
+  /// so it is scrolled to if not built yet.
+  Future<Finder> row(String countNo) async {
+    final tile = find.descendant(
+        of: _list,
+        matching: find.byWidgetPredicate((w) =>
+            w is ListTile &&
+            w.title is Text &&
+            (w.title as Text).data == countNo));
+    if (tile.evaluate().isEmpty) {
+      await tester.scrollUntilVisible(tile, 200,
+          scrollable: find
+              .descendant(of: _list, matching: find.byType(Scrollable))
+              .first);
+    }
+    return tile.hitTestable();
+  }
 
-  String? firstRowTitle() => (_rows.firstOrNull?.title as Text?)?.data;
+  /// The subtitle of the row titled [countNo].
+  Future<String?> rowSubtitle(String countNo) async {
+    final tile = await row(countNo);
+    return (tester.widget<ListTile>(tile).subtitle as Text?)?.data;
+  }
 
-  String? firstRowSubtitle() => (_rows.firstOrNull?.subtitle as Text?)?.data;
-
-  /// Opens the newest count's detail.
-  Future<void> openLatest() async {
-    final first = find
-        .descendant(of: _list, matching: find.byType(ListTile))
-        .first
-        .hitTestable();
-    await tester.tap(first);
+  /// Opens the detail of the count [countNo] from the list.
+  Future<void> open(String countNo) async {
+    await tester.tap(await row(countNo));
     await tester.pump();
     await shell.expectScreenWithoutError(shell.appBarTitle(_detailTitle));
     await pumpUntilGone(tester,
@@ -152,7 +161,13 @@ class StockCountRobot {
       fail('the stock count was not saved and no error was shown');
     }
     await shell.expectScreenWithoutError(shell.appBarTitle(_listTitle));
-    await pumpUntil(tester, () => _rows.isNotEmpty, 'the list to reload');
+    await pumpUntil(
+        tester,
+        () => find
+            .descendant(of: _list, matching: find.byType(ListTile))
+            .evaluate()
+            .isNotEmpty,
+        'the list to reload');
   }
 
   /// 'เพิ่มสินค้า' → search [productName] → its row → the row of [lot].

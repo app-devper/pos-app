@@ -74,8 +74,11 @@ void main() {
       expect(edit.priceRow(_wholesale, '฿20.00'), findsOneWidget);
       expect(edit.priceTabShows('฿25.00'), findsNothing);
 
-      // Assert: the selling screen shows the new name at the General price;
-      // a wholesale price applies only once a wholesale customer is chosen
+      // Assert: the selling screen shows the new name at the General price.
+      // cart.open() enters the selling screen afresh, which reloads the grid,
+      // so this does not meet the known "grid does not refresh until the
+      // screen is re-entered" finding (product_search.dart:41-46).
+      // The wholesale price applies only once a wholesale customer is chosen
       // (OrderItem prices by the sale's customer type, order_item.dart:63).
       await _expectSellsAs(shell, '฿30.00');
     });
