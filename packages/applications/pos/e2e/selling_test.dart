@@ -124,11 +124,10 @@ void main() {
 
       // Assert: the cart is empty, the bill is recorded
       await cart.expectSold();
-      // FINDING: the grid loads once, when the screen opens, and a sale does
-      // not reload it, so it still shows 10 (skipped test below).
+      // The sale reloads the grid (was finding #4).
       await cart.filterGrid(_product, productName: _product);
-      expect(cart.tileShows(_product, 'คงเหลือ 10 ชิ้น'), findsOneWidget,
-          reason: 'the grid currently keeps the stock it opened with');
+      expect(cart.tileShows(_product, 'คงเหลือ 7 ชิ้น'), findsOneWidget,
+          reason: 'the grid shows the stock after the sale');
       await cart.clearGridFilter();
       _cashBill = await _bills.recordNew(before);
       expect(_cashBill.totalText, '75.00');
@@ -345,10 +344,8 @@ void main() {
       skip: 'FINDING: a cancelled line stays on the bill detail and in its '
           'Total (order_detail_page.dart:248, 386)');
 
-  // ProductSearch loads in initState only (product_search.dart:41-44); the
-  // sale invalidates the product cache but nothing reloads the grid
-  // (cart_page.dart:75-81).
-  group('FINDING', () {
+  // Was finding #4: the grid loaded once, when the screen opened.
+  group('the selling grid', () {
     testWidgets('after a sale the grid shows the new stock', (tester) async {
       final cart = CartRobot(await _signedInShell(tester));
       await cart.open();
@@ -360,9 +357,7 @@ void main() {
       await cart.filterGrid(_product, productName: _product);
       expect(cart.tileShows(_product, 'คงเหลือ 9 ชิ้น'), findsOneWidget);
     }, timeout: e2eTestTimeout);
-  },
-      skip: 'FINDING: the selling grid keeps its stock figures after a sale '
-          '(product_search.dart:41-44)');
+  });
 
   // Fixed-height dialogs too low for their Sarabun text: see
   // selling_faults.dart. flutter_test fails these on the overflow.

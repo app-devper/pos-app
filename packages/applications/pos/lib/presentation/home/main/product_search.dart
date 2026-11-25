@@ -1,3 +1,6 @@
+// Dart imports:
+import 'dart:async';
+
 // Flutter imports:
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -19,9 +22,13 @@ import 'package:pos/presentation/home/main/product_search_view_model.dart';
 class ProductSearch extends StatefulWidget {
   final Function(String) onSelected;
 
+  /// Each event reloads the products: a recorded sale has moved their stock.
+  final Stream<Object?>? reloadOn;
+
   const ProductSearch({
     super.key,
     required this.onSelected,
+    this.reloadOn,
   });
 
   @override
@@ -36,16 +43,19 @@ class _ProductSearchState extends State<ProductSearch> {
   final _serialNumberNode = FocusNode();
 
   late ProductSearchViewModel _viewModel;
+  StreamSubscription<Object?>? _reloads;
 
   @override
   void initState() {
     _viewModel = sl<ProductSearchViewModel>();
     _viewModel.prepareData();
+    _reloads = widget.reloadOn?.listen((_) => _viewModel.refresh());
     super.initState();
   }
 
   @override
   void dispose() {
+    _reloads?.cancel();
     _serialNumberEditingController.dispose();
     _serialNumberNode.dispose();
     _viewModel.dispose();

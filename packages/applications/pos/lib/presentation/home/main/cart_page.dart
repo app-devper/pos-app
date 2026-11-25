@@ -160,6 +160,7 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
             onSelected: (serialNumber) {
               _viewModel.addOrderItem(serialNumber);
             },
+            reloadOn: _viewModel.orderPlaced,
           ),
         ),
         Container(width: 1, color: AppColors.of(context).border),
@@ -184,6 +185,7 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
             onSelected: (serialNumber) {
               _viewModel.addOrderItem(serialNumber);
             },
+            reloadOn: _viewModel.orderPlaced,
           ),
         ),
         Container(width: 1, color: AppColors.of(context).border),
@@ -625,6 +627,7 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
               onSelected: (serialNumber) {
                 _viewModel.addOrderItem(serialNumber);
               },
+              reloadOn: _viewModel.orderPlaced,
             ),
           ),
         ],

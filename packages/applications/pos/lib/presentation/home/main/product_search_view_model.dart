@@ -28,30 +28,40 @@ class ProductSearchViewModel {
 
   ValueListenable<String?> get error => _error;
 
-  final List<ProductUnitItem> _products = [];
+  List<ProductUnitItem> _products = const [];
+  String _query = '';
 
   Future<void> prepareData() async {
     await getProducts();
   }
 
+  /// A first load, or a retry: the grid spins until the products are in.
   Future<void> getProducts() async {
     _error.value = null;
     _items.value = null;
+    await _load();
+  }
+
+  /// Loads the products again behind the grid the cashier sees, keeping what
+  /// was typed in the search: after a sale the stock figures have moved.
+  Future<void> refresh() => _load();
+
+  Future<void> _load() async {
     try {
-      _products.clear();
       final products = await productRepo.getLocalProducts();
-      for (var item in products) {
-        if (item.status == productStatusActive) {
-          _products.addAll(item.toProductItems());
-        }
-      }
-      _items.value = List<ProductUnitItem>.of(_products);
+      _products = List<ProductUnitItem>.unmodifiable([
+        for (final item in products)
+          if (item.status == productStatusActive) ...item.toProductItems(),
+      ]);
+      _error.value = null;
+      searchProduct(_query);
     } on Exception catch (e) {
       _error.value = toFailure(e).getMessage();
     }
   }
 
   void searchProduct(String text) {
+    _query = text;
     if (text.isEmpty) {
       _items.value = List<ProductUnitItem>.of(_products);
     } else {
