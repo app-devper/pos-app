@@ -121,6 +121,31 @@ void main() {
   },
       skip: 'FINDING: the stock count detail shows the product id, not its '
           'name (stock_count_manage_page.dart:121)');
+
+  // FINDING (Task 7): CustomSnackBar's 'Clear' calls
+  // ScaffoldMessenger.of(context) with the context of the screen that showed
+  // it (design_system snack_bar.dart:65). The snackbar never closes on its
+  // own and outlives that screen; once the screen is gone, 'Clear' throws
+  // "Looking up a deactivated widget's ancestor is unsafe" and the snackbar
+  // stays. After a receipt is imported, 'นำเข้าสต็อกสำเร็จ' sits over the
+  // new stock count's 'เพิ่มสินค้า' until it is swiped away.
+  group('FINDING', () {
+    testWidgets('a success snackbar from an earlier screen can be cleared',
+        (tester) async {
+      final shell = await _signedInShell(tester);
+      final name = RunData.name('count snackbar product');
+      Cleanup.add('product "$name"', () => deleteProductsNamed(name));
+      await stockProduct(shell,
+          what: 'count snackbar product', barcodeNumber: 8);
+      await StockCountRobot(shell).openList();
+
+      await tester.tap(find.text('Clear').hitTestable());
+      await tester.pump();
+      await shell.waitForSnackbarToClose();
+    });
+  },
+      skip: "FINDING: a success snackbar's Clear fails once its screen has "
+          'gone, and the snackbar stays (snack_bar.dart:65)');
 }
 
 /// The list, the stock tab and the adjustments tab after the count.
