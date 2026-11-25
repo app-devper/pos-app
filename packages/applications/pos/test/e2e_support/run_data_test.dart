@@ -76,4 +76,27 @@ void main() {
       expect(() => RunData.barcodeIn('local-run', 1), throwsArgumentError);
     });
   });
+
+  group('runNamePattern', () {
+    test('matches every name RunData gives', () {
+      for (final what in ['product', 'sale customer', 'stock count']) {
+        expect(RunData.runNamePattern.hasMatch(
+                RunData.nameIn('20261125120303-38502', what)),
+            isTrue,
+            reason: what);
+      }
+    });
+
+    test('does not match other E2E-looking names', () {
+      for (final name in [
+        'E2E-shirt',
+        'E2E customer',
+        'E2E supplier',
+        'E2E-2026 product',
+        'xE2E-20261125120303-38502 product',
+      ]) {
+        expect(RunData.runNamePattern.hasMatch(name), isFalse, reason: name);
+      }
+    });
+  });
 }

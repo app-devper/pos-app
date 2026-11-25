@@ -2,18 +2,26 @@
 // tools/e2e/sweep.sh <local|hosted>; run-all.sh never picks it up (it is
 // not a *_test.dart file at e2e/'s top level).
 //
-// Signed in as admin, through the app's own repositories, it touches only
-// data the suite names:
-// - every bill of the last 3 days whose every line is a suite product
-//   (named `E2E-…`): cancelled; a bill that mixes a suite product with
-//   anything else is left and reported;
-// - every product not yet deleted whose name starts with `E2E-`: its stock
-//   is zeroed and it is deleted;
-// - customers named `E2E-<run id> …`: removed (archived) on the local
-//   target; the hosted target keeps every customer, the kept `E2E customer`
-//   included;
-// - draft receipts whose reference starts with a run id
-//   (`yyyyMMddHHmmss-<pid>`, as the suite writes them): cancelled.
+// Run it only when no run is in progress, on any machine: it cancels a
+// running file's bills and deletes its product.
+//
+// Signed in as admin, through the app's own repositories, it acts on these
+// names only. A run name is `E2E-<yyyyMMddHHmmss>-<pid> <what>`
+// (RunData.runNamePattern), so the kept `E2E customer` and `E2E supplier`,
+// and any other name merely starting `E2E-`, are never touched:
+// - every bill of the last 3 days whose every line is a run-named product
+//   is cancelled, whoever rang it up (a cashier may have sold the run's
+//   product from the selling grid); a bill that mixes one with anything else
+//   is left and reported;
+// - every run-named product not yet deleted: its lots are zeroed, its stock
+//   rows deleted, then it is deleted (support/api/product_api.dart
+//   retireProduct);
+// - run-named customers: removed (archived) on the local target; the
+//   hosted target keeps every customer;
+// - draft receipts whose reference starts with a run id followed by a
+//   space, a hyphen or nothing (`^\d{14}-\d+([ -]|$)`, as the suite
+//   writes references): cancelled. A receipt reference is free text, so a
+//   real one typed in that shape would match too.
 // It prints what it did and what it left.
 
 // Flutter imports:
@@ -36,9 +44,9 @@ import '../support/api/product_api.dart';
 import '../support/app.dart';
 import '../support/customer_plan.dart';
 import '../support/env.dart';
+import '../support/run_data.dart';
 import '../support/stock_plan.dart';
 
-const _suitePrefix = 'E2E-';
 final _runReference = RegExp(r'^\d{14}-\d+([ -]|$)');
 const _alreadyCancelled = 'บิลนี้ถูกยกเลิกไปแล้ว';
 const _receiptLookBack = Duration(days: 30);
@@ -79,19 +87,22 @@ void main() {
 
 Future<List<Product>> _suiteProducts() async => [
       for (final p in await getIt()<ProductRepository>().getProducts())
-        if (p.name.startsWith(_suitePrefix)) p,
+        if (RunData.runNamePattern.hasMatch(p.name)) p,
     ];
 
 Future<void> _sweepProduct(Product product) async {
-  final zeroed = await zeroStockOf(product);
-  await getIt()<ProductRepository>().removeProductById(product.id);
-  _did.add('product "${product.name}": $zeroed lot(s) zeroed, deleted');
+  final r = await retireProduct(product);
+  _did.add('product "${product.name}": ${r.zeroed} lot(s) zeroed, '
+      '${r.rowsDeleted} stock row(s) deleted, product deleted');
+  for (final row in r.rowsKept) {
+    _left.add('$row of "${product.name}" NOT deleted');
+  }
 }
 
-/// Bills of the last [_billLookBack]: one whose every line is a suite
-/// product (named `E2E-…`, deleted or not) is cancelled; one that mixes a
-/// suite product with anything else is left and reported (the rule of
-/// [sweepDecision], over all suite products).
+/// Bills of the last [_billLookBack]: one whose every line is a run-named
+/// product (deleted or not) is cancelled, whoever rang it up; one that mixes
+/// a run-named product with anything else is left and reported (the rule
+/// of [sweepDecision], over all run-named products).
 Future<void> _sweepBills() async {
   final orders = getIt()<OrderRepository>();
   final now = DateTime.now();
@@ -102,10 +113,10 @@ Future<void> _sweepBills() async {
   for (final summary in summaries) {
     final bill = await orders.getOrderById(summary.id);
     final names = [for (final item in bill.items) item.product?.name ?? ''];
-    final suite = names.where((n) => n.startsWith(_suitePrefix)).toList();
+    final suite = names.where(RunData.runNamePattern.hasMatch).toList();
     if (suite.isEmpty) continue;
     if (suite.length != names.length) {
-      _left.add('bill ${bill.code}: holds a suite product with other items '
+      _left.add('bill ${bill.code}: holds a run-named product with other items '
           '— NOT cancelled, it was not made by the suite');
       continue;
     }
@@ -121,7 +132,7 @@ Future<void> _sweepBills() async {
 Future<void> _sweepCustomers() async {
   final repository = getIt()<CustomerRepository>();
   for (final customer in await repository.getCustomers()) {
-    if (!customer.name.startsWith(_suitePrefix)) continue;
+    if (!RunData.runNamePattern.hasMatch(customer.name)) continue;
     if (customer.status == archivedStatus) continue;
     if (E2EEnv.isHosted) {
       _left.add('customer "${customer.name}" (hosted: customers are kept)');

@@ -1,9 +1,21 @@
 #!/usr/bin/env bash
-# Cleans up what an interrupted e2e run left: standing bills made only of
-# suite products, active `E2E-` products (stock zeroed, then deleted),
-# run-named customers (local only) and draft receipts with a run-id
-# reference. Touches nothing without the suite's prefix. See
-# packages/applications/pos/e2e/maintenance/sweep_earlier_runs.dart.
+# Cleans up what an interrupted e2e run left. Run it ONLY when no run is in
+# progress, on any machine: it cancels a running file's bills and deletes
+# its product.
+#
+# It acts on run names only, `E2E-<yyyyMMddHHmmss>-<pid> <what>`
+# (RunData.runNamePattern): never the kept `E2E customer` or `E2E supplier`,
+# nor anything else merely starting `E2E-`.
+# - bills of the last 3 days whose every line is a run-named product:
+#   cancelled, whoever rang them up; a bill mixing one with anything else is
+#   left and reported;
+# - run-named products not yet deleted: lots zeroed, stock rows deleted,
+#   product deleted;
+# - run-named customers: removed on the local target, kept on hosted;
+# - draft receipts whose reference starts with a run id followed by a space,
+#   a hyphen or nothing (`^[0-9]{14}-[0-9]+`); a reference is free text, so
+#   a real one typed that way would match too.
+# See packages/applications/pos/e2e/maintenance/sweep_earlier_runs.dart.
 #
 #   tools/e2e/sweep.sh local    the local stack
 #   tools/e2e/sweep.sh hosted   the hosted API; run by the owner only
@@ -14,6 +26,11 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 usage() { printf 'usage: %s <local|hosted>\n' "$0" >&2; exit 2; }
 [ "$#" -eq 1 ] || usage
 case "$1" in local|hosted) ;; *) usage ;; esac
+
+printf 'sweep: run this only when no e2e run is in progress, on any machine:\n'
+printf 'sweep: it cancels bills made wholly of run-named products (E2E-<yyyyMMddHHmmss>-<pid> …),\n'
+printf 'sweep: deletes run-named products and their stock rows, removes run-named customers (local only)\n'
+printf 'sweep: and cancels draft receipts whose reference starts with a run id.\n'
 
 # run.sh prints the hosted API and "run by the owner", and refuses without
 # .env.e2e, exactly as for a test file.

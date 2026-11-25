@@ -32,8 +32,17 @@ class RunData {
   /// barcode of a run started at least one second earlier or later.
   static String barcode(int n) => barcodeIn(E2EEnv.runId, n);
 
+  /// The prefix every run's names carry: `E2E-`.
+  static const namePrefix = 'E2E-';
+
+  /// Matches what [nameIn] produces for a run id of the shape run.sh gives
+  /// (`yyyyMMddHHmmss-<pid>`), and nothing else: not the kept `E2E
+  /// customer` or `E2E supplier`, nor a real `E2E-…` name. The sweep acts
+  /// only on names it matches.
+  static final runNamePattern = RegExp('^$namePrefix\\d{14}-\\d+ ');
+
   @visibleForTesting
-  static String nameIn(String runId, String what) => 'E2E-$runId $what';
+  static String nameIn(String runId, String what) => '$namePrefix$runId $what';
 
   @visibleForTesting
   static String barcodeIn(String runId, int n) {
