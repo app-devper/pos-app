@@ -33,8 +33,8 @@ void main() {
 
     test('only the last 3 matter when more were recorded', () {
       // at(50), at(55), at(58) are the last 3: wait until at(50) + 60
-      final wait = waitBeforeSignIn(
-          [at(0), at(5), at(50), at(55), at(58)], at(60));
+      final wait =
+          waitBeforeSignIn([at(0), at(5), at(50), at(55), at(58)], at(60));
       expect(wait, const Duration(seconds: 50) + signInPacingMargin);
     });
   });

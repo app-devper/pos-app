@@ -30,6 +30,15 @@ const _fonts = [
   'packages/common/assets/font/Sarabun-Bold.ttf',
 ];
 
+/// What to do when the app's widgets no longer overflow, or overflow
+/// differently: this file runs in CI, so its failures must say.
+String _changed(String widget) =>
+    'The layout of $widget changed. If its overflow is fixed, remove the '
+    'tolerance in e2e/support/selling_faults.dart (and its counter '
+    'assertion in e2e/selling_test.dart) and unskip the FINDING test '
+    '"the quantity and payment dialogs fit their text". If only the widget '
+    'tree changed, update the chain matched in selling_faults.dart.';
+
 Widget _keypad() => DecimalInput(
     title: 'จำนวนสินค้า',
     onChange: (_) {},
@@ -102,8 +111,9 @@ void main() {
       final reported = await _overflowsOf(tester, _keypad(), _keypadBox);
 
       // Assert
-      expect(reported, hasLength(1));
-      expect(isQuantityKeypadOverflow(reported.single), isTrue);
+      expect(reported, hasLength(1), reason: _changed('DecimalInput'));
+      expect(isQuantityKeypadOverflow(reported.single), isTrue,
+          reason: _changed('DecimalInput'));
       expect(isPaymentDisplayOverflow(reported.single), isFalse);
     });
 
@@ -124,8 +134,9 @@ void main() {
       final reported = await _overflowsOf(tester, _payment(), _paymentBox);
 
       // Assert
-      expect(reported, hasLength(1));
-      expect(isPaymentDisplayOverflow(reported.single), isTrue);
+      expect(reported, hasLength(1), reason: _changed('PaymentScreen'));
+      expect(isPaymentDisplayOverflow(reported.single), isTrue,
+          reason: _changed('PaymentScreen'));
       expect(isQuantityKeypadOverflow(reported.single), isFalse);
     });
 
