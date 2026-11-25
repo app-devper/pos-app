@@ -1,0 +1,8 @@
+appId: app.devper.pos
+name: android - every main menu item opens its screen
+env:
+  LAYOUT: narrow
+---
+- launchApp:
+    clearState: true
+- runFlow: ../shared/navigation.yaml
