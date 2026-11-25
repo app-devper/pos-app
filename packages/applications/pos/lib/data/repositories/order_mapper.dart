@@ -112,6 +112,7 @@ extension OrderJson on Map<String, dynamic> {
       order: order,
       oversoldQty: json["oversoldQty"] ?? 0,
       returnedQty: json["returnedQty"] ?? 0,
+      status: json["status"] ?? "",
     );
   }
 }

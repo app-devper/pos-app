@@ -9,7 +9,6 @@ import 'package:flutter/services.dart';
 import 'package:common/core/ext/widget_ext.dart';
 import 'package:design_system/widgets/app_bar.dart';
 import 'package:design_system/widgets/snack_bar.dart';
-import 'package:design_system/widgets/status_badge.dart';
 import 'package:intl/intl.dart';
 
 // Project imports:
@@ -19,7 +18,6 @@ import 'package:pos/domain/model/order/order_detail.dart';
 import 'package:pos/domain/model/order/order_item_detail.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/domain/model/receipt/receipt.dart';
-import 'package:pos/domain/model/sale/money.dart';
 import 'package:pos/domain/model/supplier/supplier.dart';
 import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/constants.dart';
@@ -30,9 +28,9 @@ import 'package:pos/presentation/order/core/export_pdf.dart';
 import 'package:pos/presentation/order/return/product_return_widget.dart';
 import 'package:pos/presentation/order/return/product_returns_history_widget.dart';
 import 'package:pos/presentation/product/argument.dart';
-import 'package:design_system/theme/app_colors.dart';
 import 'package:design_system/theme/color.dart';
 import 'order_detail_state.dart';
+import 'order_line_tile.dart';
 import 'order_detail_view_model.dart';
 
 class OrderDetailPage extends StatefulWidget {
@@ -213,8 +211,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           _buildOrderHeader(),
           _buildOrderItem(context),
           BillSummary(
-              total: getTotalPrice(),
-              totalCost: getTotalCostPrice(),
+              total: _viewModel.state.value.total,
+              totalCost: _viewModel.state.value.totalCost,
               showCost: isAdmin),
         ],
       ),
@@ -253,82 +251,22 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         itemCount: orderItem.length,
         itemBuilder: (context, index) {
           final content = orderItem[index];
-          return ListTile(
-            leading: _buildListMenu(context, content),
-            title: Text(content.product?.name ?? ""),
-            trailing: Text(format.format(content.paid())),
-            subtitle: isAdmin
-                ? Text(costAndProfitText(
-                    cost: content.costPrice,
-                    profit: content.paid() - content.costPrice))
-                : null,
+          return OrderLineTile(
+            line: content,
+            isAdmin: isAdmin,
             onTap: () {
               if (isAdmin) {
                 _nextToProductEdit(context, content.product);
               }
             },
+            onDelete: () => _showRemoveOrderItemConfirm(context, content),
+            onHistory: () => _nextToOrderHistory(context, content.product),
+            onReturn: () => _showProductReturnDialog(context, content),
           );
         },
       ),
     );
   }
-
-  Widget _buildQuantityColumn(OrderItemDetail content) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: <Widget>[
-        Text('${content.quantity}'),
-        if (content.oversoldQty > 0)
-          StatusBadge(
-              label: 'เกิน ${content.oversoldQty}', color: Colors.orange),
-        if (content.returnedQty > 0)
-          StatusBadge(
-              label: 'คืน ${content.returnedQty}',
-              color: AppColors.of(context).textSecondary),
-      ],
-    );
-  }
-
-  Widget _buildListMenu(BuildContext context, OrderItemDetail content) {
-    if (isAdmin) {
-      return SizedBox(
-          width: 130,
-          height: 50,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              InkWell(
-                onTap: () {
-                  _showRemoveOrderItemConfirm(context, content);
-                },
-                child: const Icon(Icons.delete),
-              ),
-              InkWell(
-                onTap: () {
-                  _nextToOrderHistory(context, content.product);
-                },
-                child: const Icon(Icons.history),
-              ),
-              if (content.quantity - content.returnedQty > 0)
-                InkWell(
-                  onTap: () {
-                    _showProductReturnDialog(context, content);
-                  },
-                  child: const Icon(Icons.keyboard_return),
-                ),
-              _buildQuantityColumn(content),
-            ],
-          ));
-    } else {
-      return _buildQuantityColumn(content);
-    }
-  }
-
-  double getTotalPrice() => saleTotal(orderItem.map((x) => x.paid()));
-
-  double getTotalCostPrice() =>
-      roundMoney(orderItem.fold(0.0, (sum, x) => sum + x.costPrice));
 
   void _showRemoveOrderConfirm(BuildContext context) {
     showConfirmDialog(context, "ต้องการลบรายการใช่หรือไม่?", () {

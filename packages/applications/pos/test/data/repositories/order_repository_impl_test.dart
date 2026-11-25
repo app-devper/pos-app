@@ -228,6 +228,26 @@ void main() {
       expect(detail.items.single.product?.name, 'ยาแก้ปวด');
     });
 
+    test('getOrderById reads a cancelled line as cancelled', () async {
+      // Arrange
+      final recorder = _Recorder(
+        body: jsonEncode({
+          ..._orderJson,
+          'items': [
+            {..._itemJson(product: _productJson), 'status': 'CANCELLED'},
+            {..._itemJson(product: _productJson), 'status': 'CONFIRMED'},
+            _itemJson(product: _productJson),
+          ],
+        }),
+      );
+
+      // Act
+      final detail = await _repo(recorder).getOrderById('o1');
+
+      // Assert
+      expect(detail.items.map((e) => e.isCancelled), [true, false, false]);
+    });
+
     test('removeOrderById maps the deleted detail', () async {
       final recorder =
           _Recorder(body: jsonEncode({..._orderJson, 'items': []}));

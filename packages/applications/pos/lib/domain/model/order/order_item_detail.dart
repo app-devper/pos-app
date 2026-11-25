@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 // Project imports:
 import 'package:pos/domain/model/order/order.dart';
+import 'package:pos/domain/model/order/order_status.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/domain/model/sale/money.dart';
 
@@ -18,6 +19,9 @@ class OrderItemDetail {
   int oversoldQty;
   int returnedQty;
 
+  /// pos-api's status of the line; empty when it sent none.
+  String status;
+
   OrderItemDetail({
     required this.id,
     required this.product,
@@ -29,7 +33,12 @@ class OrderItemDetail {
     required this.order,
     this.oversoldQty = 0,
     this.returnedQty = 0,
+    this.status = '',
   });
+
+  /// A cancelled line stays on the bill, marked, counts in no total and
+  /// offers no action.
+  bool get isCancelled => status == orderStatusCancelled;
 
   /// What the customer paid for the line: [price] is the whole line before
   /// its discount, and [discount] is so much off each unit. Rounded to the

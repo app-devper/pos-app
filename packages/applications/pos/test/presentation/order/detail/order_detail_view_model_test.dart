@@ -16,7 +16,8 @@ import 'package:um/domain/repositories/login_repository.dart';
 
 class FakeLoginRepository implements LoginRepository {
   @override
-  Future<PasskeyChallenge> passkeyLoginOptions(String system) => throw UnimplementedError();
+  Future<PasskeyChallenge> passkeyLoginOptions(String system) =>
+      throw UnimplementedError();
 
   @override
   Future<Session> loginWithPasskey({
@@ -187,11 +188,12 @@ OrderItemDetail _buildOrderItem(String id) {
   );
 }
 
-OrderDetail _buildOrderDetail(String id) {
+OrderDetail _buildOrderDetail(String id,
+    {List<OrderItemDetail> items = const []}) {
   return OrderDetail(
     id: id,
     createdDate: '2026-01-01T00:00:00.000Z',
-    items: const [],
+    items: items,
     total: 100,
     totalCost: 50,
     discount: 0,
@@ -300,6 +302,46 @@ void main() {
       expect(vm.state.value.order, isNotNull,
           reason: 'a failed refresh must not blank the order the user is '
               'reading');
+    });
+  });
+
+  group('the bill totals', () {
+    OrderItemDetail line(String id,
+            {required double price,
+            required double cost,
+            String status = 'CONFIRMED'}) =>
+        OrderItemDetail(
+          id: id,
+          product: null,
+          quantity: 1,
+          price: price,
+          costPrice: cost,
+          discount: 0,
+          createdDate: '2026-01-01T00:00:00.000Z',
+          order: null,
+          status: status,
+        );
+
+    test('a cancelled line counts in neither the total, the cost nor profit',
+        () async {
+      // Arrange
+      final bill = _buildOrderDetail('o1', items: [
+        line('i1', price: 30, cost: 10),
+        line('i2', price: 20, cost: 8, status: 'CANCELLED'),
+      ]);
+      final vm =
+          _buildViewModel(orderRepo: FakeOrderRepository(orderDetail: bill));
+
+      // Act
+      await vm.getOrderById('o1');
+
+      // Assert
+      final state = vm.state.value;
+      expect(state.items, hasLength(2), reason: 'the line is still shown');
+      expect(state.total, 30);
+      expect(state.totalCost, 10);
+      // The profit the bill shows (BillSummary: total - cost).
+      expect(state.total - state.totalCost, 20);
     });
   });
 

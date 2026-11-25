@@ -198,6 +198,10 @@ class OrderRobot {
   Finder detailShows(String text) =>
       find.descendant(of: _detail, matching: find.text(text)).hitTestable();
 
+  /// [icon] (an action such as delete or return) on [productName]'s row.
+  Finder lineIcon(String productName, IconData icon) =>
+      _inLine(productName, icon);
+
   Finder _inLine(String productName, IconData icon) =>
       find.descendant(of: _line(productName), matching: find.byIcon(icon));
 

@@ -15,7 +15,7 @@
 //      → cancel bill 1 → 10
 
 // Flutter imports:
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:flutter_test/flutter_test.dart';
@@ -282,15 +282,13 @@ void main() {
       await orders.cancelLine(_product);
       await orders.leaveBill();
 
-      // Assert, on the bill opened again: pos-api cancels the line and sets
-      // the bill to 0.00 (the list row shows 0.00), but the detail maps no
-      // line status and sums the lines itself (FINDING, skipped test below)
+      // Assert: pos-api cancels the line and sets the bill to 0.00 (the list
+      // row shows 0.00); the detail keeps the line, marked (see 'the bill
+      // detail' below)
       final cancelledLine = await billNow(_promptPayBill.id);
       expect(cancelledLine.totalText, '0.00');
       await orders.openBill(cancelledLine);
       expect(orders.lineShows(_product, '40.00'), findsOneWidget);
-      expect(orders.detailShows('฿ 40.00'), findsOneWidget,
-          reason: 'the detail currently still counts a cancelled line');
       await orders.leaveBill();
 
       // Assert
@@ -332,21 +330,32 @@ void main() {
     }, timeout: e2eTestTimeout);
   });
 
-  // DELETE /orders/items/:id marks the line CANCELLED and recomputes the
-  // bill (ledger/cancel.go:64-90); GET /orders/:id returns every line
-  // (order.go:444) and the detail sums them (order_detail_page.dart:386).
-  group('FINDING', () {
-    testWidgets('a cancelled line no longer counts on the bill',
+  // Was finding #2: DELETE /orders/items/:id marks the line CANCELLED and
+  // recomputes the bill (ledger/cancel.go:64-90); GET /orders/:id still
+  // returns the line. The detail marks it and leaves it out of its total.
+  group('the bill detail', () {
+    testWidgets('a cancelled line is marked, not counted, and offers nothing',
         (tester) async {
+      // Arrange
       final orders = OrderRobot(await _signedInShell(tester));
       await orders.openList();
+
+      // Act
       await orders.openBill(await billNow(_promptPayBill.id));
 
+      // Assert
+      expect(orders.lineShows(_product, 'ยกเลิกแล้ว'), findsOneWidget);
       expect(orders.detailShows('฿ 0.00'), findsOneWidget);
+      for (final action in [
+        Icons.delete,
+        Icons.history,
+        Icons.keyboard_return
+      ]) {
+        expect(orders.lineIcon(_product, action), findsNothing,
+            reason: 'a cancelled line offers no $action');
+      }
     }, timeout: e2eTestTimeout);
-  },
-      skip: 'FINDING: a cancelled line stays on the bill detail and in its '
-          'Total (order_detail_page.dart:248, 386)');
+  });
 
   // Was finding #4: the grid loaded once, when the screen opened.
   group('the selling grid', () {
