@@ -77,6 +77,8 @@ Run every package's tests:
 melos exec -c 1 --dir-exists=test -- flutter test
 ```
 
+End-to-end UI tests of the POS app against a real backend (`tools/e2e/run-all.sh local`): see [docs/e2e.md](docs/e2e.md).
+
 ## Notes
 
 - `melos` workspace configuration is defined in the root `pubspec.yaml`
