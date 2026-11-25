@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:um/domain/usecase/auth_use_cases.dart';
 import 'package:common/core/error/exception.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -46,6 +48,14 @@ class FakeOrderRepository implements OrderRepository {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+/// Answers the role only when the test completes [pending].
+class PendingRoleRepository extends FakeLoginRepository {
+  final pending = Completer<String>();
+
+  @override
+  Future<String> getRole() => pending.future;
 }
 
 class FakeLoginRepository implements LoginRepository {
@@ -250,6 +260,24 @@ void main() {
       expect(viewModel.state.value.isAdmin, isTrue);
       expect(viewModel.state.value.ranges, isNotEmpty,
           reason: 'the admin gets the date-range dropdown');
+    });
+
+    test('a role answer after the page is left writes nothing', () async {
+      // Arrange: the bills page is left while the role is still awaited
+      final login = PendingRoleRepository();
+      final viewModel = buildViewModel(login: login);
+      final roleRead = viewModel.checkLogin();
+      var notified = 0;
+      viewModel.state.addListener(() => notified++);
+      viewModel.dispose();
+
+      // Act
+      login.pending.complete('ADMIN');
+
+      // Assert
+      await expectLater(roleRead, completes);
+      expect(viewModel.state.value.isAdmin, isFalse);
+      expect(notified, 0);
     });
 
     test('an unreadable role stays a cashier, as every screen treats it',
