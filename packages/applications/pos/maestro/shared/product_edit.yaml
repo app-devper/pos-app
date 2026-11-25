@@ -1,0 +1,54 @@
+# A product is renamed on its own page; the new name is on the server and on
+# the selling screen's grid, with its stock untouched.
+appId: app.devper.pos
+env:
+  RENAMED: MST-${RUN_ID} renamed
+---
+- runFlow:
+    file: steps/sign_in.yaml
+    env:
+      USERNAME: ${MAESTRO_USERNAME}
+      PASSWORD: ${MAESTRO_PASSWORD}
+- runFlow:
+    file: steps/open_screen.yaml
+    env:
+      SCREEN: "สินค้า"
+- extendedWaitUntil:
+    visible: "${PRODUCT_NAME}.*"
+    timeout: 15000
+- tapOn: "${PRODUCT_NAME}.*"
+- tapOn: "แก้ไข"
+- tapOn: "ชื่อสินค้า"
+- eraseText: 40
+- inputText: ${RENAMED}
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
+- tapOn: "ยืนยัน"
+- extendedWaitUntil:
+    visible: "ชื่อสินค้า\n?${RENAMED}"
+    timeout: 15000
+- takeScreenshot: renamed
+- runScript:
+    file: ../scripts/api.js
+    env:
+      ACTION: productOnHand
+      NAME: ${RENAMED}
+- assertTrue: ${output.onHand == '1000'}
+- runFlow:
+    file: steps/open_screen.yaml
+    env:
+      SCREEN: "ขายสินค้า"
+- extendedWaitUntil:
+    visible: "ยอดรวมสุทธิ\n?฿0\\.00"
+    timeout: 15000
+- runFlow:
+    when:
+      true: ${LAYOUT == 'narrow'}
+    commands:
+      - tapOn: "เลือกสินค้า"
+- extendedWaitUntil:
+    visible: "${RENAMED}.*"
+    timeout: 15000
