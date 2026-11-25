@@ -95,6 +95,8 @@ cleanup() {
   if [ -n "$server_pid" ]; then kill "$server_pid" 2>/dev/null || true; fi
   if [ "$started_emulator" -eq 1 ] && [ -n "$device" ]; then
     "$ADB" -s "$device" emu kill >/dev/null 2>&1 || true
+    # Gone from adb before we return, so a run started next does not adopt a dying emulator.
+    for _ in $(seq 1 30); do [ -n "$(running_emulator)" ] || break; sleep 1; done
     log "stopped the emulator this run started"
   fi
 }
@@ -136,6 +138,10 @@ prepare_android() {
   # The emulator reaches the host's stack on its own 127.0.0.1; lost on every boot.
   "$ADB" -s "$device" reverse tcp:8585 tcp:8585 >/dev/null
   "$ADB" -s "$device" reverse tcp:8586 tcp:8586 >/dev/null
+  # A freshly booted emulator draws nothing for a while: open the app once and
+  # wait for its first frame, so the first flow does not start on a black screen.
+  "$ADB" -s "$device" shell am start -W -n "$APP_ID/.MainActivity" >/dev/null
+  "$ADB" -s "$device" shell am force-stop "$APP_ID"
 }
 
 prepare_web() {
