@@ -58,3 +58,18 @@ class OrderItemDetail {
     return format.format(date.toLocal());
   }
 }
+
+/// The lines of a bill or of a product's sales history that count: a
+/// cancelled line is still listed, but is left out of every total, receipt
+/// and export.
+extension CountedLines on Iterable<OrderItemDetail> {
+  List<OrderItemDetail> get counted =>
+      where((line) => !line.isCancelled).toList();
+
+  /// What the customer paid for the counted lines.
+  double get countedTotal => saleTotal(counted.map((x) => x.paid()));
+
+  /// What the counted lines cost.
+  double get countedCost =>
+      roundMoney(counted.fold(0.0, (sum, x) => sum + x.costPrice));
+}

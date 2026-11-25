@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 // Package imports:
 import 'package:design_system/widgets/app_bar.dart';
 import 'package:design_system/widgets/snack_bar.dart';
-import 'package:intl/intl.dart';
 
 // Project imports:
 import 'package:pos/container.dart';
@@ -17,6 +16,8 @@ import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/constants.dart';
 import 'package:pos/presentation/order/core/export_csv.dart';
 import 'package:design_system/theme/color.dart';
+import 'package:pos/presentation/order/bill_summary.dart';
+import 'package:pos/presentation/order/history/order_history_tile.dart';
 import 'order_history_view_model.dart';
 
 class OrderHistoryPage extends StatefulWidget {
@@ -33,7 +34,6 @@ class OrderHistoryPage extends StatefulWidget {
 
 class _OrderHistoryPageState extends State<OrderHistoryPage> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  final _format = NumberFormat("#,##0.00", "en_US");
 
   late CustomSnackBar _snackBar;
   late OrderHistoryViewModel _viewModel;
@@ -143,100 +143,18 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
     return Expanded(
       child: ListView.builder(
         itemCount: orderItems.length,
-        itemBuilder: (context, index) {
-          final item = orderItems[index];
-          final customerName = item.order?.customerName ?? "";
-          return ListTile(
-            leading: Text(
-              '${item.quantity}',
-            ),
-            title: Text(item.getCreatedDate() +
-                (customerName.isNotEmpty ? " Name: $customerName" : "")),
-            trailing: Text(_format.format(item.paid())),
-            subtitle: Text(
-                "Cost: ${_format.format(item.costPrice)}  Profit: ${_format.format(item.paid() - item.costPrice)}"),
-          );
-        },
+        itemBuilder: (context, index) =>
+            OrderHistoryTile(line: orderItems[index], showCost: isAdmin),
       ),
     );
   }
 
-  Container _buildSummaryTotal() {
-    return Container(
-      padding: const EdgeInsets.all(defaultPagePadding),
-      child: Column(
-        children: <Widget>[
-          _buildPrice(),
-          _buildCostPrice(),
-          _buildProfit(),
-        ],
-      ),
+  Widget _buildSummaryTotal() {
+    final state = _viewModel.state.value;
+    return BillSummary(
+      total: state.total,
+      totalCost: state.totalCost,
+      showCost: isAdmin,
     );
-  }
-
-  Widget _buildPrice() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: <Widget>[
-        const Text(
-          'Total',
-        ),
-        Text(
-          '฿ ${_format.format(getTotalPrice())}',
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCostPrice() {
-    if (isAdmin) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          const Text(
-            'Total Cost',
-          ),
-          Text(
-            '฿ ${_format.format(getTotalCostPrice())}',
-          ),
-        ],
-      );
-    } else {
-      return Container();
-    }
-  }
-
-  Widget _buildProfit() {
-    if (isAdmin) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          const Text(
-            'Total Profit',
-          ),
-          Text(
-            '฿ ${_format.format(getTotalPrice() - getTotalCostPrice())}',
-          ),
-        ],
-      );
-    } else {
-      return Container();
-    }
-  }
-
-  double getTotalPrice() {
-    double price = 0;
-    for (var x in orderItems) {
-      price += x.paid();
-    }
-    return price;
-  }
-
-  double getTotalCostPrice() {
-    double price = 0;
-    for (var x in orderItems) {
-      price += x.costPrice;
-    }
-    return price;
   }
 }

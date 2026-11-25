@@ -14,6 +14,12 @@ class OrderHistoryState {
     this.loading = false,
   });
 
+  /// What the customer paid for the lines that count (see [CountedLines]).
+  double get total => items.countedTotal;
+
+  /// What the lines that count cost.
+  double get totalCost => items.countedCost;
+
   OrderHistoryState copyWith({
     List<OrderItemDetail>? items,
     bool? loading,
