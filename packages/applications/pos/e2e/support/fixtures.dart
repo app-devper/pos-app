@@ -19,7 +19,6 @@ import 'api/product_api.dart';
 import 'api/receive_api.dart';
 import 'cleanup.dart';
 import 'env.dart';
-import 'known_faults.dart';
 import 'robots/product_robot.dart';
 import 'robots/receive_robot.dart';
 import 'robots/shell_robot.dart';
@@ -105,12 +104,8 @@ void keepRetirementLeftovers(String name, Retired r) {
 
 /// From the receipt list: creates [receipt], adds its line, imports it and
 /// goes back to the list; returns the receipt's code. The imported receipt and the supplier cannot
-/// be deleted, so both are reported as kept. The supplier picker's known
-/// overflow is let through meanwhile.
-Future<String> receiveAndImport(ReceiveRobot receives, Receipt receipt) =>
-    onReceiptPage(() => _receiveAndImport(receives, receipt));
-
-Future<String> _receiveAndImport(ReceiveRobot receives, Receipt receipt) async {
+/// be deleted, so both are reported as kept.
+Future<String> receiveAndImport(ReceiveRobot receives, Receipt receipt) async {
   Cleanup.add('draft receive ${receipt.reference}',
       () => cancelDraftReceivesWithReference(receipt.reference));
   Cleanup.keep('supplier "${receipt.supplierName}" (kept for reuse)');

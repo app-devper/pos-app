@@ -187,22 +187,15 @@ quietly accept it:
 - What a user expects is kept in a test skipped with
   `skip: 'FINDING: <one line with file:line>'`. Each such test was seen
   failing when unskipped. `run-all.sh` lists them under "Findings".
-- Layout overflows that would fail every test are let through only around
-  the one screen that raises them, and counted:
-  - `onReceiptPage` in `support/known_faults.dart`: the supplier picker,
-  - `onQuantityKeypad` and `onPaymentDialog` in `support/selling_faults.dart`:
-    the two dialogs.
+- Nothing is let through: a layout overflow, like any other framework
+  error, fails the test that raised it. (The counted tolerances for the
+  three overflowing layouts, findings #17-#19, went with their fixes.)
 
-  The tests expect each count to be at least 1. So when the app is fixed,
-  those assertions fail, with a message saying what to delete. The two
-  files use the same mechanism twice; they are kept apart for now.
-
-When a FINDING test or a tolerance starts failing, the app has probably
+When a FINDING test starts failing, the app has probably
 been fixed:
 
 1. Confirm the fix in the app's code.
-2. Unskip the FINDING test, or delete the tolerance and its counter
-   assertion.
+2. Unskip the FINDING test.
 3. Change the running test's "as the app behaves" assertion to the expected
    behaviour.
 4. Delete the FINDING comment.
