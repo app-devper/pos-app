@@ -12,7 +12,7 @@ check that the main paths work on a phone and on the web.
 |---|---|
 | `auth` | a wrong password is refused with UM's code and the user stays on sign-in; admin, manager and user each sign in to the selling screen and out |
 | `navigation` | every main menu item opens its own screen (bills, products, the five manage tiles, profile) and selling is reachable again |
-| `sell_and_bill` | two of a product in the cart, the totals, a payment of the exact amount, a new bill on the server with that total, and that bill found by its number in the bills list |
+| `sell_and_bill` | two of a product in the cart, the totals, a payment of the exact amount, on the web a scan typed straight after paying lands in the search field, a new bill on the server with that total, and that bill found by the number its row shows in the bills list |
 | `customer` | a customer added by the form is on the server, can be found and chosen for a sale, and is archived by its delete button (finding 7 pinned: it stays listed) |
 | `receive_stock` | a goods receipt for a supplier, one line of five, imported: the server holds 1005 on hand |
 | `product_edit` | a product renamed on its page: the server and the selling screen show the new name, stock untouched |
@@ -120,8 +120,7 @@ except a tooltip on hover or long-press:
   build is unchanged: Maestro sees nothing of it (checked).
 - Labels where a control had none or could not be told apart:
   `CartSearchButton` (tooltip เลือกสินค้า), the cart line's quantity
-  (`<n>x <product>`), `OrderListTile` (position + bill number),
-  `CartCustomerRemoveButton` (นำลูกค้า … ออก), `CustomerListHeader`'s add icon
+  (`<n>x <product>`), `CartCustomerRemoveButton` (นำลูกค้า … ออก), `CustomerListHeader`'s add icon
   (เพิ่มลูกค้า), `ReceiveMenuButton` (เมนูใบรับสินค้า).
 
 ### Known limits
