@@ -159,6 +159,45 @@ void main() {
       // Assert
       expect(vm.items.value!.single.getQuantity(), 998);
     });
+
+    test('an older first load still shows when a newer reload failed',
+        () async {
+      // Arrange: the first load is still spinning when a sale reloads
+      final repo = _ScriptedRepository();
+      final vm = ProductSearchViewModel(productRepo: repo);
+      final first = vm.prepareData();
+      final reload = vm.refresh();
+
+      // Act: the reload fails, then the first load comes back
+      repo.pending[1].completeError(const NetworkException(message: 'offline'));
+      await reload;
+      repo.pending[0].complete([_product(1000)]);
+      await first;
+
+      // Assert
+      expect(vm.items.value?.single.getQuantity(), 1000,
+          reason: 'nothing newer was shown, so the grid must not spin on');
+      expect(vm.error.value, isNull);
+    });
+
+    test('an older failed load shows no error over a newer grid', () async {
+      // Arrange: a retry is started while the first load is still out
+      final repo = _ScriptedRepository();
+      final vm = ProductSearchViewModel(productRepo: repo);
+      final first = vm.getProducts();
+      final retry = vm.getProducts();
+
+      // Act: the retry succeeds, then the first load fails
+      repo.pending[1].complete([_product(1000)]);
+      await retry;
+      repo.pending[0].completeError(const NetworkException(message: 'offline'));
+      await first;
+
+      // Assert
+      expect(vm.error.value, isNull,
+          reason: 'the grid on screen is newer than the failure');
+      expect(vm.items.value?.single.getQuantity(), 1000);
+    });
   });
 
   group('ProductSearch', () {

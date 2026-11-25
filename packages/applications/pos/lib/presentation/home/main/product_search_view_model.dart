@@ -31,9 +31,13 @@ class ProductSearchViewModel {
   List<ProductUnitItem> _products = const [];
   String _query = '';
 
-  /// Counts the loads started; only the latest one's answer is shown, so two
-  /// quick sales cannot leave the older stock on screen.
-  int _loadId = 0;
+  /// Counts the loads started, and names the newest one whose answer is on
+  /// screen. An answer, or a failure, is shown only when it is newer than
+  /// what is shown: two quick sales cannot leave the older stock on screen,
+  /// a failed reload cannot hide an older load still on its way, and an
+  /// older failure cannot cover a newer grid.
+  int _startedId = 0;
+  int _appliedId = 0;
 
   Future<void> prepareData() async {
     await getProducts();
@@ -44,33 +48,31 @@ class ProductSearchViewModel {
   Future<void> getProducts() async {
     _error.value = null;
     _items.value = null;
-    try {
-      await _load();
-    } on Exception catch (e) {
-      _error.value = toFailure(e).getMessage();
-    }
+    await _load(showError: true);
   }
 
   /// Loads the products again behind the grid the cashier sees, keeping what
   /// was typed in the search: after a sale the stock figures have moved. A
   /// failed reload keeps the grid as it was, with no error: the cashier goes
   /// on selling, and the next sale reloads again.
-  Future<void> refresh() async {
-    try {
-      await _load();
-    } on Exception catch (_) {}
-  }
+  Future<void> refresh() => _load(showError: false);
 
-  Future<void> _load() async {
-    final id = ++_loadId;
-    final products = await productRepo.getLocalProducts();
-    if (id != _loadId) return;
-    _products = List<ProductUnitItem>.unmodifiable([
-      for (final item in products)
-        if (item.status == productStatusActive) ...item.toProductItems(),
-    ]);
-    _error.value = null;
-    searchProduct(_query);
+  Future<void> _load({required bool showError}) async {
+    final id = ++_startedId;
+    try {
+      final products = await productRepo.getLocalProducts();
+      if (id <= _appliedId) return;
+      _appliedId = id;
+      _products = List<ProductUnitItem>.unmodifiable([
+        for (final item in products)
+          if (item.status == productStatusActive) ...item.toProductItems(),
+      ]);
+      _error.value = null;
+      searchProduct(_query);
+    } on Exception catch (e) {
+      if (!showError || id <= _appliedId) return;
+      _error.value = toFailure(e).getMessage();
+    }
   }
 
   void searchProduct(String text) {
