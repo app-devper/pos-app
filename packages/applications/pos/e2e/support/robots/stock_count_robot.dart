@@ -9,24 +9,23 @@ import 'package:flutter_test/flutter_test.dart';
 
 // Project imports:
 import 'package:pos/presentation/stock_count/main/stock_counts_page.dart';
-import 'package:pos/presentation/stock_count/manage/stock_count_item_picker_widget.dart';
 import 'package:pos/presentation/stock_count/manage/stock_count_manage_page.dart';
 import '../pump.dart';
 import 'form_driver.dart';
+import 'product_picker.dart';
 import 'scroll.dart';
 import 'shell_robot.dart';
 
 const _listTitle = 'นับสต็อก';
 const _newTitle = 'นับสต็อกใหม่';
 const _detailTitle = 'รายละเอียดการนับสต็อก';
-const _pickerSearchHint = 'ค้นหาสินค้า...';
 
 /// pos-api answers a count within a second locally; a hosted one is slower.
 const _saveTimeout = Duration(seconds: 30);
 
 final _list = find.byType(StockCountsPage);
 final _manage = find.byType(StockCountManagePage);
-final _picker = find.byType(StockCountItemPickerWidget);
+final _picker = productPicker;
 
 class StockCountRobot {
   StockCountRobot(this.shell) : form = FormDriver(shell);
@@ -167,21 +166,7 @@ class StockCountRobot {
         .descendant(of: _manage, matching: find.text('เพิ่มสินค้า'))
         .hitTestable());
     await tester.pump();
-    final search = shell.searchField(_pickerSearchHint);
-    await pumpUntilFound(tester, search);
-    // Typing before the products have loaded is lost: the load replaces
-    // the list with every product (stock_count_item_picker_view_model.dart
-    // getProducts). A row of any product means it has loaded.
-    await pumpUntilFound(
-        tester, find.descendant(of: _picker, matching: find.byType(ListTile)),
-        timeout: _saveTimeout);
-    await tester.enterText(search, productName);
-    await tester.pump();
-    await pumpUntilFound(
-        tester, _inPicker(find.widgetWithText(ListTile, productName)));
-    // The search field holds the name too; the row is a ListTile.
-    await tester.tap(_inPicker(find.widgetWithText(ListTile, productName)));
-    await tester.pump();
+    await pickProductByName(shell, productName, timeout: _saveTimeout);
     final lotRow = _inPicker(find.text('ล็อต $lot'));
     await pumpUntilFound(tester, lotRow);
     expect(
@@ -194,6 +179,5 @@ class StockCountRobot {
     await pumpUntilGone(tester, _picker);
   }
 
-  Finder _inPicker(Finder finder) =>
-      find.descendant(of: _picker, matching: finder).hitTestable();
+  Finder _inPicker(Finder finder) => inProductPicker(finder);
 }

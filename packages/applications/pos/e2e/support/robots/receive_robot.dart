@@ -13,6 +13,7 @@ import 'package:pos/domain/model/supplier/supplier.dart';
 import 'package:pos/presentation/receive/main/receives_widget.dart';
 import '../pump.dart';
 import 'form_driver.dart';
+import 'product_picker.dart';
 import 'shell_robot.dart';
 
 const _manageTile = 'ใบรับสินค้า / Goods Receipt';
@@ -174,7 +175,11 @@ class ReceiveRobot {
     await tester.tap(_addItemButton.hitTestable());
     await tester.pump();
     await pumpUntilFound(tester, _itemDialog.hitTestable());
-    await form.choose('สินค้า', item.productName, within: _itemDialog);
+    // The product is chosen through the product picker and its search.
+    await tester.tap(form.field('สินค้า', within: _itemDialog));
+    await tester.pump();
+    await pickProductByName(shell, item.productName);
+    await pumpUntilGone(tester, productPicker);
     await form.enter('จำนวน (', '${item.quantity}',
         within: _itemDialog, prefix: true);
     await form.enter('ต้นทุนต่อหน่วย', _money(item.cost), within: _itemDialog);

@@ -17,43 +17,55 @@ class StockCountItemPickerViewModel {
     required this.productRepo,
   });
 
-  final _state = ViewState<StockCountItemPickerState>(
-      const StockCountItemPickerState());
+  final _state =
+      ViewState<StockCountItemPickerState>(const StockCountItemPickerState());
 
   ValueListenable<StockCountItemPickerState> get state => _state;
 
   List<ProductUnitItem> _all = [];
+  String _query = '';
 
-  Future<void> getProducts() async {
+  /// Loads the active products, one row per unit, or with [onePerProduct]
+  /// one row per product: its base unit's (a receipt counts in it).
+  Future<void> getProducts({bool onePerProduct = false}) async {
     _state.value = _state.value.copyWith(loading: true, clearError: true);
     try {
       final products = await productRepo.getProducts();
-      _all = [];
-      for (var item in products) {
-        if (item.status == productStatusActive) {
-          _all.addAll(item.toProductItems());
-        }
-      }
-      _state.value = _state.value
-          .copyWith(loading: false, products: List<ProductUnitItem>.of(_all));
+      _all = [
+        for (final item in products)
+          if (item.status == productStatusActive)
+            ...onePerProduct ? _baseUnitItem(item) : item.toProductItems(),
+      ];
+      // What was typed while the products loaded still applies.
+      _state.value =
+          _state.value.copyWith(loading: false, products: _filter(_query));
     } on Exception catch (_) {
       _state.value = _state.value
           .copyWith(loading: false, error: "โหลดสินค้าไม่สำเร็จ กรุณาลองใหม่");
     }
   }
 
+  /// The product's row in its base unit, or in its first unit when none
+  /// is named so; none for a product without units.
+  static List<ProductUnitItem> _baseUnitItem(Product product) {
+    final items = product.toProductItems();
+    if (items.isEmpty) return const [];
+    return [
+      items.firstWhere((item) => item.unit.unit == product.unit,
+          orElse: () => items.first),
+    ];
+  }
+
   void searchProduct(String text) {
-    if (text.isEmpty) {
-      _state.value =
-          _state.value.copyWith(products: List<ProductUnitItem>.of(_all));
-    } else {
-      final lower = text.toLowerCase();
-      _state.value = _state.value.copyWith(
-        products: _all
-            .where((item) => item.name.toLowerCase().contains(lower))
-            .toList(),
-      );
-    }
+    _query = text;
+    _state.value = _state.value.copyWith(products: _filter(text));
+  }
+
+  List<ProductUnitItem> _filter(String text) {
+    if (text.isEmpty) return List<ProductUnitItem>.unmodifiable(_all);
+    final lower = text.toLowerCase();
+    return List<ProductUnitItem>.unmodifiable(
+        _all.where((item) => item.name.toLowerCase().contains(lower)));
   }
 
   void selectProduct(ProductUnitItem product) {

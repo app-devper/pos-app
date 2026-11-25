@@ -2,10 +2,10 @@
 #
 # On Android the open menu's options are ordinary text nodes. On the web the
 # open menu exposes no option text at all, so the option cannot be addressed:
-# the flows' database holds exactly one supplier and one product (the run's),
-# the menu opens with it focused, and Enter chooses it. The caller asserts what
-# it can afterwards (the receipt line names the product; the supplier's name
-# does not reach the web's semantics tree, so on the web it is not asserted).
+# the flows' database holds exactly one supplier (the run's), the menu opens
+# with it focused, and Enter chooses it. The supplier's name does not reach the
+# web's semantics tree, so on the web it is not asserted. (A receipt line's
+# product is no longer a dropdown: it is chosen through the product search.)
 appId: app.devper.pos
 ---
 - runFlow:

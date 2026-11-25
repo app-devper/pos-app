@@ -72,7 +72,9 @@ class _StockCountManagePageState extends State<StockCountManagePage> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: buildAppBar(
-        _isViewOnly ? Languages.of(context).stockCountManageTitle : Languages.of(context).stockCountCreateTitle,
+        _isViewOnly
+            ? Languages.of(context).stockCountManageTitle
+            : Languages.of(context).stockCountCreateTitle,
         actions: _isViewOnly
             ? null
             : [
@@ -122,12 +124,17 @@ class _StockCountManagePageState extends State<StockCountManagePage> {
             children: [
               ListTile(
                 title: Text('สินค้า ${item.productId}'),
-                subtitle: Text('ในระบบ ${item.systemQuantity} / นับได้ ${item.countedQuantity}'),
+                subtitle: Text(
+                    'ในระบบ ${item.systemQuantity} / นับได้ ${item.countedQuantity}'),
                 trailing: Text(
-                  item.delta == 0 ? 'ตรงกัน' : (item.delta > 0 ? '+${item.delta}' : '${item.delta}'),
+                  item.delta == 0
+                      ? 'ตรงกัน'
+                      : (item.delta > 0 ? '+${item.delta}' : '${item.delta}'),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: item.delta == 0 ? AppColors.of(context).textSecondary : (item.delta > 0 ? Colors.green : Colors.red),
+                    color: item.delta == 0
+                        ? AppColors.of(context).textSecondary
+                        : (item.delta > 0 ? Colors.green : Colors.red),
                   ),
                 ),
               ),
@@ -149,7 +156,8 @@ class _StockCountManagePageState extends State<StockCountManagePage> {
             decoration: InputDecoration(
               labelText: 'หมายเหตุ',
               hintText: 'โปรดระบุหมายเหตุ (ถ้ามี)',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             ),
           ),
         ),
@@ -158,7 +166,8 @@ class _StockCountManagePageState extends State<StockCountManagePage> {
               ? Center(
                   child: Text(
                     'ยังไม่มีสินค้าที่นับ',
-                    style: TextStyle(color: AppColors.of(context).textSecondary),
+                    style:
+                        TextStyle(color: AppColors.of(context).textSecondary),
                   ),
                 )
               : ListView.builder(
@@ -169,7 +178,8 @@ class _StockCountManagePageState extends State<StockCountManagePage> {
                       children: [
                         ListTile(
                           title: Text(item.productName),
-                          subtitle: Text('ล็อต ${item.lotNumber}, ในระบบ ${item.systemQuantity}'),
+                          subtitle: Text(
+                              'ล็อต ${item.lotNumber}, ในระบบ ${item.systemQuantity}'),
                           trailing: SizedBox(
                             width: 140,
                             child: Row(
@@ -180,15 +190,18 @@ class _StockCountManagePageState extends State<StockCountManagePage> {
                                     initialValue: item.counted.toString(),
                                     keyboardType: TextInputType.number,
                                     textAlign: TextAlign.center,
-                                    decoration: const InputDecoration(labelText: 'นับได้'),
+                                    decoration: const InputDecoration(
+                                        labelText: 'นับได้'),
                                     onChanged: (value) {
-                                      _viewModel.updateCounted(index, int.tryParse(value) ?? -1);
+                                      _viewModel.updateCounted(
+                                          index, int.tryParse(value) ?? -1);
                                     },
                                   ),
                                 ),
                                 IconButton(
                                   splashRadius: 20,
-                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.red),
                                   onPressed: () {
                                     _viewModel.removeItem(index);
                                   },

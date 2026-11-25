@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:design_system/widgets/dialogs.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/domain/model/receive/receive_item.dart';
+import 'package:pos/presentation/stock_count/manage/stock_count_item_picker_widget.dart';
 
 class ReceiveItemDialog extends StatefulWidget {
   final String receiveId;
@@ -18,14 +20,36 @@ class _ReceiveItemDialogState extends State<ReceiveItemDialog> {
   final _cost = TextEditingController();
   final _lot = TextEditingController();
   final _expiry = TextEditingController();
+  final _productName = TextEditingController();
   Product? _product;
 
   @override
   void dispose() {
-    for (final controller in [_quantity, _cost, _lot, _expiry]) {
+    for (final controller in [_quantity, _cost, _lot, _expiry, _productName]) {
       controller.dispose();
     }
     super.dispose();
+  }
+
+  /// Opens the app's product picker with its search (the one a stock count
+  /// uses); the chosen product names the field and sets the cost.
+  void _pickProduct() {
+    showCenterDialog(
+      context: context,
+      builder: (_) => StockCountItemPickerWidget.product(
+        onProductSelected: (item) => _choose(item.id),
+      ),
+    );
+  }
+
+  void _choose(String productId) {
+    final product = widget.products.where((p) => p.id == productId).firstOrNull;
+    if (product == null) return;
+    setState(() {
+      _product = product;
+      _productName.text = product.name;
+      _cost.text = '${product.costPrice}';
+    });
   }
 
   DateTime? _expiryDate(String value) {
@@ -45,18 +69,13 @@ class _ReceiveItemDialogState extends State<ReceiveItemDialog> {
                 child: Form(
               key: _form,
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-                DropdownButtonFormField<Product>(
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'สินค้า'),
-                  items: widget.products
-                      .map((p) =>
-                          DropdownMenuItem(value: p, child: Text(p.name)))
-                      .toList(),
-                  onChanged: (p) => setState(() {
-                    _product = p;
-                    _cost.text = '${p?.costPrice ?? 0}';
-                  }),
-                  validator: (p) => p == null ? 'เลือกสินค้า' : null,
+                TextFormField(
+                  controller: _productName,
+                  readOnly: true,
+                  decoration: const InputDecoration(
+                      labelText: 'สินค้า', suffixIcon: Icon(Icons.search)),
+                  onTap: _pickProduct,
+                  validator: (_) => _product == null ? 'เลือกสินค้า' : null,
                 ),
                 TextFormField(
                     controller: _quantity,

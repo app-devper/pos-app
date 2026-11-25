@@ -1,5 +1,5 @@
 # Goods come in: a receipt for the run's supplier, one line of five of the
-# run's product, imported into stock. The server then holds 1005 on hand.
+# run's product (chosen through the product search), imported into stock. The server then holds 1005 on hand.
 appId: app.devper.pos
 ---
 - runScript:
@@ -52,11 +52,26 @@ appId: app.devper.pos
 - extendedWaitUntil:
     visible: "เพิ่มรายการรับสินค้า"
     timeout: 10000
+# The product is found through the app's product picker and its search; its
+# row reads the name, then the unit and the number of lots.
 - tapOn: "สินค้า"
+- extendedWaitUntil:
+    visible: "ค้นหาสินค้า\\.\\.\\."
+    timeout: 10000
+- tapOn: "ค้นหาสินค้า\\.\\.\\."
+- inputText: MST-${RUN_ID}
 - runFlow:
-    file: steps/choose_dropdown_option.yaml
-    env:
-      OPTION: ${PRODUCT_NAME}
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
+- extendedWaitUntil:
+    visible: "${PRODUCT_NAME}\n?.*ล็อต"
+    timeout: 15000
+- tapOn: "${PRODUCT_NAME}\n?.*ล็อต"
+- extendedWaitUntil:
+    visible: "เพิ่มรายการรับสินค้า"
+    timeout: 10000
 - tapOn: "จำนวน \\(.*"
 - inputText: "5"
 - tapOn: "เลขล็อต"
