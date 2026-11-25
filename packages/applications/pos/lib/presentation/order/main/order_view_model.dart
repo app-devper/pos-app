@@ -57,9 +57,11 @@ class OrderViewModel {
     }
   }
 
+  /// Builds on the state as it is once the role is in: the page calls
+  /// [initData] while this awaits, and its ranges must survive.
   Future<void> checkLogin() async {
-    _state.value = _state.value
-        .copyWith(isAdmin: await getRoleUseCase.atLeast(Role.admin));
+    final isAdmin = await getRoleUseCase.atLeast(Role.admin);
+    _state.value = _state.value.copyWith(isAdmin: isAdmin);
   }
 
   void initData() {

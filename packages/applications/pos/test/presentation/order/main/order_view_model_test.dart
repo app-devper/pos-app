@@ -236,6 +236,22 @@ void main() {
       expect(cashier.state.value.isAdmin, isFalse);
     });
 
+    test('the role answer keeps the ranges set while it was awaited', () async {
+      // Arrange: the page calls checkLogin, then initData, without waiting
+      final viewModel =
+          buildViewModel(login: FakeLoginRepository(role: 'ADMIN'));
+
+      // Act
+      final roleRead = viewModel.checkLogin();
+      viewModel.initData();
+      await roleRead;
+
+      // Assert
+      expect(viewModel.state.value.isAdmin, isTrue);
+      expect(viewModel.state.value.ranges, isNotEmpty,
+          reason: 'the admin gets the date-range dropdown');
+    });
+
     test('an unreadable role stays a cashier, as every screen treats it',
         () async {
       final viewModel = buildViewModel(
