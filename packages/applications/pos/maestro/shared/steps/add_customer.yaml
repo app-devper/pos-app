@@ -1,0 +1,34 @@
+# From the customer list, adds the customer ${NAME} with the phone ${PHONE}
+# through the form, and returns once the server has it and the form is gone.
+appId: app.devper.pos
+---
+- tapOn: "เพิ่มลูกค้า"
+- tapOn: "ชื่อลูกค้า"
+- inputText: ${NAME}
+- tapOn: "โทรศัพท์"
+- inputText: ${PHONE}
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
+- tapOn: "ยืนยัน"
+# "เพิ่มลูกค้า" is on both the form and the list, so the server is asked
+# until it has the customer.
+- evalScript: ${output.customerCount = '0'}
+- repeat:
+    times: 15
+    while:
+      true: ${output.customerCount != '1'}
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 1000
+      - runScript:
+          file: ../../scripts/api.js
+          env:
+            ACTION: customerCount
+            NAME: ${NAME}
+- assertTrue: ${output.customerCount == '1'}
+- extendedWaitUntil:
+    notVisible: "ชื่อลูกค้า"
+    timeout: 15000

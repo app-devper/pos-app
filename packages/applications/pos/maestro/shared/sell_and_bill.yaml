@@ -13,7 +13,9 @@ appId: app.devper.pos
 - extendedWaitUntil:
     visible: "ยอดรวมสุทธิ\n?฿50\\.00"
     timeout: 10000
-- assertVisible: "2x ${PRODUCT_NAME}"
+# The cart line reads as one node: quantity, product, unit, amount and the
+# price's kind, on the web too.
+- assertVisible: "2x ${PRODUCT_NAME} .*฿50\\.00.*"
 - takeScreenshot: cart
 # The newest bill before paying: the sale must add one after it, or an earlier
 # run's bill of the same amount would pass for this one.
@@ -36,7 +38,7 @@ appId: app.devper.pos
       - inputText: 93${RUN_ID}0001
       - pressKey: Enter
       - extendedWaitUntil:
-          visible: "1x ${PRODUCT_NAME}"
+          visible: "1x ${PRODUCT_NAME} .*"
           timeout: 10000
 - repeat:
     times: 15
@@ -64,4 +66,7 @@ appId: app.devper.pos
     visible: "${output.billCode} .*"
     timeout: 10000
 - assertVisible: "(ยอดรวม\n?)?฿ 50\\.00"
+# The bill's line reads as one node: quantity, product, (for an admin) cost
+# and profit, amount.
+- assertVisible: "2 ${PRODUCT_NAME} .*50\\.00"
 - takeScreenshot: bill

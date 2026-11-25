@@ -1,20 +1,5 @@
-# Chooses ${OPTION} in the dropdown that was just opened.
-#
-# On Android the open menu's options are ordinary text nodes. On the web the
-# open menu exposes no option text at all, so the option cannot be addressed:
-# the flows' database holds exactly one supplier (the run's), the menu opens
-# with it focused, and Enter chooses it. The supplier's name does not reach the
-# web's semantics tree, so on the web it is not asserted. (A receipt line's
-# product is no longer a dropdown: it is chosen through the product search.)
+# Chooses ${OPTION} in the dropdown that was just opened, by its text: each
+# option's name is a text node of its own, on Android and on the web.
 appId: app.devper.pos
 ---
-- runFlow:
-    when:
-      platform: Android
-    commands:
-      - tapOn: ${OPTION}
-- runFlow:
-    when:
-      platform: Web
-    commands:
-      - pressKey: Enter
+- tapOn: ${OPTION}

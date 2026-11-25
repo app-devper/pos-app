@@ -36,6 +36,10 @@ appId: app.devper.pos
     file: steps/choose_dropdown_option.yaml
     env:
       OPTION: MST-${RUN_ID} supplier
+# The closed picker shows the chosen supplier, read with its label.
+- extendedWaitUntil:
+    visible: "ร้านขายสินค้า\n?MST-${RUN_ID} supplier"
+    timeout: 10000
 - tapOn: "หมายเลขอางอิง"
 - inputText: REF-${RUN_ID}
 - runFlow:
