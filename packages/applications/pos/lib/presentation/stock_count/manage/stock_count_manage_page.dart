@@ -13,6 +13,7 @@ import 'package:pos/container.dart';
 import 'package:pos/domain/model/stock_count/stock_count.dart';
 import 'package:pos/localizations/language/languages.dart';
 import 'package:design_system/widgets/dialogs.dart';
+import 'package:pos/presentation/stock_count/manage/stock_count_detail_line.dart';
 import 'package:pos/presentation/stock_count/manage/stock_count_item_picker_widget.dart';
 import 'package:pos/presentation/stock_count/manage/stock_count_manage_state.dart';
 import 'package:pos/presentation/stock_count/manage/stock_count_manage_view_model.dart';
@@ -89,7 +90,7 @@ class _StockCountManagePageState extends State<StockCountManagePage> {
         valueListenable: _viewModel.state,
         builder: (context, state, _) {
           if (_isViewOnly) {
-            return _buildDetail(state.stockCount);
+            return _buildDetail(state.stockCount, state.productNames);
           }
           return _buildCreateForm(state);
         },
@@ -97,7 +98,8 @@ class _StockCountManagePageState extends State<StockCountManagePage> {
     );
   }
 
-  Widget _buildDetail(StockCount? stockCount) {
+  Widget _buildDetail(
+      StockCount? stockCount, Map<String, String> productNames) {
     if (stockCount == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -122,22 +124,8 @@ class _StockCountManagePageState extends State<StockCountManagePage> {
         ...stockCount.items.map(
           (item) => Column(
             children: [
-              ListTile(
-                title: Text('สินค้า ${item.productId}'),
-                subtitle: Text(
-                    'ในระบบ ${item.systemQuantity} / นับได้ ${item.countedQuantity}'),
-                trailing: Text(
-                  item.delta == 0
-                      ? 'ตรงกัน'
-                      : (item.delta > 0 ? '+${item.delta}' : '${item.delta}'),
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: item.delta == 0
-                        ? AppColors.of(context).textSecondary
-                        : (item.delta > 0 ? Colors.green : Colors.red),
-                  ),
-                ),
-              ),
+              StockCountDetailLine(
+                  item: item, productName: productNames[item.productId]),
               const Divider(height: 1),
             ],
           ),

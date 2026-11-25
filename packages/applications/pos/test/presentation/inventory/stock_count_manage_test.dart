@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pos/domain/model/stock_count/param.dart';
 import 'package:pos/domain/model/stock_count/stock_count.dart';
+import 'package:pos/domain/repositories/product_repository.dart';
 import 'package:pos/domain/repositories/stock_count_repository.dart';
 import 'package:pos/presentation/stock_count/manage/stock_count_manage_view_model.dart';
 
@@ -25,12 +26,20 @@ StockCountItemParam item(int counted) => StockCountItemParam(
     productName: 'Product',
     lotNumber: 'LOT',
     systemQuantity: 5);
+
+/// These tests never read a count's detail, so the catalogue is never asked.
+class NoProducts implements ProductRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 void main() {
   late Counts repo;
   late StockCountManageViewModel vm;
   setUp(() {
     repo = Counts();
-    vm = StockCountManageViewModel(stockCountRepo: repo);
+    vm = StockCountManageViewModel(
+        stockCountRepo: repo, productRepo: NoProducts());
   });
   tearDown(() => vm.dispose());
   test('duplicate lot is rejected and original quantity preserved', () async {

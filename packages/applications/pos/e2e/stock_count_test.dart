@@ -17,7 +17,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // Project imports:
-import 'support/api/product_api.dart';
 import 'support/api/stock_count_api.dart';
 import 'support/app.dart';
 import 'support/cleanup.dart';
@@ -98,12 +97,9 @@ void main() {
       expect(counts.detailShows(_note), findsOneWidget);
       expect(counts.detailShows('ในระบบ 10 / นับได้ 8'), findsOneWidget);
       expect(counts.detailShows('-2'), findsOneWidget);
-      // FINDING: the line is titled with the product's id, not its name.
-      // Asserted as the app behaves; the skipped test below says what a
-      // user expects.
-      final productId = (await productsNamed(_product)).single.id;
-      expect(counts.detailShows('สินค้า $productId'), findsOneWidget,
-          reason: 'the detail currently names the product by its id');
+      // The line is titled with the product's name (was finding #9).
+      expect(counts.detailShows(_product), findsOneWidget,
+          reason: 'the detail names the counted product');
       await counts.leave();
       await counts.leave();
 
@@ -112,11 +108,9 @@ void main() {
     });
   }, timeout: e2eTestTimeout);
 
-  // FINDING (Task 7): the detail titles each line 'สินค้า <productId>'
-  // (stock_count_manage_page.dart:124); pos-api's stock count lines carry
-  // only productId and stockId (entities/stock_count.go), so a user cannot
-  // tell which product a count line is about.
-  group('FINDING', () {
+  // Was a finding (#9): pos-api's count lines carry only ids, and the detail
+  // titled each 'สินค้า <productId>'; it now looks the names up.
+  group('count line names', () {
     testWidgets('the stock count detail names the counted product',
         (tester) async {
       final counts = StockCountRobot(await _signedInShell(tester));
@@ -125,9 +119,7 @@ void main() {
 
       expect(counts.detailShows(_product), findsOneWidget);
     }, timeout: e2eTestTimeout);
-  },
-      skip: 'FINDING: the stock count detail shows the product id, not its '
-          'name (stock_count_manage_page.dart:124)');
+  });
 
   // Was a finding (#12): a success bar outlived the screen that showed it,
   // and its 'Clear' then threw "Looking up a deactivated widget's ancestor

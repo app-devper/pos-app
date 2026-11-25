@@ -5,11 +5,22 @@ import 'package:pos/domain/model/stock_count/stock_count.dart';
 import 'package:pos/domain/repositories/stock_count_repository.dart';
 import 'package:pos/presentation/stock_count/manage/stock_count_manage_view_model.dart';
 import 'package:pos/domain/repositories/product_repository.dart';
+import 'package:pos/domain/model/product/product.dart';
 
 /// The mutation use cases invalidate the product cache after writing, so they
 /// need a repository even though these tests only assert on the write.
 class FakeProductRepository implements ProductRepository {
   var invalidated = 0;
+  final List<Product> products;
+  final Object? error;
+
+  FakeProductRepository({this.products = const [], this.error});
+
+  @override
+  Future<List<Product>> getLocalProducts() async {
+    if (error != null) throw error!;
+    return products;
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
@@ -75,13 +86,73 @@ StockCountItemParam buildItem({
   );
 }
 
-StockCountManageViewModel buildViewModel(StockCountRepository repository) {
+StockCountManageViewModel buildViewModel(StockCountRepository repository,
+    {ProductRepository? products}) {
   return StockCountManageViewModel(
     stockCountRepo: repository,
+    productRepo: products ?? FakeProductRepository(),
   );
 }
 
+StockCount _countOf(String productId) => StockCount(
+      id: 'sc9',
+      countNo: 'SC-9',
+      note: '',
+      items: [
+        StockCountItem(
+            productId: productId,
+            stockId: 's1',
+            systemQuantity: 10,
+            countedQuantity: 8,
+            delta: -2),
+      ],
+      createdDate: '2026-01-01T00:00:00.000Z',
+    );
+
+Product _named(String id, String name) => Product(
+      id: id,
+      name: name,
+      status: 'Active',
+      category: 'General',
+      createdDate: '',
+      units: const [],
+      prices: const [],
+      stocks: const [],
+    );
+
 void main() {
+  group('the count detail names its products', () {
+    test('each counted line gets its product\'s name', () async {
+      // Arrange
+      final vm = buildViewModel(
+          FakeStockCountRepository(result: _countOf('p1')),
+          products: FakeProductRepository(
+              products: [_named('p1', 'Paracetamol'), _named('p2', 'Other')]));
+
+      // Act
+      await vm.getStockCountById('sc9');
+
+      // Assert
+      expect(vm.state.value.productNames['p1'], 'Paracetamol');
+    });
+
+    test('names that cannot be looked up still leave the count shown',
+        () async {
+      // Arrange
+      final vm = buildViewModel(
+          FakeStockCountRepository(result: _countOf('p1')),
+          products: FakeProductRepository(
+              error: const NetworkException(message: 'offline')));
+
+      // Act
+      await vm.getStockCountById('sc9');
+
+      // Assert
+      expect(vm.state.value.stockCount?.id, 'sc9');
+      expect(vm.state.value.productNames, isEmpty);
+    });
+  });
+
   test('getStockCountById loads an existing count', () async {
     final repository = FakeStockCountRepository(
       result: buildStockCount('sc7'),

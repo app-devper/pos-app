@@ -237,6 +237,7 @@ Future<void> initPos() async {
   sl.registerFactory(
     () => StockCountManageViewModel(
       stockCountRepo: sl(),
+      productRepo: sl(),
     ),
   );
   sl.registerFactory(
