@@ -97,32 +97,35 @@ class _AppShellState extends State<AppShell>
     return Scaffold(
       backgroundColor: colors.surface,
       floatingActionButton: widget.floatingActionButton,
-      body: Row(
-        children: [
-          AnimatedContainer(
-            duration: _duration,
-            curve: _curve,
-            width: open ? _expandedWidth : _railWidth,
-            child: _Sidebar(
-              brand: widget.brand,
-              items: widget.items,
-              selectedId: widget.selectedId,
-              collapsed: !open,
-              onSelect: widget.onSelect,
-              onToggle: () => _toggle(false),
-              footer: widget.sidebarFooter?.call(!open),
+      // The whole frame keeps clear of the system bars, so no screen has to.
+      body: SafeArea(
+        child: Row(
+          children: [
+            AnimatedContainer(
+              duration: _duration,
+              curve: _curve,
+              width: open ? _expandedWidth : _railWidth,
+              child: _Sidebar(
+                brand: widget.brand,
+                items: widget.items,
+                selectedId: widget.selectedId,
+                collapsed: !open,
+                onSelect: widget.onSelect,
+                onToggle: () => _toggle(false),
+                footer: widget.sidebarFooter?.call(!open),
+              ),
             ),
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                if (widget.showTopBar)
-                  _TopBar(title: widget.title, actions: widget.actions),
-                Expanded(child: widget.child),
-              ],
+            Expanded(
+              child: Column(
+                children: [
+                  if (widget.showTopBar)
+                    _TopBar(title: widget.title, actions: widget.actions),
+                  Expanded(child: widget.child),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -135,55 +138,58 @@ class _AppShellState extends State<AppShell>
       // The drawer sits above the content, so the action must not float over
       // the scrim while it is open.
       floatingActionButton: open ? null : widget.floatingActionButton,
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              _TopBar(
-                title: widget.showTopBar ? widget.title : '',
-                actions: widget.actions,
-                onMenu: () => _toggle(true),
+      // The whole frame keeps clear of the status bar, so no screen has to.
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                _TopBar(
+                  title: widget.showTopBar ? widget.title : '',
+                  actions: widget.actions,
+                  onMenu: () => _toggle(true),
+                ),
+                Expanded(child: widget.child),
+              ],
+            ),
+            // Scrim fades with the panel and swallows taps only while open.
+            IgnorePointer(
+              ignoring: !open,
+              child: AnimatedOpacity(
+                duration: _duration,
+                curve: _curve,
+                opacity: open ? 1 : 0,
+                child: GestureDetector(
+                  onTap: () => _toggle(true),
+                  child: Container(color: Colors.black.withValues(alpha: 0.4)),
+                ),
               ),
-              Expanded(child: widget.child),
-            ],
-          ),
-          // Scrim fades with the panel and swallows taps only while open.
-          IgnorePointer(
-            ignoring: !open,
-            child: AnimatedOpacity(
+            ),
+            AnimatedPositioned(
               duration: _duration,
               curve: _curve,
-              opacity: open ? 1 : 0,
-              child: GestureDetector(
-                onTap: () => _toggle(true),
-                child: Container(color: Colors.black.withValues(alpha: 0.4)),
+              top: 0,
+              bottom: 0,
+              left: open ? 0 : -_expandedWidth,
+              width: _expandedWidth,
+              child: Material(
+                elevation: 8,
+                child: _Sidebar(
+                  brand: widget.brand,
+                  items: widget.items,
+                  selectedId: widget.selectedId,
+                  collapsed: false,
+                  onSelect: (id) {
+                    _toggle(true);
+                    widget.onSelect(id);
+                  },
+                  onToggle: () => _toggle(true),
+                  footer: widget.sidebarFooter?.call(false),
+                ),
               ),
             ),
-          ),
-          AnimatedPositioned(
-            duration: _duration,
-            curve: _curve,
-            top: 0,
-            bottom: 0,
-            left: open ? 0 : -_expandedWidth,
-            width: _expandedWidth,
-            child: Material(
-              elevation: 8,
-              child: _Sidebar(
-                brand: widget.brand,
-                items: widget.items,
-                selectedId: widget.selectedId,
-                collapsed: false,
-                onSelect: (id) {
-                  _toggle(true);
-                  widget.onSelect(id);
-                },
-                onToggle: () => _toggle(true),
-                footer: widget.sidebarFooter?.call(false),
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
