@@ -107,4 +107,84 @@ class LanguageEn extends Languages {
   @override
   String get suppliersTitle => "Supplier Manage";
 
+  @override
+  String get back => "Back";
+
+  @override
+  String get clearSearch => "Clear search";
+
+  @override
+  String get sortByBalance => "Sort by stock on hand";
+
+  @override
+  String get sortByName => "Sort by name";
+
+  @override
+  String get productMenu => "Product menu";
+
+  @override
+  String get addSupplier => "Add supplier";
+
+  @override
+  String get chooseProduct => "Choose product";
+
+  @override
+  String removeCustomer(String name) => "Remove customer $name";
+
+  @override
+  String get receiveMenu => "Receipt menu";
+
+  @override
+  String get deleteReceive => "Delete receipt";
+
+  @override
+  String deleteReceiveLine(String name) => "Delete line $name";
+
+  @override
+  String importedReceiveLine(String name) => "Line $name imported";
+
+  @override
+  String get billReceipt => "Receipt PDF";
+
+  @override
+  String get billReload => "Reload bill";
+
+  @override
+  String get billReturns => "Returns history";
+
+  @override
+  String get billDelete => "Delete bill";
+
+  @override
+  String deleteBillLine(String name) => "Delete line $name";
+
+  @override
+  String billLineHistory(String name) => "Sales history of $name";
+
+  @override
+  String returnBillLine(String name) => "Return $name";
+
+  @override
+  String oneLess(String name) => "One less $name";
+
+  @override
+  String oneMore(String name) => "One more $name";
+
+  @override
+  String changeQuantity(String name) => "Change quantity of $name";
+
+  @override
+  String allowOversell(String name) => "Allow selling $name beyond stock";
+
+  @override
+  String oversellAllowed(String name) => "Selling $name beyond stock allowed";
+
+  @override
+  String editLot(String lot) => "Edit lot $lot";
+
+  @override
+  String lotOnHand(String lot) => "Set on hand of lot $lot";
+
+  @override
+  String adjustLot(String lot) => "Adjust stock of lot $lot";
 }

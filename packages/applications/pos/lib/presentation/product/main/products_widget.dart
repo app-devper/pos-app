@@ -11,6 +11,7 @@ import 'package:design_system/theme/app_colors.dart';
 import 'package:design_system/widgets/error_state.dart';
 import 'products_state.dart';
 import 'products_view_model.dart';
+import 'package:pos/localizations/language/languages.dart';
 
 class ProductsWidget extends StatefulWidget {
   final Function(Product) onSelected;
@@ -80,6 +81,7 @@ class _ProductsWidgetState extends State<ProductsWidget> {
                     fillColor: AppColors.of(context).border,
                     filled: true,
                     suffixIcon: IconButton(
+                      tooltip: Languages.of(context).clearSearch,
                       splashRadius: 20,
                       onPressed: () {
                         FocusScope.of(context).requestFocus(_viewNode);
@@ -97,6 +99,9 @@ class _ProductsWidgetState extends State<ProductsWidget> {
               ),
             ),
             IconButton(
+              tooltip: _sortBalance
+                  ? Languages.of(context).sortByName
+                  : Languages.of(context).sortByBalance,
               splashRadius: 20,
               onPressed: () {
                 setState(() {
@@ -111,6 +116,7 @@ class _ProductsWidgetState extends State<ProductsWidget> {
             const SizedBox(width: 8),
             if (isMobile) ...[
               IconButton(
+                tooltip: Languages.of(context).productMenu,
                 splashRadius: 20,
                 onPressed: () {
                   widget.onMenu();

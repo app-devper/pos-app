@@ -13,6 +13,7 @@ const customerSearchHint = 'ค้นหาลูกค้า...';
 
 class CustomerListHeader extends StatelessWidget {
   final String title;
+  final String backLabel;
   final String addLabel;
   final bool showAdd;
   final VoidCallback onBack;
@@ -25,6 +26,7 @@ class CustomerListHeader extends StatelessWidget {
   const CustomerListHeader({
     super.key,
     required this.title,
+    required this.backLabel,
     required this.addLabel,
     required this.showAdd,
     required this.onBack,
@@ -55,16 +57,20 @@ class CustomerListHeader extends StatelessWidget {
   Widget _buildBar(BuildContext context) {
     return Row(
       children: [
-        InkWell(
-          onTap: onBack,
-          child: Container(
-            width: 40,
-            height: 40,
-            padding: const EdgeInsets.all(8.0),
-            child: Icon(
-              Icons.arrow_back_ios,
-              color: AppColors.of(context).textSecondary,
-              size: 16,
+        Semantics(
+          button: true,
+          label: backLabel,
+          child: InkWell(
+            onTap: onBack,
+            child: Container(
+              width: 40,
+              height: 40,
+              padding: const EdgeInsets.all(8.0),
+              child: Icon(
+                Icons.arrow_back_ios,
+                color: AppColors.of(context).textSecondary,
+                size: 16,
+              ),
             ),
           ),
         ),

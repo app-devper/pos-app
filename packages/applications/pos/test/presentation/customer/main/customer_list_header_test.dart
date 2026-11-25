@@ -17,6 +17,7 @@ void main() {
     var added = 0;
     await tester.pumpWidget(_host(CustomerListHeader(
       title: 'ข้อมูลลูกค้า',
+      backLabel: 'ย้อนกลับ',
       addLabel: 'เพิ่มลูกค้า',
       showAdd: true,
       onBack: () {},
@@ -38,6 +39,7 @@ void main() {
     // Arrange / Act
     await tester.pumpWidget(_host(CustomerListHeader(
       title: 'ข้อมูลลูกค้า',
+      backLabel: 'ย้อนกลับ',
       addLabel: 'เพิ่มลูกค้า',
       showAdd: false,
       onBack: () {},
@@ -54,6 +56,7 @@ void main() {
     var back = 0;
     await tester.pumpWidget(_host(CustomerListHeader(
       title: 'ข้อมูลลูกค้า',
+      backLabel: 'ย้อนกลับ',
       addLabel: 'เพิ่มลูกค้า',
       showAdd: true,
       onBack: () => back++,
@@ -74,6 +77,7 @@ void main() {
     final searched = <String>[];
     await tester.pumpWidget(_host(CustomerListHeader(
       title: 'ข้อมูลลูกค้า',
+      backLabel: 'ย้อนกลับ',
       addLabel: 'เพิ่มลูกค้า',
       showAdd: false,
       onBack: () {},

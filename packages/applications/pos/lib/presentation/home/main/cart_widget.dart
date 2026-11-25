@@ -4,6 +4,7 @@ import 'package:design_system/theme/app_colors.dart';
 
 // Package imports:
 import 'package:common/core/ext/number_ext.dart';
+import 'package:pos/localizations/language/languages.dart';
 
 class ProductItem extends StatelessWidget {
   final String name;
@@ -264,8 +265,8 @@ class CartOrderItem extends StatelessWidget {
                   height: 36,
                   child: Tooltip(
                     message: allowOversell
-                        ? "อนุญาตขายเกินสต็อกแล้ว"
-                        : "อนุญาตขายเกินสต็อก",
+                        ? Languages.of(context).oversellAllowed(title)
+                        : Languages.of(context).allowOversell(title),
                     child: InkResponse(
                       onTap: () {
                         onToggleOversell.call();
@@ -294,19 +295,22 @@ class CartOrderItem extends StatelessWidget {
                 SizedBox(
                   width: 36,
                   height: 36,
-                  child: InkResponse(
-                    onTap: () {
-                      onRemove.call();
-                    },
-                    child: Ink(
-                      decoration: ShapeDecoration(
-                        color: Colors.red[50],
-                        shape: const CircleBorder(),
-                      ),
-                      child: const Icon(
-                        Icons.remove,
-                        color: Colors.red,
-                        size: 20,
+                  child: _named(
+                    Languages.of(context).oneLess(title),
+                    InkResponse(
+                      onTap: () {
+                        onRemove.call();
+                      },
+                      child: Ink(
+                        decoration: ShapeDecoration(
+                          color: Colors.red[50],
+                          shape: const CircleBorder(),
+                        ),
+                        child: const Icon(
+                          Icons.remove,
+                          color: Colors.red,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ),
@@ -337,19 +341,22 @@ class CartOrderItem extends StatelessWidget {
                 SizedBox(
                   width: 36,
                   height: 36,
-                  child: InkResponse(
-                    onTap: () {
-                      onAdd.call();
-                    },
-                    child: Ink(
-                      decoration: ShapeDecoration(
-                        color: AppColors.of(context).surfaceSunken,
-                        shape: const CircleBorder(),
-                      ),
-                      child: Icon(
-                        Icons.add,
-                        color: AppColors.of(context).textPrimary,
-                        size: 20,
+                  child: _named(
+                    Languages.of(context).oneMore(title),
+                    InkResponse(
+                      onTap: () {
+                        onAdd.call();
+                      },
+                      child: Ink(
+                        decoration: ShapeDecoration(
+                          color: AppColors.of(context).surfaceSunken,
+                          shape: const CircleBorder(),
+                        ),
+                        child: Icon(
+                          Icons.add,
+                          color: AppColors.of(context).textPrimary,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ),
@@ -366,6 +373,10 @@ class CartOrderItem extends StatelessWidget {
       ],
     );
   }
+
+  /// A round icon button of the line, named for a screen reader.
+  static Widget _named(String label, Widget button) =>
+      Semantics(button: true, label: label, child: button);
 }
 
 /// Opens the product picker on a narrow (phone) layout, where the product grid
@@ -381,7 +392,7 @@ class CartSearchButton extends StatelessWidget {
       height: 40,
       width: 40,
       child: IconButton(
-        tooltip: 'เลือกสินค้า',
+        tooltip: Languages.of(context).chooseProduct,
         padding: const EdgeInsets.all(0),
         splashRadius: 20,
         onPressed: onPressed,
@@ -409,7 +420,7 @@ class CartCustomerRemoveButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      tooltip: 'นำลูกค้า $customerName ออก',
+      tooltip: Languages.of(context).removeCustomer(customerName),
       splashRadius: 16,
       onPressed: onPressed,
       color: Colors.red,

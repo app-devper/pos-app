@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:pos/domain/model/order/order_detail.dart';
 import 'package:pos/presentation/constants.dart';
 import 'package:pos/presentation/order/cancelled_mark.dart';
+import 'package:pos/localizations/language/languages.dart';
 
 /// The top of a bill: its number and time, and a cancelled bill's
 /// [cancelledLabel] mark.
@@ -59,19 +60,26 @@ class OrderDetailActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final names = Languages.of(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _button(Icons.picture_as_pdf, onPrint),
+        _button(Icons.picture_as_pdf, names.billReceipt, onPrint),
         if (isAdmin) ...[
-          _button(Icons.sync, onSync),
-          _button(Icons.assignment_return, onReturns),
-          if (!(bill?.isCancelled ?? false)) _button(Icons.delete, onDelete),
+          _button(Icons.sync, names.billReload, onSync),
+          _button(Icons.assignment_return, names.billReturns, onReturns),
+          if (!(bill?.isCancelled ?? false))
+            _button(Icons.delete, names.billDelete, onDelete),
         ],
       ],
     );
   }
 
-  Widget _button(IconData icon, VoidCallback onPressed) =>
-      IconButton(splashRadius: 20, onPressed: onPressed, icon: Icon(icon));
+  Widget _button(IconData icon, String tooltip, VoidCallback onPressed) =>
+      IconButton(
+        tooltip: tooltip,
+        splashRadius: 20,
+        onPressed: onPressed,
+        icon: Icon(icon),
+      );
 }

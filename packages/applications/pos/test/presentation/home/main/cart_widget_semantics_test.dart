@@ -8,10 +8,16 @@ import 'package:flutter_test/flutter_test.dart';
 // Project imports:
 import 'package:pos/presentation/home/main/cart_widget.dart';
 import '../../../support/app_fonts.dart';
+import '../../../support/app_languages.dart';
 
-/// In the app's theme and fonts, so a layout error here is one a user gets.
-Widget _host(Widget child) =>
-    MaterialApp(theme: CustomTheme.mainTheme, home: Scaffold(body: child));
+/// In the app's theme, fonts and (Thai unless [languages] says otherwise)
+/// strings, so a layout error here is one a user gets.
+Widget _host(Widget child, {TestLanguages languages = thaiLanguages}) =>
+    MaterialApp(
+      theme: CustomTheme.mainTheme,
+      localizationsDelegates: [languages],
+      home: Scaffold(body: child),
+    );
 
 void main() {
   setUpAll(loadAppFonts);
@@ -69,5 +75,21 @@ void main() {
     // Assert
     expect(removed, 1);
     expect(find.byIcon(Icons.close), findsOneWidget);
+  });
+
+  testWidgets('in English the cart buttons are named in English',
+      (tester) async {
+    // Arrange / Act
+    await tester.pumpWidget(_host(
+      Row(children: [
+        CartSearchButton(onPressed: () {}),
+        CartCustomerRemoveButton(customerName: 'Ann', onPressed: () {}),
+      ]),
+      languages: englishLanguages,
+    ));
+
+    // Assert
+    expect(find.byTooltip('Choose product'), findsOneWidget);
+    expect(find.byTooltip('Remove customer Ann'), findsOneWidget);
   });
 }

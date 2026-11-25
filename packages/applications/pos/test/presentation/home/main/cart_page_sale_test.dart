@@ -14,6 +14,7 @@ import 'package:pos/presentation/home/main/cart_view_model.dart';
 import 'package:pos/presentation/home/main/product_search.dart';
 import 'package:pos/presentation/home/main/product_search_view_model.dart';
 import '../../../support/app_fonts.dart';
+import '../../../support/app_languages.dart';
 
 const _barcode = '111';
 
@@ -111,7 +112,9 @@ Future<void> _openSellingScreen(WidgetTester tester, String billCode) async {
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   registerSellingScreen(billCode);
-  await tester.pumpWidget(const MaterialApp(home: Scaffold(body: CartPage())));
+  await tester.pumpWidget(const MaterialApp(
+      localizationsDelegates: [thaiLanguages],
+      home: Scaffold(body: CartPage())));
   await _settle(tester);
 }
 

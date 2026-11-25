@@ -15,6 +15,7 @@ import 'package:pos/presentation/product/main/product_page.dart';
 import 'package:pos/presentation/product/main/product_view_model.dart';
 import 'package:pos/presentation/product/main/products_view_model.dart';
 import 'package:pos/presentation/router.dart';
+import '../../support/app_languages.dart';
 
 /// The shop's catalogue, in memory. Removing a Product takes it out and says
 /// the catalogue changed, the way the real repository does with its cache.
@@ -115,7 +116,7 @@ void main() {
       timeout: const Timeout(Duration(seconds: 60)), (tester) async {
     useWideScreen(tester);
     await tester.pumpWidget(MaterialApp(
-      localizationsDelegates: [CommonLocalizationsDelegate()],
+      localizationsDelegates: [CommonLocalizationsDelegate(), thaiLanguages],
       onGenerateRoute: RouterApp.generateRoute,
       home: Builder(
         builder: (context) => Scaffold(
@@ -140,7 +141,7 @@ void main() {
       timeout: const Timeout(Duration(seconds: 60)), (tester) async {
     useWideScreen(tester);
     await tester.pumpWidget(MaterialApp(
-      localizationsDelegates: [CommonLocalizationsDelegate()],
+      localizationsDelegates: [CommonLocalizationsDelegate(), thaiLanguages],
       // In the app this panel sits inside HomePage's Scaffold.
       home: const Scaffold(body: ProductsPage()),
     ));

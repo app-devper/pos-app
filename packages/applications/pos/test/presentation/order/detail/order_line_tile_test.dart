@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 // Project imports:
 import 'package:pos/domain/model/order/order_item_detail.dart';
 import 'package:pos/presentation/order/detail/order_line_tile.dart';
+import '../../../support/app_languages.dart';
 
 OrderItemDetail _line({String status = 'CONFIRMED', int returnedQty = 0}) =>
     OrderItemDetail(
@@ -25,6 +26,7 @@ OrderItemDetail _line({String status = 'CONFIRMED', int returnedQty = 0}) =>
 /// Compact, the app's density on desktop and the web, where the E2E suite
 /// saw a cancelled, returned line overflow its row.
 Widget _host(OrderItemDetail line, {bool isAdmin = true}) => MaterialApp(
+      localizationsDelegates: const [thaiLanguages],
       theme: ThemeData(visualDensity: VisualDensity.compact),
       home: Scaffold(
         body: OrderLineTile(

@@ -113,4 +113,85 @@ class LanguageTh extends Languages {
 
   @override
   String get suppliersTitle => "จัดการร้านค้า";
+
+  @override
+  String get back => "ย้อนกลับ";
+
+  @override
+  String get clearSearch => "ล้างคำค้น";
+
+  @override
+  String get sortByBalance => "เรียงตามคงเหลือ";
+
+  @override
+  String get sortByName => "เรียงตามชื่อ";
+
+  @override
+  String get productMenu => "เมนูสินค้า";
+
+  @override
+  String get addSupplier => "เพิ่มร้านขายสินค้า";
+
+  @override
+  String get chooseProduct => "เลือกสินค้า";
+
+  @override
+  String removeCustomer(String name) => "นำลูกค้า $name ออก";
+
+  @override
+  String get receiveMenu => "เมนูใบรับสินค้า";
+
+  @override
+  String get deleteReceive => "ลบใบรับสินค้า";
+
+  @override
+  String deleteReceiveLine(String name) => "ลบรายการ $name";
+
+  @override
+  String importedReceiveLine(String name) => "รายการ $name นำเข้าแล้ว";
+
+  @override
+  String get billReceipt => "ใบเสร็จ PDF";
+
+  @override
+  String get billReload => "โหลดบิลใหม่";
+
+  @override
+  String get billReturns => "ประวัติการคืนสินค้า";
+
+  @override
+  String get billDelete => "ลบบิล";
+
+  @override
+  String deleteBillLine(String name) => "ลบรายการ $name";
+
+  @override
+  String billLineHistory(String name) => "ประวัติการขาย $name";
+
+  @override
+  String returnBillLine(String name) => "คืนสินค้า $name";
+
+  @override
+  String oneLess(String name) => "ลดจำนวน $name";
+
+  @override
+  String oneMore(String name) => "เพิ่มจำนวน $name";
+
+  @override
+  String changeQuantity(String name) => "แก้ไขจำนวน $name";
+
+  @override
+  String allowOversell(String name) => "อนุญาตขายเกินสต็อก $name";
+
+  @override
+  String oversellAllowed(String name) => "อนุญาตขายเกินสต็อกแล้ว $name";
+
+  @override
+  String editLot(String lot) => "แก้ไขล็อต $lot";
+
+  @override
+  String lotOnHand(String lot) => "ปรับจำนวนคงเหลือ ล็อต $lot";
+
+  @override
+  String adjustLot(String lot) => "ปรับสต็อก ล็อต $lot";
 }

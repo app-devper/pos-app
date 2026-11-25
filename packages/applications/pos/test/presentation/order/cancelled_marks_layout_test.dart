@@ -20,6 +20,7 @@ import 'package:pos/presentation/order/detail/order_line_tile.dart';
 import 'package:pos/presentation/order/history/order_history_tile.dart';
 import 'package:pos/presentation/order/main/order_list_tile.dart';
 import '../../support/app_fonts.dart';
+import '../../support/app_languages.dart';
 
 const _code = 'OD_202611260123';
 const _customer = 'บริษัท สุขภาพดี เภสัชภัณฑ์ และเวชภัณฑ์ (ประเทศไทย) จำกัด';
@@ -130,6 +131,7 @@ void main() {
       // Act
       await tester.pumpWidget(MaterialApp(
         theme: CustomTheme.mainTheme,
+        localizationsDelegates: const [thaiLanguages],
         home: Scaffold(body: ListView(children: [build()])),
       ));
 
@@ -147,6 +149,7 @@ void main() {
     // Act
     await tester.pumpWidget(MaterialApp(
       theme: CustomTheme.mainTheme,
+      localizationsDelegates: const [thaiLanguages],
       home: Scaffold(body: ListView(children: [_widgets.values.first()])),
     ));
 

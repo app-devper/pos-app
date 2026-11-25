@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 // Project imports:
 import 'package:pos/domain/model/order/order_detail.dart';
 import 'package:pos/presentation/order/detail/order_detail_header.dart';
+import '../../../support/app_languages.dart';
 
 OrderDetail _bill({String status = 'CONFIRMED'}) => OrderDetail(
       id: 'order-1',
@@ -22,8 +23,9 @@ OrderDetail _bill({String status = 'CONFIRMED'}) => OrderDetail(
       status: status,
     );
 
-Widget _host(Widget child) =>
-    MaterialApp(home: Scaffold(appBar: AppBar(), body: child));
+Widget _host(Widget child) => MaterialApp(
+    localizationsDelegates: const [thaiLanguages],
+    home: Scaffold(appBar: AppBar(), body: child));
 
 Widget _actions(OrderDetail? bill, {bool isAdmin = true}) => _host(Row(
       children: [

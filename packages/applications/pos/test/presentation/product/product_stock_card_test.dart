@@ -10,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/presentation/product/main/product_stock_card.dart';
 import '../../support/app_fonts.dart';
+import '../../support/app_languages.dart';
 
 /// A lot number as long as the E2E suite's.
 const _longLot = 'L20261126041051-86725';
@@ -22,6 +23,7 @@ final _price = ProductPrice(
     customerType: 'General');
 
 Widget _card(List<ProductStock> stocks) => MaterialApp(
+      localizationsDelegates: const [thaiLanguages],
       theme: CustomTheme.mainTheme,
       home: Scaffold(
         body: ListView(children: [
@@ -114,6 +116,7 @@ void main() {
 
     // Act
     await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: const [thaiLanguages],
       home: Scaffold(
         body: ProductStockCard(
           unit: _unit,
@@ -132,7 +135,7 @@ void main() {
         ),
       ),
     ));
-    await tester.tap(find.byTooltip('ปรับสต็อก').last);
+    await tester.tap(find.byTooltip('ปรับสต็อก ล็อต L2026B'));
 
     // Assert
     expect(find.text('ล็อต'), findsOneWidget);

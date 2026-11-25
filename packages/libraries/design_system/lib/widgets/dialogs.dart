@@ -51,10 +51,15 @@ void showCenterDialog({
       return Scaffold(
         key: alertKey,
         backgroundColor: Colors.transparent,
+        // A tap outside closes the dialog, a tap on it does nothing; neither
+        // is a control a screen reader should offer (the route's barrier
+        // already offers to dismiss).
         body: GestureDetector(
           behavior: HitTestBehavior.opaque,
+          excludeFromSemantics: true,
           onTap: () => Navigator.of(context).pop(),
           child: GestureDetector(
+            excludeFromSemantics: true,
             onTap: () {},
             child: Align(
               alignment: Alignment.center,

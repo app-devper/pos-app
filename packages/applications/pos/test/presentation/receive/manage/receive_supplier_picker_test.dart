@@ -29,6 +29,7 @@ Widget _host(Supplier? value) => MaterialApp(
               value: value,
               onChanged: (_) {},
               onAdd: () {},
+              addLabel: 'เพิ่มร้านขายสินค้า',
             ),
           ]),
         ),

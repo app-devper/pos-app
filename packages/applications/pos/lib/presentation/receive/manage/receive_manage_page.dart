@@ -149,6 +149,7 @@ class _ReceiveManagePageState extends State<ReceiveManagePage> {
         Languages.of(context).receiveManageTitle,
         actions: [
           IconButton(
+            tooltip: Languages.of(context).deleteReceive,
             splashRadius: 20,
             onPressed: () {
               if (_receive != null && !_receive!.isImported) {
@@ -232,6 +233,7 @@ class _ReceiveManagePageState extends State<ReceiveManagePage> {
       onAdd: () {
         _nextToSupplierAdd(context);
       },
+      addLabel: Languages.of(context).addSupplier,
     );
   }
 
@@ -247,7 +249,13 @@ class _ReceiveManagePageState extends State<ReceiveManagePage> {
               height: 50,
               child: InkWell(
                 child: Icon(
-                    _receive?.isImported == true ? Icons.lock : Icons.delete),
+                  _receive?.isImported == true ? Icons.lock : Icons.delete,
+                  semanticLabel: _receive?.isImported == true
+                      ? Languages.of(context)
+                          .importedReceiveLine(content.product?.name ?? '-')
+                      : Languages.of(context)
+                          .deleteReceiveLine(content.product?.name ?? '-'),
+                ),
                 onTap: () {
                   if (!_receive!.isImported) {
                     _showRemoveItemAlertDialog(context, index);
@@ -260,7 +268,6 @@ class _ReceiveManagePageState extends State<ReceiveManagePage> {
                 'Quantity: ${content.quantity} Cost: ${_format.format(content.costPrice)}'),
             trailing:
                 Text(_format.format(content.costPrice * content.quantity)),
-            onTap: () {},
           );
         },
       ),

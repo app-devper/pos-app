@@ -167,13 +167,15 @@ class _InputNumberState extends State<InputNumber> {
             buildHeightLine(),
             widget.isShowDot
                 ? buildNumberButton(number: ".", onPressed: () => input("."))
-                : buildNumberButton(number: "", onPressed: () => input("")),
+                // A blank key: it types nothing, so it offers no tap.
+                : buildNumberButton(number: ""),
             buildHeightLine(),
             buildNumberButton(number: "0", onPressed: () => input("0")),
             buildHeightLine(),
             buildNumberButton(
               icon: Icon(
                 Icons.backspace_outlined,
+                semanticLabel: 'ลบตัวเลข',
                 color: AppColors.of(context).textPrimary,
               ),
               onPressed: () => delete(),

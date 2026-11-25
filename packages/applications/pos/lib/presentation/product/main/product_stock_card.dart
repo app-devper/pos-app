@@ -9,6 +9,7 @@ import 'package:design_system/theme/spacing.dart';
 
 // Project imports:
 import 'package:pos/domain/model/product/product.dart';
+import 'package:pos/localizations/language/languages.dart';
 
 /// One unit's card on the product's stock tab: the total on hand, then a
 /// column per figure with one row per lot (its number included), and the
@@ -140,8 +141,8 @@ class ProductStockCard extends StatelessWidget {
       _column(context, 'นำเข้า', CrossAxisAlignment.center,
           (stock) => Text('${stock.import}x', style: _boldFigure)),
       _column(context, 'คงเหลือ', CrossAxisAlignment.center,
-          (stock) => _onHand(stock)),
-      _adjustColumn(),
+          (stock) => _onHand(context, stock)),
+      _adjustColumn(context),
     ];
   }
 
@@ -173,6 +174,7 @@ class ProductStockCard extends StatelessWidget {
           onTap: () => onEdit(stock),
           child: Text(
             'แก้ไข',
+            semanticsLabel: Languages.of(context).editLot(stock.lotNumber),
             style: TextStyle(
               fontSize: 14.0,
               color: Theme.of(context).colorScheme.primary,
@@ -196,11 +198,13 @@ class ProductStockCard extends StatelessWidget {
     );
   }
 
-  Widget _onHand(ProductStock stock) {
+  Widget _onHand(BuildContext context, ProductStock stock) {
     return InkWell(
       onTap: () => onQuantity(stock),
       child: Text(
         '${stock.quantity}x',
+        semanticsLabel:
+            '${stock.quantity}x ${Languages.of(context).lotOnHand(stock.lotNumber)}',
         style: const TextStyle(
           fontSize: 16.0,
           fontWeight: FontWeight.bold,
@@ -210,7 +214,7 @@ class ProductStockCard extends StatelessWidget {
     );
   }
 
-  Widget _adjustColumn() {
+  Widget _adjustColumn(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -223,7 +227,7 @@ class ProductStockCard extends StatelessWidget {
               padding: EdgeInsets.zero,
               splashRadius: 16,
               icon: const Icon(Icons.tune, size: 18),
-              tooltip: 'ปรับสต็อก',
+              tooltip: Languages.of(context).adjustLot(stock.lotNumber),
               onPressed: () => onAdjust(stock),
             ),
           ),

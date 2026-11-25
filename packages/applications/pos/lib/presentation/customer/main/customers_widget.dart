@@ -67,6 +67,7 @@ class _CustomersWidgetState extends State<CustomersWidget> {
       children: <Widget>[
         CustomerListHeader(
           title: Languages.of(context).customerTitle,
+          backLabel: Languages.of(context).back,
           addLabel: Languages.of(context).customerAddTitle,
           showAdd: isMobile,
           onBack: () => widget.onBack(),

@@ -12,6 +12,7 @@ import 'package:pos/presentation/receive/main/receive_state.dart';
 import 'package:pos/presentation/receive/main/receives_view_model.dart';
 import 'package:design_system/theme/app_colors.dart';
 import 'package:pos/presentation/receive/main/receive_menu_button.dart';
+import 'package:pos/localizations/language/languages.dart';
 
 class ReceivesWidget extends StatefulWidget {
   final Function(Receive) onSelected;
@@ -80,6 +81,7 @@ class _ReceivesWidgetState extends State<ReceivesWidget> {
                     fillColor: AppColors.of(context).border,
                     filled: true,
                     suffixIcon: IconButton(
+                      tooltip: Languages.of(context).clearSearch,
                       splashRadius: 20,
                       onPressed: () {
                         FocusScope.of(context).requestFocus(_viewNode);

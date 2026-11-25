@@ -15,12 +15,16 @@ class ReceiveSupplierPicker extends StatelessWidget {
   final ValueChanged<Supplier?> onChanged;
   final VoidCallback onAdd;
 
+  /// The add button's name.
+  final String addLabel;
+
   const ReceiveSupplierPicker({
     super.key,
     required this.suppliers,
     required this.value,
     required this.onChanged,
     required this.onAdd,
+    required this.addLabel,
   });
 
   @override
@@ -45,6 +49,7 @@ class ReceiveSupplierPicker extends StatelessWidget {
           child: ButtonIconWidget(
             key: const Key("supplier"),
             onClicked: onAdd,
+            tooltip: addLabel,
             icon: const Icon(Icons.add_business),
           ),
         ),

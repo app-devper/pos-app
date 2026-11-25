@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:pos/domain/model/order/order_item_detail.dart';
 import 'package:pos/presentation/order/bill_summary.dart';
 import 'package:pos/presentation/order/cancelled_mark.dart';
+import 'package:pos/localizations/language/languages.dart';
 
 /// One line of a bill: its product, quantity (with its oversold and
 /// returned marks), what was paid, and for an admin its cost and profit and
@@ -66,21 +67,30 @@ class OrderLineTile extends StatelessWidget {
 
   Widget _buildListMenu(BuildContext context) {
     if (!isAdmin || line.isCancelled) return _buildQuantityColumn(context);
+    final names = Languages.of(context);
+    final product = line.product?.name ?? '';
     return SizedBox(
       width: 130,
       height: 50,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          InkWell(onTap: onDelete, child: const Icon(Icons.delete)),
-          InkWell(onTap: onHistory, child: const Icon(Icons.history)),
+          _action(Icons.delete, names.deleteBillLine(product), onDelete),
+          _action(Icons.history, names.billLineHistory(product), onHistory),
           if (line.quantity - line.returnedQty > 0)
-            InkWell(onTap: onReturn, child: const Icon(Icons.keyboard_return)),
+            _action(
+                Icons.keyboard_return, names.returnBillLine(product), onReturn),
           _buildQuantityColumn(context),
         ],
       ),
     );
   }
+
+  /// An admin's icon action on the line, named for a screen reader.
+  Widget _action(IconData icon, String label, VoidCallback onTap) => InkWell(
+        onTap: onTap,
+        child: Icon(icon, semanticLabel: label),
+      );
 
   Widget _buildQuantityColumn(BuildContext context) {
     return Column(

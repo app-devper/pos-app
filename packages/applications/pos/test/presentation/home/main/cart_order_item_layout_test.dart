@@ -12,9 +12,11 @@ import 'package:flutter_test/flutter_test.dart';
 // Project imports:
 import 'package:pos/presentation/home/main/cart_widget.dart';
 import '../../../support/app_fonts.dart';
+import '../../../support/app_languages.dart';
 
 Widget _host(double width, {required double discount}) => MaterialApp(
       theme: CustomTheme.mainTheme,
+      localizationsDelegates: const [thaiLanguages],
       home: Scaffold(
         body: Align(
           alignment: Alignment.topLeft,
@@ -38,6 +40,8 @@ Widget _host(double width, {required double discount}) => MaterialApp(
         ),
       ),
     );
+
+const _finding29 = true;
 
 /// A phone's touch density and the desktop's compact one.
 final _densities =
@@ -64,4 +68,24 @@ void main() {
       }, variant: _densities);
     }
   }
+
+  // Found by the accessibility walk: on a 360 px phone the cart is the screen
+  // less its 51 px cart slots, 309 px, and the line's 288 px of buttons and
+  // price leave its 40 px of padding and the product name no room.
+  testWidgets('a cart line fits the 309 px cart of a 360 px phone',
+      (tester) async {
+    // Arrange
+    useViewSize(tester, phoneSize);
+
+    // Act
+    await tester.pumpWidget(_host(phoneSize.width - 51, discount: 0));
+
+    // Assert
+    expect(tester.takeException(), isNull);
+    expect(tester.getSize(find.text('พาราเซตามอล 500 มก. แผงละ 10 เม็ด')).width,
+        greaterThan(0));
+  },
+      // FINDING 29: the line needs a narrow layout; see e2e-findings.md.
+      skip: _finding29,
+      variant: _densities);
 }

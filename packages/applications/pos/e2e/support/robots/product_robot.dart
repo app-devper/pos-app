@@ -273,8 +273,8 @@ class ProductRobot {
     String note = '',
     String reason = 'อื่นๆ',
   }) async {
-    final tune = _inDetail(find.byTooltip('ปรับสต็อก'));
-    expect(tune, findsOneWidget, reason: 'expected one lot on the stock tab');
+    final tune = _inDetail(find.byTooltip('ปรับสต็อก ล็อต $lot'));
+    expect(tune, findsOneWidget, reason: 'expected lot $lot on the stock tab');
     await tester.tap(tune);
     await tester.pump();
     await pumpUntilFound(tester, _adjustDialog.hitTestable());
