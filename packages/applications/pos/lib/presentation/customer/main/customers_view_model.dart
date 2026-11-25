@@ -37,6 +37,10 @@ class CustomersViewModel {
     }
   }
 
+  /// Loads the list again: after an add, a rename or a removal beside it,
+  /// on a wide screen, where the list stays on screen.
+  Future<void> reload() => getCustomers();
+
   void dispose() {
     _state.dispose();
   }

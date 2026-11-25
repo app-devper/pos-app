@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:design_system/widgets/responsive.dart';
 
 // Project imports:
-import 'package:pos/container.dart';
 import 'package:pos/domain/model/customer/customer.dart';
 import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/customer/main/customers_state.dart';
@@ -16,13 +15,17 @@ import 'package:design_system/widgets/error_state.dart';
 
 // Package imports:
 
+/// The customer list. Its [viewModel] belongs to the page, which reloads it
+/// after an add, a rename or a removal and disposes it.
 class CustomersWidget extends StatefulWidget {
+  final CustomersViewModel viewModel;
   final Function(Customer) onSelected;
   final Function() onBack;
   final Function() onAdd;
 
   const CustomersWidget({
     super.key,
+    required this.viewModel,
     required this.onSelected,
     required this.onBack,
     required this.onAdd,
@@ -33,19 +36,16 @@ class CustomersWidget extends StatefulWidget {
 }
 
 class _CustomersWidgetState extends State<CustomersWidget> {
-  late CustomersViewModel _viewModel;
+  CustomersViewModel get _viewModel => widget.viewModel;
 
   @override
   void initState() {
     super.initState();
-    _viewModel = sl<CustomersViewModel>();
-    _viewModel.getCustomers();
-  }
-
-  @override
-  void dispose() {
-    _viewModel.dispose();
-    super.dispose();
+    // A narrow layout builds the list afresh each time it is shown; a load
+    // the page already started is not repeated.
+    if (!_viewModel.state.value.loading) {
+      _viewModel.getCustomers();
+    }
   }
 
   @override

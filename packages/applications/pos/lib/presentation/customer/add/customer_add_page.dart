@@ -150,7 +150,9 @@ class _CustomerAddPageState extends State<CustomerAddPage> {
                       'โปรดระบุข้อมูลลูกค้า',
                       style: TextStyle(
                         fontSize: 16,
-                        color: AppColors.of(context).textPrimary.withValues(alpha: 0.6),
+                        color: AppColors.of(context)
+                            .textPrimary
+                            .withValues(alpha: 0.6),
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -266,7 +268,6 @@ class _CustomerAddPageState extends State<CustomerAddPage> {
       ),
     );
   }
-
 
   CustomerParam _getCustomerParam() {
     return CustomerParam(

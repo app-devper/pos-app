@@ -134,13 +134,9 @@ void main() {
         reason: 'the app currently resets the type on any edit');
   }, skip: E2EEnv.isHosted, timeout: e2eTestTimeout);
 
-  // FINDING (Task 7): on a wide screen CustomerPage keeps the same
-  // CustomersWidget while the right panel changes, and that widget loads
-  // only in initState (customers_widget.dart:38-42, customer_page.dart:74-85),
-  // so a customer just added (or removed) is not shown (or still shown)
-  // until the user leaves the page and comes back. The running test above
-  // re-enters; this one states what a user expects. Skipped tests do not
-  // sign in or write anything.
+  // Was a finding (#13): on a wide screen the list stays on screen while the
+  // panel beside it changes, and it loaded only in initState; the page now
+  // reloads it after an add, a rename and a removal.
   group('customer list refresh', () {
     testWidgets('a new customer appears in the list without leaving the page',
         (tester) async {
@@ -155,9 +151,7 @@ void main() {
       // Assert
       expect(await customers.scrollListTo(name), isTrue);
     }, timeout: e2eTestTimeout);
-  },
-      skip: 'FINDING: on a wide screen the customer list does not reload '
-          'after an add or a removal (customers_widget.dart:38-42)');
+  });
 
   // Was a finding (#7): pos-api archives a removed customer and returns it
   // from GET /customers; CustomersViewModel now leaves archived ones out.
@@ -241,9 +235,8 @@ void _registerCleanup(CustomerPlan plan) {
 
 /// Adds [plan]'s customer through the form, with the suite's marker, unless
 /// the suite's own one is active; refuses (fails, touching nothing) when
-/// only someone else's customer has the name. Then re-enters the list
-/// (FINDING: on a wide screen it loads only on entry) and returns the
-/// suite's customer as the server has it.
+/// only someone else's customer has the name. Then re-enters the list and
+/// returns the suite's customer as the server has it.
 Future<({Customer customer, bool created})> _ensureListed(
     CustomerRobot customers, CustomerPlan plan) async {
   final decision = plan.decide(await _recordsNamed(plan.name));
