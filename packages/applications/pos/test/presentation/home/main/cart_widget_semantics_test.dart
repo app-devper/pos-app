@@ -2,14 +2,20 @@
 import 'package:flutter/material.dart';
 
 // Package imports:
+import 'package:design_system/theme/theme.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // Project imports:
 import 'package:pos/presentation/home/main/cart_widget.dart';
+import '../../../support/app_fonts.dart';
 
-Widget _host(Widget child) => MaterialApp(home: Scaffold(body: child));
+/// In the app's theme and fonts, so a layout error here is one a user gets.
+Widget _host(Widget child) =>
+    MaterialApp(theme: CustomTheme.mainTheme, home: Scaffold(body: child));
 
 void main() {
+  setUpAll(loadAppFonts);
+
   testWidgets('a cart line says which product its quantity belongs to',
       (tester) async {
     // Arrange
@@ -30,13 +36,6 @@ void main() {
       onEditPrice: () {},
       onToggleOversell: () {},
     )));
-    // The price column may overflow by a few pixels with the test font's
-    // metrics (a known layout finding); that is not what this test is about.
-    final layoutError = tester.takeException();
-    if (layoutError != null) {
-      expect(layoutError.toString(), contains('overflowed'));
-    }
-
     // Assert: the visible text is unchanged, the label names the product.
     expect(find.text('2x'), findsOneWidget);
     expect(find.bySemanticsLabel('2x Paracetamol 500'), findsOneWidget);
