@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:common/core/error/exception.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pos/container.dart';
@@ -21,6 +22,22 @@ class _StockRepository implements ProductRepository {
   Future<List<Product>> getLocalProducts() async {
     loads++;
     return [_product(onHand)];
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+/// Each load waits on its own [Completer], so a test decides when, and in
+/// which order, the loads come back, and whether one fails.
+class _ScriptedRepository implements ProductRepository {
+  final pending = <Completer<List<Product>>>[];
+
+  @override
+  Future<List<Product>> getLocalProducts() {
+    final load = Completer<List<Product>>();
+    pending.add(load);
+    return load.future;
   }
 
   @override
@@ -82,6 +99,45 @@ void main() {
       expect(repo.loads, 2);
       expect(vm.items.value, hasLength(1));
       expect(vm.items.value!.single.getQuantity(), 998);
+    });
+  });
+
+  group('ProductSearchViewModel loads', () {
+    test('a failed reload after a sale keeps the grid and shows no error',
+        () async {
+      // Arrange: the grid loaded 1000 on hand
+      final repo = _ScriptedRepository();
+      final vm = ProductSearchViewModel(productRepo: repo);
+      final first = vm.prepareData();
+      repo.pending.single.complete([_product(1000)]);
+      await first;
+      final shown = vm.items.value;
+
+      // Act: the reload after a sale fails (the network blinked)
+      final reload = vm.refresh();
+      repo.pending.last
+          .completeError(const NetworkException(message: 'offline'));
+      await reload;
+
+      // Assert
+      expect(vm.items.value, same(shown));
+      expect(vm.error.value, isNull,
+          reason: 'the cashier keeps selling from the grid they had');
+    });
+
+    test('a first load that fails still shows the error', () async {
+      // Arrange
+      final repo = _ScriptedRepository();
+      final vm = ProductSearchViewModel(productRepo: repo);
+
+      // Act
+      final first = vm.prepareData();
+      repo.pending.single
+          .completeError(const NetworkException(message: 'offline'));
+      await first;
+
+      // Assert
+      expect(vm.error.value, isNotNull);
     });
   });
 

@@ -35,29 +35,36 @@ class ProductSearchViewModel {
     await getProducts();
   }
 
-  /// A first load, or a retry: the grid spins until the products are in.
+  /// A first load, or a retry: the grid spins until the products are in,
+  /// and a failure replaces it with the error and its retry.
   Future<void> getProducts() async {
     _error.value = null;
     _items.value = null;
-    await _load();
-  }
-
-  /// Loads the products again behind the grid the cashier sees, keeping what
-  /// was typed in the search: after a sale the stock figures have moved.
-  Future<void> refresh() => _load();
-
-  Future<void> _load() async {
     try {
-      final products = await productRepo.getLocalProducts();
-      _products = List<ProductUnitItem>.unmodifiable([
-        for (final item in products)
-          if (item.status == productStatusActive) ...item.toProductItems(),
-      ]);
-      _error.value = null;
-      searchProduct(_query);
+      await _load();
     } on Exception catch (e) {
       _error.value = toFailure(e).getMessage();
     }
+  }
+
+  /// Loads the products again behind the grid the cashier sees, keeping what
+  /// was typed in the search: after a sale the stock figures have moved. A
+  /// failed reload keeps the grid as it was, with no error: the cashier goes
+  /// on selling, and the next sale reloads again.
+  Future<void> refresh() async {
+    try {
+      await _load();
+    } on Exception catch (_) {}
+  }
+
+  Future<void> _load() async {
+    final products = await productRepo.getLocalProducts();
+    _products = List<ProductUnitItem>.unmodifiable([
+      for (final item in products)
+        if (item.status == productStatusActive) ...item.toProductItems(),
+    ]);
+    _error.value = null;
+    searchProduct(_query);
   }
 
   void searchProduct(String text) {
