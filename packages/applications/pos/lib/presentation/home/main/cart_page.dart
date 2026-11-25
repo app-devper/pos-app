@@ -637,35 +637,16 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
   }
 
   void _showPaymentDialog() {
-    showCenterDialog(
-      context: context,
+    showPaymentDialog(
+      context,
       alertKey: _alertKey,
-      builder: (dialogContext) => _buildPaymentScreen(dialogContext),
-    );
-  }
-
-  Column _buildPaymentScreen(BuildContext context) {
-    return Column(
-      children: [
-        TitleBar(
-          title: "ชำระเงิน",
-          onBack: () {
-            Navigator.pop(context);
-          },
-        ),
-        const Divider(height: 1),
-        Expanded(
-          child: PaymentScreen(
-            amount: _total,
-            onCompleted: (tendered, typeMode) {
-              _viewModel.checkout(tendered: tendered, type: typeMode);
-            },
-            onError: () {
-              _showError("คุณรับเงินน้อยกว่ายอดราคาสินค้า");
-            },
-          ),
-        )
-      ],
+      amount: _total,
+      onCompleted: (tendered, typeMode) {
+        _viewModel.checkout(tendered: tendered, type: typeMode);
+      },
+      onError: () {
+        _showError("คุณรับเงินน้อยกว่ายอดราคาสินค้า");
+      },
     );
   }
 }

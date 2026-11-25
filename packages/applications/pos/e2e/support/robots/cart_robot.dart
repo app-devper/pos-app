@@ -15,7 +15,6 @@ import 'package:pos/presentation/home/main/cart_widget.dart';
 import 'package:pos/presentation/home/main/payment_screen.dart';
 import 'package:pos/presentation/home/main/product_search.dart';
 import '../pump.dart';
-import '../selling_faults.dart';
 import 'shell_robot.dart';
 
 const _searchHint = 'ค้นหาชื่อสินค้า หรือสแกนบาร์โค้ด';
@@ -152,10 +151,8 @@ class CartRobot {
 
   /// Presses 'ชำระเงิน (n รายการ)'; picks พร้อมเพย์ when [promptPay] and
   /// keys in [tendered] when given (else the exact amount is taken).
-  /// Its amount display overflows (a known finding), let through here.
   Future<void> openPayment({bool promptPay = false, String? tendered}) =>
-      onPaymentDialog(
-          () => _openPayment(promptPay: promptPay, tendered: tendered));
+      _openPayment(promptPay: promptPay, tendered: tendered);
 
   /// The cart's 'ชำระเงิน (n รายการ)' button.
   Finder get payButtonInCart => find
@@ -191,36 +188,30 @@ class CartRobot {
   Finder payButton(String label) =>
       _inPayment(find.widgetWithText(ElevatedButton, label));
 
-  // Every step that pumps while the payment dialog is open lets its known
-  // overflow through: it is reported again whenever the display relays out.
-
-  Future<void> submitPayment() => onPaymentDialog(() async {
-        await tester.tap(_inPayment(find.byType(ElevatedButton)));
-        await tester.pump();
-      });
+  Future<void> submitPayment() async {
+    await tester.tap(_inPayment(find.byType(ElevatedButton)));
+    await tester.pump();
+  }
 
   /// A refused payment: the error snackbar [text] shows over the open
   /// payment, then closes on its own.
-  Future<void> expectRefused(String text) => onPaymentDialog(() async {
-        await shell.expectSnackbar(text);
-        await shell.waitForSnackbarToClose();
-      });
+  Future<void> expectRefused(String text) async {
+    await shell.expectSnackbar(text);
+    await shell.waitForSnackbarToClose();
+  }
 
-  Future<void> closePayment() => onPaymentDialog(() async {
-        await shell.closeDialog();
-        await pumpUntilGone(tester, _payment);
-      });
+  Future<void> closePayment() async {
+    await shell.closeDialog();
+    await pumpUntilGone(tester, _payment);
+  }
 
   /// The sale's success bar shows, the payment closes and the cart is
   /// empty; returns the bar's text once it has closed by itself.
   Future<String> expectSold() async {
-    var message = '';
-    await onPaymentDialog(() async {
-      await pumpUntilFound(tester, _sold.hitTestable(),
-          timeout: const Duration(seconds: 30));
-      message = tester.widget<Text>(_sold.hitTestable().first).data ?? '';
-      await pumpUntilGone(tester, _payment);
-    });
+    await pumpUntilFound(tester, _sold.hitTestable(),
+        timeout: const Duration(seconds: 30));
+    final message = tester.widget<Text>(_sold.hitTestable().first).data ?? '';
+    await pumpUntilGone(tester, _payment);
     expect(isEmpty, isTrue, reason: 'a sold cart is emptied');
     await shell.waitForSnackbarToClose();
     return message;

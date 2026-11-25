@@ -31,7 +31,6 @@ import 'support/robots/product_robot.dart';
 import 'support/robots/shell_robot.dart';
 import 'support/run_data.dart';
 import 'support/sale_customer.dart';
-import 'support/selling_faults.dart';
 import 'support/stock_plan.dart';
 
 const _unknownBarcode = '0000000000000';
@@ -170,10 +169,6 @@ void main() {
       expect(cart.paymentDue('฿75.00'), findsOneWidget,
           reason: 'the payment stays open');
       await cart.closePayment();
-      // The payment stayed open for seconds, long enough to be painted.
-      expect(paymentDisplayOverflowsSwallowed, greaterThanOrEqualTo(1),
-          reason: 'The payment display no longer overflows: drop '
-              'onPaymentDialog and unskip its FINDING test.');
       await cart.removeLine(_product);
       expect(await billsOfProductSince(_product, before), isEmpty);
       await _expectOnHand(shell, 7);
@@ -369,9 +364,9 @@ void main() {
     }, timeout: e2eTestTimeout);
   });
 
-  // Fixed-height dialogs too low for their Sarabun text: see
-  // selling_faults.dart. flutter_test fails these on the overflow.
-  group('FINDING', () {
+  // Were findings #18 and #19: fixed-height dialogs too low for their
+  // Sarabun text. flutter_test fails this on any overflow.
+  group('the selling dialogs', () {
     testWidgets('the quantity and payment dialogs fit their text',
         (tester) async {
       final cart = CartRobot(await _signedInShell(tester));
@@ -383,7 +378,7 @@ void main() {
       await tester.tap(cart.payButtonInCart);
       await tester.pump(const Duration(seconds: 1));
     }, timeout: e2eTestTimeout);
-  }, skip: 'FINDING: the payment display (payment_screen.dart:221) overflows');
+  });
 }
 
 /// One step of the chain.
