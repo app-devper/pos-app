@@ -7,14 +7,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
-/// The overflowing Column of DecimalInput's display, nearest widget first,
-/// as the overflow report names its creator (decimal_input.dart:103, inside
-/// the Container at :94 and the Expanded at :39).
-const keypadDisplayChain = [
-  'Column', 'Padding', 'DecoratedBox', 'ConstrainedBox', 'Container', //
-  'Expanded', 'Column', 'Padding', 'Container', 'DecimalInput',
-];
-
 /// The overflowing Column of PaymentScreen's 'ยอดรับเงินรวม' display
 /// (payment_screen.dart:221, inside the Container at :213, the Expanded at
 /// :43 and the Flexible at :40).
@@ -26,18 +18,8 @@ const paymentDisplayChain = [
 
 final _swallowed = <String, int>{};
 
-/// How many quantity keypad overflows [onQuantityKeypad] has let through.
-int get quantityKeypadOverflowsSwallowed => _swallowed['DecimalInput'] ?? 0;
-
 /// How many payment display overflows [onPaymentDialog] has let through.
 int get paymentDisplayOverflowsSwallowed => _swallowed['PaymentScreen'] ?? 0;
-
-/// FINDING (Task 7): the cart's quantity dialog is a fixed 430 px
-/// (dialogs.dart:96-99); under the TitleBar, the 250 px keypad and the
-/// padding, DecimalInput's display gets 51 px for a 20 px title and a 24 px
-/// figure, so its Column overflows by 12 px (decimal_input.dart:103).
-bool isQuantityKeypadOverflow(FlutterErrorDetails details) =>
-    _isOverflowOf(details, keypadDisplayChain);
 
 /// FINDING (Task 7): the payment dialog is a fixed 600 px
 /// (dialogs.dart:30-37); beside the keypad column (250 + 16 + 64 px) the
@@ -46,17 +28,9 @@ bool isQuantityKeypadOverflow(FlutterErrorDetails details) =>
 bool isPaymentDisplayOverflow(FlutterErrorDetails details) =>
     _isOverflowOf(details, paymentDisplayChain);
 
-/// Runs [body], which opens the cart's quantity dialog, letting the keypad
+/// Runs [body], which drives the payment dialog, letting its amount
 /// display's overflow through and counting it; every other error goes to the
 /// handler in place when [body] starts, which is put back when it ends.
-Future<T> onQuantityKeypad<T>(Future<T> Function() body) => _tolerating(
-    'DecimalInput',
-    isQuantityKeypadOverflow,
-    'the quantity keypad display overflows '
-        '(decimal_input.dart:103)',
-    body);
-
-/// As [onQuantityKeypad], for the payment dialog's amount display.
 Future<T> onPaymentDialog<T>(Future<T> Function() body) => _tolerating(
     'PaymentScreen',
     isPaymentDisplayOverflow,

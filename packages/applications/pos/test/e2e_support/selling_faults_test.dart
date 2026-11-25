@@ -8,15 +8,11 @@ import 'package:flutter/services.dart';
 
 // Package imports:
 import 'package:design_system/theme/theme.dart';
-import 'package:design_system/widgets/decimal_input.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // Project imports:
 import 'package:pos/presentation/home/main/payment_screen.dart';
 import '../../e2e/support/selling_faults.dart';
-
-/// The quantity dialog is 320 x 430; its TitleBar and divider take 49.
-const _keypadBox = Size(320, 381);
 
 /// The payment dialog is 640 x 600; its TitleBar and divider take 49.
 const _paymentBox = Size(640, 551);
@@ -38,13 +34,6 @@ String _changed(String widget) =>
     'assertion in e2e/selling_test.dart) and unskip the FINDING test '
     '"the quantity and payment dialogs fit their text". If only the widget '
     'tree changed, update the chain matched in selling_faults.dart.';
-
-Widget _keypad() => DecimalInput(
-    title: 'จำนวนสินค้า',
-    onChange: (_) {},
-    onDone: (_) {},
-    maxLength: 3,
-    isShowDot: false);
 
 Widget _payment() =>
     PaymentScreen(amount: 75, onCompleted: (_, __) {}, onError: () {});
@@ -104,29 +93,6 @@ void main() {
     await loader.load();
   });
 
-  group('isQuantityKeypadOverflow', () {
-    testWidgets('matches the keypad display overflowing in the dialog',
-        (tester) async {
-      // Act
-      final reported = await _overflowsOf(tester, _keypad(), _keypadBox);
-
-      // Assert
-      expect(reported, hasLength(1), reason: _changed('DecimalInput'));
-      expect(isQuantityKeypadOverflow(reported.single), isTrue,
-          reason: _changed('DecimalInput'));
-      expect(isPaymentDisplayOverflow(reported.single), isFalse);
-    });
-
-    test('does not match an error that is not an overflow', () {
-      // Arrange
-      final other = FlutterErrorDetails(
-          exception: FlutterError('setState() called after dispose()'));
-
-      // Act / Assert
-      expect(isQuantityKeypadOverflow(other), isFalse);
-    });
-  });
-
   group('isPaymentDisplayOverflow', () {
     testWidgets('matches the amount display overflowing in the dialog',
         (tester) async {
@@ -137,7 +103,6 @@ void main() {
       expect(reported, hasLength(1), reason: _changed('PaymentScreen'));
       expect(isPaymentDisplayOverflow(reported.single), isTrue,
           reason: _changed('PaymentScreen'));
-      expect(isQuantityKeypadOverflow(reported.single), isFalse);
     });
 
     testWidgets('does not match another overflow inside the payment screen',
@@ -182,48 +147,6 @@ void main() {
       // Act
       await expectLater(
           onPaymentDialog(() async => throw StateError('step failed')),
-          throwsStateError);
-
-      // Assert
-      expect(FlutterError.onError, same(inPlace));
-    });
-  });
-
-  group('onQuantityKeypad', () {
-    testWidgets('swallows and counts the keypad overflow', (tester) async {
-      // Arrange
-      final before = quantityKeypadOverflowsSwallowed;
-
-      // Act
-      final reached =
-          await _passedOn(tester, onQuantityKeypad, [(_keypad(), _keypadBox)]);
-
-      // Assert
-      expect(reached, isEmpty);
-      expect(quantityKeypadOverflowsSwallowed, before + 1);
-    });
-
-    testWidgets('passes the payment screen overflows on, uncounted',
-        (tester) async {
-      // Arrange
-      final before = quantityKeypadOverflowsSwallowed;
-
-      // Act
-      final reached = await _passedOn(
-          tester, onQuantityKeypad, [(_payment(), _crampedPaymentBox)]);
-
-      // Assert
-      expect(reached, isNotEmpty);
-      expect(quantityKeypadOverflowsSwallowed, before);
-    });
-
-    test('restores the handler in place when the body throws', () async {
-      // Arrange
-      final inPlace = FlutterError.onError;
-
-      // Act
-      await expectLater(
-          onQuantityKeypad(() async => throw StateError('step failed')),
           throwsStateError);
 
       // Assert

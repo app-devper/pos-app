@@ -85,6 +85,10 @@ double _clampToViewport(double requested, double viewportExtent) {
   return requested > maxAllowed ? maxAllowed : requested;
 }
 
+/// The most a number dialog may grow to fit its display and keypad; the
+/// dialog itself is as tall as they are (and never above 90% of the screen).
+const inputNumberDialogMaxHeight = 600.0;
+
 void showInputNumberDialog(
   BuildContext context, {
   required String title,
@@ -97,9 +101,10 @@ void showInputNumberDialog(
     context: context,
     minWidth: 320,
     minHeight: 430,
-    maxHeight: 430,
+    maxHeight: inputNumberDialogMaxHeight,
     maxWidth: 320,
     builder: (dialogContext) => Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         TitleBar(
           title: title,
@@ -113,7 +118,7 @@ void showInputNumberDialog(
           },
         ),
         const Divider(height: 1),
-        Expanded(
+        Flexible(
           child: DecimalInput(
             isShowDot: isShowDot,
             maxLength: maxLength,

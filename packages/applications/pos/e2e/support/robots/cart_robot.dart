@@ -82,11 +82,7 @@ class CartRobot {
 
   /// Taps the line's `<n>x` and keys [quantity] in the 'จำนวนสินค้า'
   /// keypad dialog.
-  /// The dialog's display overflows (a known finding), let through here.
-  Future<void> setQuantity(String productName, int quantity) =>
-      onQuantityKeypad(() => _setQuantity(productName, quantity));
-
-  Future<void> _setQuantity(String productName, int quantity) async {
+  Future<void> setQuantity(String productName, int quantity) async {
     final current = tester.widget<CartOrderItem>(line(productName)).quantity;
     await tester.tap(lineShows(productName, '${current}x'));
     await tester.pump();

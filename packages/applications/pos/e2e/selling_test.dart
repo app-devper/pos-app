@@ -171,9 +171,6 @@ void main() {
           reason: 'the payment stays open');
       await cart.closePayment();
       // The payment stayed open for seconds, long enough to be painted.
-      expect(quantityKeypadOverflowsSwallowed, greaterThanOrEqualTo(1),
-          reason: 'The quantity keypad no longer overflows: drop '
-              'onQuantityKeypad and unskip its FINDING test.');
       expect(paymentDisplayOverflowsSwallowed, greaterThanOrEqualTo(1),
           reason: 'The payment display no longer overflows: drop '
               'onPaymentDialog and unskip its FINDING test.');
@@ -386,9 +383,7 @@ void main() {
       await tester.tap(cart.payButtonInCart);
       await tester.pump(const Duration(seconds: 1));
     }, timeout: e2eTestTimeout);
-  },
-      skip: 'FINDING: the quantity keypad (decimal_input.dart:103) and the '
-          'payment display (payment_screen.dart:221) overflow');
+  }, skip: 'FINDING: the payment display (payment_screen.dart:221) overflows');
 }
 
 /// One step of the chain.
