@@ -64,15 +64,40 @@ class ProductStockCard extends StatelessWidget {
               ),
             ),
             const Divider(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: _buildColumns(context),
-            ),
+            _buildTable(context),
           ],
         ),
       ),
     );
   }
+
+  /// The columns spread over the card's width; where they need more (a
+  /// phone, a long lot number) the table scrolls sideways, so every figure
+  /// stays whole and each lot stays on one line across the columns.
+  Widget _buildTable(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minWidth: constraints.maxWidth),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: _spaced(_buildColumns(context)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// [columns] with a gap between each, so they never touch when scrolled.
+  static List<Widget> _spaced(List<Widget> columns) => [
+        for (final (index, column) in columns.indexed) ...[
+          if (index > 0) const SizedBox(width: _columnGap),
+          column,
+        ],
+      ];
+
+  static const _columnGap = 16.0;
 
   Widget _buildHeader(BuildContext context) {
     return Row(children: [
