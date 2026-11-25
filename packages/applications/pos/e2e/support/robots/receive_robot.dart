@@ -15,6 +15,7 @@ import '../pump.dart';
 import 'form_driver.dart';
 import 'product_picker.dart';
 import 'shell_robot.dart';
+import 'package:pos/presentation/receive/manage/receive_line_tile.dart';
 
 const _manageTile = 'ใบรับสินค้า / Goods Receipt';
 const _searchHint = 'ค้นหาเลขที่ใบรับสินค้า...';
@@ -198,16 +199,14 @@ class ReceiveRobot {
     await form.awaitOutcome(itemRow(item));
   }
 
-  /// The receipt line for [item]: `Name: <product>` and its quantity and
-  /// unit cost.
+  /// The receipt line for [item]: its product, quantity and unit cost (shown
+  /// as `Name: <product>` and `Quantity: <n> Cost: <cost>`).
   Finder itemRow(ReceiptItem item) => find
       .byWidgetPredicate((w) =>
-          w is ListTile &&
-          w.title is Text &&
-          (w.title as Text).data == 'Name: ${item.productName}' &&
-          w.subtitle is Text &&
-          (w.subtitle as Text).data ==
-              'Quantity: ${item.quantity} Cost: ${_money(item.cost)}')
+          w is ReceiveLineTile &&
+          w.line.product?.name == item.productName &&
+          w.line.quantity == item.quantity &&
+          _money(w.line.costPrice) == _money(item.cost))
       .hitTestable();
 
   /// 'นำเข้าสต็อก' and its confirm; returns once the page says it imported.

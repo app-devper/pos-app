@@ -20,6 +20,8 @@ import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/presentation/home/main/cart_page.dart';
 import 'package:pos/presentation/home/main/cart_widget.dart';
 import 'package:pos/presentation/order/detail/order_line_tile.dart';
+import 'package:pos/presentation/receive/manage/receive_line_tile.dart';
+import 'package:pos/domain/model/receive/receive_item.dart';
 import '../support/app_fonts.dart';
 import '../support/app_languages.dart';
 import 'home/main/cart_page_sale_test.dart' as cart;
@@ -214,6 +216,29 @@ void main() {
     final title = _node(tester, 'ตะกร้าสินค้า #1');
     expect(title.childrenCount, 0);
     expect(title.getSemanticsData().flagsCollection.isHeader, isTrue);
+    semantics.dispose();
+  });
+
+  testWidgets('a receipt line reads as one node beside its delete button',
+      (tester) async {
+    // Arrange
+    final semantics = tester.ensureSemantics();
+    final line = ReceiveItem(
+        id: 'i1',
+        receiveId: 'r1',
+        productId: 'p1',
+        lotId: 'l1',
+        costPrice: 10,
+        quantity: 2,
+        product: _billLine().product);
+
+    // Act
+    await tester.pumpWidget(
+        _host(ReceiveLineTile(line: line, imported: false, onDelete: () {})));
+
+    // Assert
+    _expectRowNode(tester, 'Name: $_product\nQuantity: 2 Cost: 10.00\n20.00',
+        ['ลบรายการ $_product']);
     semantics.dispose();
   });
 }

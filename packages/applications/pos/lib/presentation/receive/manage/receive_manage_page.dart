@@ -24,6 +24,7 @@ import 'receive_item_dialog.dart';
 import 'receive_manage_state.dart';
 import 'receive_manage_view_model.dart';
 import 'receive_supplier_picker.dart';
+import 'package:pos/presentation/receive/manage/receive_line_tile.dart';
 
 class ReceiveManagePage extends StatefulWidget {
   final String? receiveId;
@@ -243,31 +244,14 @@ class _ReceiveManagePageState extends State<ReceiveManagePage> {
         itemCount: _receiveItems.length,
         itemBuilder: (context, index) {
           final content = _receiveItems[index];
-          return ListTile(
-            leading: SizedBox(
-              width: 50,
-              height: 50,
-              child: InkWell(
-                child: Icon(
-                  _receive?.isImported == true ? Icons.lock : Icons.delete,
-                  semanticLabel: _receive?.isImported == true
-                      ? Languages.of(context)
-                          .importedReceiveLine(content.product?.name ?? '-')
-                      : Languages.of(context)
-                          .deleteReceiveLine(content.product?.name ?? '-'),
-                ),
-                onTap: () {
-                  if (!_receive!.isImported) {
-                    _showRemoveItemAlertDialog(context, index);
-                  }
-                },
-              ),
-            ),
-            title: Text('Name: ${content.product?.name ?? "-"}'),
-            subtitle: Text(
-                'Quantity: ${content.quantity} Cost: ${_format.format(content.costPrice)}'),
-            trailing:
-                Text(_format.format(content.costPrice * content.quantity)),
+          return ReceiveLineTile(
+            line: content,
+            imported: _receive?.isImported == true,
+            onDelete: () {
+              if (!_receive!.isImported) {
+                _showRemoveItemAlertDialog(context, index);
+              }
+            },
           );
         },
       ),
