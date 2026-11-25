@@ -29,6 +29,14 @@ class E2EEnv {
   /// Absolute path of the credentials file.
   static const String envFile = String.fromEnvironment('E2E_ENV_FILE');
 
+  /// Where the hosted target records its `/auth/login` times, shared by the
+  /// files of a run so that pacing spans them; empty (no pacing) locally.
+  static const String signInLog = String.fromEnvironment('E2E_SIGNIN_LOG');
+
+  /// A file whose existence tells run-all.sh to stop the run: written when
+  /// the hosted target refuses the suite's own credentials. Optional.
+  static const String stopFile = String.fromEnvironment('E2E_STOP_FILE');
+
   static const _defines = {
     'ENV': config,
     'E2E_RUN_ID': runId,

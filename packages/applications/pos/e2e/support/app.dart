@@ -24,6 +24,7 @@ import 'package:pos/presentation/app.dart';
 import 'cleanup.dart';
 import 'env.dart';
 import 'pump.dart';
+import 'sign_in_pacing.dart';
 
 /// 1400 wide keeps the sidebar expanded (labels shown) and the grid inline.
 const _surfaceSize = Size(1400, 900);
@@ -62,6 +63,12 @@ E2ERole? _sessionRole;
 
 /// `/auth/login` calls this file made, printed at its end.
 int _signInCalls = 0;
+
+/// Set once the hosted target refused the suite's own credentials.
+bool _stopped = false;
+
+/// um-api's code for a wrong username or password (errs.ErrWrongCredentials).
+const _wrongCredentialsCode = '[UM-401-004]';
 
 /// Call first in every e2e file's main().
 void initE2E() {
@@ -174,12 +181,19 @@ Future<void> _forgetSession() async {
 }
 
 /// Types [username] and [password] into the sign-in form and submits it;
-/// each call is one `/auth/login` call and counts as a sign-in.
+/// each call is one `/auth/login` call and counts as a sign-in. On the
+/// hosted target it first waits so that the suite makes at most
+/// [signInPacingMax] in any [signInPacingWindow] (see sign_in_pacing.dart).
 Future<void> submitCredentials(
   WidgetTester tester,
   String username,
   String password,
 ) async {
+  if (_stopped) {
+    fail('E2E: stopped — the target refused the suite\'s credentials; '
+        'check .env.e2e');
+  }
+  await _pace(tester);
   _signInCalls++;
   await tester.enterText(_field('ชื่อผู้ใช้'), username);
   await tester.enterText(_field('รหัสผ่าน'), password);
@@ -187,38 +201,80 @@ Future<void> submitCredentials(
   await tester.pump();
 }
 
+/// Waits out the pacing, if any, and records this sign-in's time.
+Future<void> _pace(WidgetTester tester) async {
+  final path = E2EEnv.signInLog;
+  if (path.isEmpty) return;
+  final log = File(path);
+  final earlier =
+      log.existsSync() ? parseSignInLog(log.readAsStringSync()) : <DateTime>[];
+  final wait = waitBeforeSignIn(earlier, DateTime.now());
+  if (wait > Duration.zero) {
+    debugPrint('E2E: pacing sign-ins (at most $signInPacingMax a minute on '
+        'the hosted target): waiting ${wait.inSeconds}s');
+    await _wait(tester, wait);
+  }
+  log.writeAsStringSync('${DateTime.now().millisecondsSinceEpoch}\n',
+      mode: FileMode.append);
+}
+
 Finder _field(String label) =>
     find.widgetWithText(TextField, label).hitTestable();
 
-/// Signs in as [role] and waits for the selling screen. If um-api's sign-in
-/// rate limit refuses it, waits the window out and tries once more; any
-/// other refusal fails at once with the alert the app shows.
+/// Signs in as [role] and waits for the selling screen; fails with the
+/// alert the app shows if the server refuses (see [signInAttempt]).
 Future<void> signIn(
   WidgetTester tester, {
   E2ERole role = E2ERole.admin,
 }) async {
-  var refusal = await _trySignIn(tester, role);
-  if (refusal != null && refusal.contains(_rateLimitCode)) {
-    debugPrint('E2E: sign-in rate limit reached, waiting '
-        '${_rateLimitWindow.inSeconds}s');
-    await _dismissAlert(tester);
-    await _wait(tester, _rateLimitWindow);
-    refusal = await _trySignIn(tester, role);
-  }
+  final refusal =
+      await signInAttempt(tester, E2EEnv.username(role), E2EEnv.password(role));
   if (refusal != null) {
+    if (refusal.contains(_wrongCredentialsCode)) _stopRun();
     fail('Signing in as ${role.name} was refused: $refusal');
   }
   _sessionRole = role;
 }
 
-/// Submits [role]'s credentials; returns null on reaching the selling
+/// One sign-in with [username] and [password]: returns null on reaching the
+/// selling screen, or the refusal the alert showed (the alert is then
+/// dismissed). If um-api's rate limit refuses it, waits the window out and
+/// tries once more; every attempt is paced (see [submitCredentials]).
+Future<String?> signInAttempt(
+  WidgetTester tester,
+  String username,
+  String password,
+) async {
+  var refusal = await _trySignIn(tester, username, password);
+  if (refusal != null && refusal.contains(_rateLimitCode)) {
+    debugPrint('E2E: sign-in rate limit reached, waiting '
+        '${_rateLimitWindow.inSeconds}s');
+    await _dismissAlert(tester);
+    await _wait(tester, _rateLimitWindow);
+    refusal = await _trySignIn(tester, username, password);
+  }
+  if (refusal != null) await _dismissAlert(tester);
+  return refusal;
+}
+
+/// Our own credentials were refused: on the hosted target, stop the whole
+/// run (run-all.sh checks the stop file after each file) so that no later
+/// file repeats a failing sign-in, which could lock the account.
+void _stopRun() {
+  if (!E2EEnv.isHosted) return;
+  _stopped = true;
+  if (E2EEnv.stopFile.isNotEmpty) {
+    File(E2EEnv.stopFile).writeAsStringSync('wrong credentials\n');
+  }
+  debugPrint('E2E: the hosted target refused the suite\'s credentials; '
+      'stopping the run — check .env.e2e');
+}
+
+/// Submits [username]'s credentials; returns null on reaching the selling
 /// screen, or the text of the alert the app showed instead.
-Future<String?> _trySignIn(WidgetTester tester, E2ERole role) async {
-  await submitCredentials(
-    tester,
-    E2EEnv.username(role),
-    E2EEnv.password(role),
-  );
+Future<String?> _trySignIn(
+    WidgetTester tester, String username, String password) async {
+  await submitCredentials(tester, username, password);
   await pumpUntil(
     tester,
     () =>

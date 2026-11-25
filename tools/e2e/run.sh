@@ -44,11 +44,21 @@ run_id="${E2E_RUN_ID:-$(date +%Y%m%d%H%M%S)-$$}"
 cd "$APP_DIR"
 # Only the file's path is passed: the test reads the credentials at run time,
 # so they are neither compiled into the test nor visible in `ps`.
+# Hosted only: the sign-in times, shared by a run's files so that the pacing
+# (at most 3 sign-ins a minute) spans them, and the file whose existence
+# tells run-all.sh to stop (the suite's own credentials were refused).
+signin_log=""
+if [ "$target" = hosted ]; then
+  signin_log="${E2E_SIGNIN_LOG:-${TMPDIR:-/tmp}/pos-e2e-hosted-signins.log}"
+fi
+stop_file="${E2E_STOP_FILE:-}"
 set +e
 fvm flutter test "e2e/$file" \
   --dart-define=ENV="$config" \
   --dart-define=E2E_RUN_ID="$run_id" \
-  --dart-define=E2E_ENV_FILE="$APP_DIR/$env_file"
+  --dart-define=E2E_ENV_FILE="$APP_DIR/$env_file" \
+  --dart-define=E2E_SIGNIN_LOG="$signin_log" \
+  --dart-define=E2E_STOP_FILE="$stop_file"
 code=$?
 set -e
 exit "$code"

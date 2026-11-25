@@ -23,7 +23,8 @@ case "$target" in
   local) ;;
   hosted)
     printf 'run-all: target API %s — run by the owner\n' "$HOSTED_API"
-    printf 'run-all: the API allows 5 sign-ins a minute; a full run may pause 65s at a time to wait it out\n'
+    printf 'run-all: the API allows 5 sign-ins a minute per address, possibly shared with every user behind the gateway;\n'
+    printf 'run-all: the suite paces its 12 sign-ins to at most 3 a minute, which adds up to about 3 minutes to a run\n'
     [ -f "$E2E_DIR/../.env.e2e" ] || {
       printf 'run-all: %s is missing (copy .env.e2e.example and fill it in)\n' "$(cd "$E2E_DIR/.." && pwd)/.env.e2e" >&2
       exit 2
@@ -62,9 +63,16 @@ sign_ins() {
 
 export E2E_RUN_ID="$(date +%Y%m%d%H%M%S)-$$"
 LOG_DIR="$(mktemp -d "${TMPDIR:-/tmp}/pos-e2e-run-all.XXXXXX")"
+export E2E_STOP_FILE="$LOG_DIR/stop"
+export E2E_SIGNIN_LOG="$LOG_DIR/signins.log"
 summary=""
 failed=0
 for f in $(files); do
+  if [ -e "$E2E_STOP_FILE" ]; then
+    summary="$summary$(printf 'SKIP %-24s the run was stopped: the target refused the credentials — check .env.e2e' "$f")
+"
+    continue
+  fi
   log="$LOG_DIR/${f%.dart}.log"
   printf 'run-all: %s …\n' "$f"
   if "$SCRIPT_DIR/run.sh" "$target" "$f" > "$log" 2>&1; then result=PASS
@@ -81,4 +89,8 @@ for log in "$LOG_DIR"/*.log; do
 done
 printf '\n== Findings (skipped tests)\n'
 cat "$LOG_DIR"/*.log | tr '\r' '\n' | sed -n 's/^ *Skip: \(FINDING: .*\)$/\1/p' | sort -u
+if [ -e "$E2E_STOP_FILE" ]; then
+  printf '\nrun-all: STOPPED — the target refused the suite'"'"'s credentials; check .env.e2e before running again\n'
+  exit 1
+fi
 [ "$failed" -eq 0 ] || { printf '\nrun-all: %s file(s) failed\n' "$failed"; exit 1; }

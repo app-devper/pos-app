@@ -1,5 +1,10 @@
 // Sign-in, sign-out and the server a run talks to, driven through the real
 // app against a real UM. Run with tools/e2e/run.sh <local|hosted> auth_test.dart.
+//
+// The plain admin sign-in comes before the deliberate wrong password: on the
+// hosted target, if the owner's own credentials are refused, the harness
+// stops the whole run there (see signIn in support/app.dart) instead of
+// letting later sign-ins repeat the failure.
 
 // Package imports:
 import 'package:common/config/app_config.dart';
@@ -10,7 +15,6 @@ import 'package:flutter_test/flutter_test.dart';
 // Project imports:
 import 'support/app.dart';
 import 'support/env.dart';
-import 'support/pump.dart';
 
 const _hostedApiUrl = 'https://api.devper.app';
 const _localApiUrl = 'http://127.0.0.1:8585';
@@ -37,31 +41,6 @@ void main() {
     expect(apiUrl, expected);
   });
 
-  testWidgets('a wrong password is refused and the user stays on sign-in',
-      (tester) async {
-    // Arrange
-    await launchApp(tester);
-
-    // Act
-    await submitCredentials(
-      tester,
-      E2EEnv.username(E2ERole.admin),
-      'x-not-the-password',
-    );
-    await pumpUntilFound(tester, find.text('พบข้อผิดพลาด').hitTestable());
-    final refusal = find.textContaining(_wrongCredentialsCode).hitTestable();
-    final refusedByServer = refusal.evaluate().length;
-    await tester.tap(find.text('ตกลง').hitTestable());
-    await pumpUntilGone(tester, find.text('พบข้อผิดพลาด'));
-
-    // Assert
-    expect(refusedByServer, 1,
-        reason:
-            'the alert should carry the server code $_wrongCredentialsCode');
-    expect(find.byKey(const Key('login')).hitTestable(), findsOneWidget);
-    expect(find.text('ตะกร้าสินค้า #1'), findsNothing);
-  });
-
   testWidgets(
       'signing in opens the selling screen, signing out returns to sign-in',
       (tester) async {
@@ -80,6 +59,26 @@ void main() {
 
     // Assert
     expect(find.text('ยินดีต้อนรับ').hitTestable(), findsOneWidget);
+    expect(find.text('ตะกร้าสินค้า #1'), findsNothing);
+  });
+
+  testWidgets('a wrong password is refused and the user stays on sign-in',
+      (tester) async {
+    // Arrange
+    await launchApp(tester);
+
+    // Act: paced and rate-limit-handled like every sign-in
+    final refusal = await signInAttempt(
+      tester,
+      E2EEnv.username(E2ERole.admin),
+      'x-not-the-password',
+    );
+
+    // Assert
+    expect(refusal, contains(_wrongCredentialsCode),
+        reason:
+            'the alert should carry the server code $_wrongCredentialsCode');
+    expect(find.byKey(const Key('login')).hitTestable(), findsOneWidget);
     expect(find.text('ตะกร้าสินค้า #1'), findsNothing);
   });
 
