@@ -30,14 +30,21 @@ env:
     commands:
       - hideKeyboard
 - tapOn: "ยืนยัน"
-- extendedWaitUntil:
-    visible: "เพิ่มลูกค้า"
-    timeout: 15000
-- runScript:
-    file: ../scripts/api.js
-    env:
-      ACTION: customerCount
-      NAME: ${CUSTOMER}
+# The form closes when the server has answered; "เพิ่มลูกค้า" is on both the
+# form and the list, so the server is asked until it has the customer.
+- evalScript: ${output.customerCount = '0'}
+- repeat:
+    times: 15
+    while:
+      true: ${output.customerCount != '1'}
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 1000
+      - runScript:
+          file: ../scripts/api.js
+          env:
+            ACTION: customerCount
+            NAME: ${CUSTOMER}
 - assertTrue: ${output.customerCount == '1'}
 - runFlow:
     file: steps/open_screen.yaml
@@ -80,10 +87,12 @@ env:
     timeout: 15000
 # The server archives the customer a moment after the tap: ask until it has.
 - repeat:
-    times: 10
+    times: 15
     while:
       true: ${output.customerCount != '0'}
     commands:
+      - waitForAnimationToEnd:
+          timeout: 1000
       - runScript:
           file: ../scripts/api.js
           env:

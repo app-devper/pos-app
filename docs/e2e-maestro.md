@@ -12,7 +12,7 @@ check that the main paths work on a phone and on the web.
 |---|---|
 | `auth` | a wrong password is refused with UM's code and the user stays on sign-in; admin, manager and user each sign in to the selling screen and out |
 | `navigation` | every main menu item opens its own screen (bills, products, the five manage tiles, profile) and selling is reachable again |
-| `sell_and_bill` | two of a product in the cart, the totals, a cash payment, the total the server recorded, and that bill found by its number in the bills list |
+| `sell_and_bill` | two of a product in the cart, the totals, a payment of the exact amount, a new bill on the server with that total, and that bill found by its number in the bills list |
 | `customer` | a customer added by the form is on the server, can be found and chosen for a sale, and is archived by its delete button (finding 7 pinned: it stays listed) |
 | `receive_stock` | a goods receipt for a supplier, one line of five, imported: the server holds 1005 on hand |
 | `product_edit` | a product renamed on its page: the server and the selling screen show the new name, stock untouched |
@@ -49,6 +49,8 @@ running, keeps its screen on and forwards the two API ports (or serves the web
 build on 127.0.0.1:8090); then for each flow seeds one product and one
 supplier named `MST-<run id>`, runs Maestro and removes them. It stops what it
 started — an emulator or a stack that was already running is left running.
+On the emulator it reinstalls the app and clears its data (a session you had
+in `app.devper.pos` there is gone) and leaves "stay awake while charging" on.
 
 ### The emulator's lock screen
 
@@ -127,7 +129,8 @@ except a tooltip on hover or long-press:
 - On the web an open dropdown exposes no option text, so
   `choose_dropdown_option` presses Enter on the focused option; it is right
   only because the flows' database holds exactly one supplier and one product
-  per run. What was chosen is asserted afterwards on the page.
+  per run. The receipt line then names the product; the supplier's name is
+  not readable on the web, so there it is not asserted.
 - Several texts never reach the web's semantics tree (page and cart titles,
   the lines of a bill); the flows anchor on something beside them.
 - A flow that fails leaves its run's data for `maestro-data.sh down <run id>`,

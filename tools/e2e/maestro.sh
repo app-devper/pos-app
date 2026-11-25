@@ -81,7 +81,7 @@ export SE_OFFLINE=true   # Selenium Manager uses the browser it already has; it 
 # Maestro hands to a flow by name; they are never on a command line.
 value_of() { sed -n "s/^$1=//p" "$ENV_FILE" | head -1; }
 load_accounts() {
-  [ -f "$ENV_FILE" ] || die "$ENV_FILE is missing; run tools/e2e/local-stack.sh start"
+  [ -f "$ENV_FILE" ] || die "$ENV_FILE is missing; it is written by the first run of this script, when it starts the local stack"
   local role key
   for role in ADMIN MANAGER USER; do
     for key in USERNAME PASSWORD; do
@@ -95,16 +95,18 @@ load_accounts() {
     MAESTRO_USER_USERNAME MAESTRO_USER_PASSWORD
 }
 
-started_emulator=0; started_stack=0; server_pid=""; device=""; data_run_id=""
+started_emulator=0; emulator_pid=""; started_stack=0; server_pid=""; device=""; data_run_id=""
 
 cleanup() {
   [ -z "$data_run_id" ] || "$SCRIPT_DIR/maestro-data.sh" down "$data_run_id" >/dev/null 2>&1 || true
   if [ -n "$server_pid" ]; then kill "$server_pid" 2>/dev/null || true; fi
   if [ "$started_stack" -eq 1 ]; then "$SCRIPT_DIR/local-stack.sh" stop >/dev/null 2>&1 || true; fi
-  if [ "$started_emulator" -eq 1 ] && [ -n "$device" ]; then
-    "$ADB" -s "$device" emu kill >/dev/null 2>&1 || true
+  if [ "$started_emulator" -eq 1 ]; then
+    [ -z "$device" ] || "$ADB" -s "$device" emu kill >/dev/null 2>&1 || true
     # Gone from adb before we return, so a run started next does not adopt a dying emulator.
     for _ in $(seq 1 30); do [ -n "$(running_emulator)" ] || break; sleep 1; done
+    # One that never finished booting has no adb name: stop it by its process.
+    if [ -n "$emulator_pid" ]; then kill "$emulator_pid" 2>/dev/null || true; fi
     log "stopped the emulator this run started"
   fi
 }
@@ -117,9 +119,13 @@ start_emulator() {
   local waited=0
   device="$(running_emulator)"
   if [ -z "$device" ]; then
+    [ -x "$SDK/emulator/emulator" ] || die "no emulator at $SDK/emulator/emulator (set ANDROID_HOME)"
+    "$SDK/emulator/emulator" -list-avds 2>/dev/null | grep -qx "$AVD" \
+      || die "no emulator named $AVD (set E2E_AVD to one of: $("$SDK/emulator/emulator" -list-avds 2>/dev/null | tr '\n' ' '))"
     log "starting the emulator $AVD"
     "$SDK/emulator/emulator" -avd "$AVD" -no-snapshot-save -no-boot-anim -no-audio \
       > "$OUT_ROOT/emulator.log" 2>&1 &
+    emulator_pid=$!
     started_emulator=1
   fi
   until [ -n "$device" ] && [ "$("$ADB" -s "$device" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ]; do
@@ -128,9 +134,10 @@ start_emulator() {
   done
 }
 
-artefact() { # artefact <apk|web> <path it would have>; prints the artefact's path
-  local built
-  if [ "${E2E_MAESTRO_REUSE_BUILD:-0}" = 1 ] && [ -e "$2" ]; then printf '%s\n' "$2"; return; fi
+artefact() { # artefact <apk|web>; prints the path of the runner's own artefact
+  local kept built
+  kept="$("$SCRIPT_DIR/maestro-build.sh" path "$1")"
+  if [ "${E2E_MAESTRO_REUSE_BUILD:-0}" = 1 ] && [ -e "$kept" ]; then printf '%s\n' "$kept"; return; fi
   log "building the $1 (a few minutes the first time)" >&2
   built="$("$SCRIPT_DIR/maestro-build.sh" "$1" 2> "$OUT_ROOT/build-$1.log")" \
     || { tail -30 "$OUT_ROOT/build-$1.log" >&2; die "the $1 build failed (log: $OUT_ROOT/build-$1.log)"; }
@@ -156,7 +163,7 @@ prepare_android() {
   local apk
   [ -x "$ADB" ] || die "adb not found at $ADB (set ANDROID_HOME)"
   # Build first: the emulator must not sit idle through a build of minutes.
-  apk="$(artefact apk "$APP_DIR/build/app/outputs/flutter-apk/app-debug.apk")"
+  apk="$(artefact apk)"
   start_emulator
   keep_awake_and_unlocked
   "$ADB" -s "$device" install -r "$apk" >/dev/null
@@ -173,7 +180,7 @@ prepare_web() {
   local dir waited=0
   ! lsof -nP -iTCP:"$WEB_PORT" -sTCP:LISTEN >/dev/null 2>&1 \
     || die "port $WEB_PORT is taken; stop what is listening there"
-  dir="$(artefact web "$APP_DIR/build/web-maestro")"
+  dir="$(artefact web)"
   python3 -m http.server "$WEB_PORT" --bind 127.0.0.1 --directory "$dir" > "$OUT_ROOT/web-server.log" 2>&1 &
   server_pid=$!
   until curl -fs -o /dev/null "http://127.0.0.1:$WEB_PORT/"; do
@@ -201,7 +208,6 @@ run_flow() { # run_flow <name> <run id>; prints the PASS/FAIL line, returns maes
 }
 
 mkdir -p "$OUT_ROOT"
-load_accounts
 setup=1; [ "${E2E_MAESTRO_SKIP_SETUP:-0}" != 1 ] || setup=0   # the self-test runs without devices
 # Starts the flows' own stack unless it is up already; refuses when another
 # local stack (the Dart suite's) holds the ports.
@@ -209,13 +215,16 @@ start_stack() {
   if "$SCRIPT_DIR/local-stack.sh" status | grep -q 'pos-api running'; then return; fi
   ! lsof -nP -iTCP:8586 -sTCP:LISTEN >/dev/null 2>&1 \
     || die "another local stack is running on these ports (the Dart suite's?). Stop it first: tools/e2e/local-stack.sh stop"
+  local out
   started_stack=1
-  "$SCRIPT_DIR/local-stack.sh" start | tail -1
+  out="$("$SCRIPT_DIR/local-stack.sh" start 2>&1)" || { printf '%s\n' "$out" >&2; die "the local stack did not start"; }
+  printf '%s\n' "$out" | tail -1
 }
 
+if [ "$setup" -eq 0 ]; then load_accounts; fi
 if [ "$setup" -eq 1 ]; then
-  start_stack
-  load_accounts   # a first start writes the env file
+  start_stack   # a first start writes the env file
+  load_accounts
   "prepare_$platform"
 fi
 

@@ -74,6 +74,12 @@ check 'data: no run id is a usage error' 2 'usage:' -- "$data" up
 check 'data: an unknown mode is a usage error' 2 'usage:' -- "$data" sideways 123
 check 'data: a run id with other characters is refused' 2 'usage:' -- "$data" up '1;x'
 check 'build: an unknown artefact is a usage error' 2 'usage:' -- "$build" ipa
+# The runner must never reuse the APK an ordinary `flutter build apk` leaves
+# (that one may point at a deployed API): its own copy has a path of its own.
+check "build: the reusable APK is the runner's own copy" 0 '/build/maestro/app-debug.apk' -- "$build" path apk
+check "build: the reusable web build is the runner's own" 0 '/build/web-maestro' -- "$build" path web
+check 'a missing env file says how it comes to be' 1 'is written by the first run' -- \
+  env E2E_MAESTRO_SKIP_SETUP=1 MAESTRO_BIN="$WORK/fake-maestro" E2E_MAESTRO_ENV_FILE="$WORK/none" "$runner" web auth
 
 if [ "$failures" -eq 0 ]; then echo 'maestro-selftest: all checks passed'; exit 0; fi
 echo "maestro-selftest: $failures check(s) failed"

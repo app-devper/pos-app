@@ -3,7 +3,7 @@
 // 127.0.0.1 is the local stack on both platforms. No other host, ever.
 //
 // runScript: { file: ../scripts/api.js, env: { ACTION: newestBill } }
-//   newestBill             -> output.billCode, output.billTotal
+//   newestBill             -> output.billCode, output.billTotal ('' when there is none)
 //   productOnHand  (NAME)  -> output.onHand, output.productPrice
 //   customerCount  (NAME)  -> output.customerCount (customers of that name that are not archived)
 const UM = 'http://127.0.0.1:8585';
@@ -30,7 +30,11 @@ function newestBill() {
   const from = new Date(Date.now() - dayMs).toISOString();
   const to = new Date(Date.now() + dayMs).toISOString();
   const bills = get('/api/pos/v1/orders?startDate=' + from + '&endDate=' + to);
-  if (!bills.length) throw new Error('api.js: no bill in the last day');
+  if (!bills.length) {
+    output.billCode = '';
+    output.billTotal = '';
+    return;
+  }
   const newest = bills.reduce((a, b) => (a.createdDate > b.createdDate ? a : b));
   output.billCode = newest.code;
   output.billTotal = String(newest.total);

@@ -30,9 +30,12 @@ void main() {
       onEditPrice: () {},
       onToggleOversell: () {},
     )));
-    // The price column overflows by a few pixels with the test font's
-    // metrics; that is not what this test is about.
-    expect(tester.takeException().toString(), contains('overflowed'));
+    // The price column may overflow by a few pixels with the test font's
+    // metrics (a known layout finding); that is not what this test is about.
+    final layoutError = tester.takeException();
+    if (layoutError != null) {
+      expect(layoutError.toString(), contains('overflowed'));
+    }
 
     // Assert: the visible text is unchanged, the label names the product.
     expect(find.text('2x'), findsOneWidget);
