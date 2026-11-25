@@ -6,10 +6,12 @@
 import 'package:flutter/material.dart';
 
 // Package imports:
+import 'package:common/widgets/loading_dialog.dart';
 import 'package:design_system/widgets/title_bar.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // Project imports:
+import 'package:pos/presentation/product/edit/product_edit_page.dart';
 import 'package:pos/presentation/product/history/product_history_widget.dart';
 import 'package:pos/presentation/product/main/product_detail_widget.dart';
 import 'package:pos/presentation/product/main/products_widget.dart';
@@ -290,4 +292,39 @@ class ProductRobot {
 
   Finder _inAdjust(Finder finder) =>
       find.descendant(of: _adjustDialog, matching: finder).hitTestable();
+
+  // --- Edit and delete --------------------------------------------------------
+
+  /// From the detail: its 'แก้ไข', until the edit form has filled itself in
+  /// (it reloads the product behind a loading dialog and then overwrites
+  /// its fields, so typing earlier would be lost).
+  Future<void> openEditForm() async {
+    await shell.tapTitleBarAction('แก้ไข');
+    await pumpUntilFound(tester, _editPage.hitTestable());
+    await pumpUntilFound(tester, form.field('ชื่อสินค้า', within: _editPage));
+    await tester.pump(_editLoadSettle);
+    await pumpUntilGone(tester, find.byType(LoadingDialog));
+  }
+
+  /// From the detail: 'แก้ไข' → the red 'ลบสินค้า' → confirm
+  /// 'ต้องการลบสินค้าใช่หรือไม่'; returns once the menu is back.
+  Future<void> delete() async {
+    await openEditForm();
+    final remove =
+        find.descendant(of: _editPage, matching: find.text('ลบสินค้า'));
+    // It is the last thing on a long form.
+    await tester.ensureVisible(remove);
+    await tester.pump();
+    await tester.tap(remove.hitTestable());
+    await tester.pump();
+    await pumpUntilFound(
+        tester, find.text('ต้องการลบสินค้าใช่หรือไม่').hitTestable());
+    await shell.confirm();
+    await form.awaitOutcome(_menu);
+  }
 }
+
+final _editPage = find.byType(ProductEditPage);
+
+/// The edit form's reload starts one frame after it opens.
+const _editLoadSettle = Duration(milliseconds: 300);
