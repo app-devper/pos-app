@@ -87,5 +87,5 @@ devtools_options.yaml
 **/*.keystore
 
 # E2E credentials (generated or owner-provided); never committed
-.env.e2e
-.env.e2e.local
+.env.e2e*
+!.env.e2e.example
