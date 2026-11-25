@@ -79,7 +79,7 @@ void main() {
     expect(await customers.scrollListTo(plan.name, code: customer.code), isTrue,
         reason: 'the app currently keeps listing a removed customer');
     expect(await _statusOf(customer), archivedStatus);
-  });
+  }, timeout: e2eTestTimeout);
 
   testWidgets(
       'the kept customer is created, marked, when absent and reused '
@@ -107,7 +107,7 @@ void main() {
     await _changePhone(customers, second.customer);
     expect(
         customers.detailRow(_addressRow, keptCustomerMarker), findsOneWidget);
-  }, skip: E2EEnv.isHosted);
+  }, skip: E2EEnv.isHosted, timeout: e2eTestTimeout);
 
   testWidgets('editing a wholesale customer\'s phone resets its type',
       (tester) async {
@@ -132,7 +132,7 @@ void main() {
     expect(customers.detailRow('โทรศัพท์', _changedPhone), findsOneWidget);
     expect(customers.detailRow(_typeRow, _general), findsOneWidget,
         reason: 'the app currently resets the type on any edit');
-  }, skip: E2EEnv.isHosted);
+  }, skip: E2EEnv.isHosted, timeout: e2eTestTimeout);
 
   // FINDING (Task 7): on a wide screen CustomerPage keeps the same
   // CustomersWidget while the right panel changes, and that widget loads
@@ -154,7 +154,7 @@ void main() {
 
       // Assert
       expect(await customers.scrollListTo(name), isTrue);
-    });
+    }, timeout: e2eTestTimeout);
   },
       skip: 'FINDING: on a wide screen the customer list does not reload '
           'after an add or a removal (customers_widget.dart:42)');
@@ -180,7 +180,7 @@ void main() {
 
       // Assert
       expect(await customers.scrollListTo(name), isFalse);
-    });
+    }, timeout: e2eTestTimeout);
   },
       skip: 'FINDING: a removed customer stays in the list (pos-api archives '
           'it and lists archived customers; the app does not filter them)');
@@ -202,7 +202,7 @@ void main() {
 
       // Assert
       expect(customers.detailRow(_typeRow, _wholesale), findsOneWidget);
-    });
+    }, timeout: e2eTestTimeout);
   },
       skip: 'FINDING: editing a customer resets its type to ลูกค้าทั่วไป '
           '(customer_edit_page.dart:59)');
@@ -220,7 +220,7 @@ void main() {
         findsOneWidget);
     expect(customers.addFormTitle, findsOneWidget,
         reason: 'the form should stay open, nothing saved');
-  });
+  }, timeout: e2eTestTimeout);
 }
 
 /// Launches the app signed in as admin (once per file) and opens the

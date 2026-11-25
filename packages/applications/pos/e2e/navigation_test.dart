@@ -56,7 +56,7 @@ void main() {
     await _goodsReceiptsOpenAndReturn(shell);
     await _stockCountsOpenAndReturn(shell);
     await _userInfoOpensAndReturns(shell);
-  });
+  }, timeout: e2eTestTimeout);
 
   // FINDING (Task 7): OrderViewModel.checkLogin reads _state.value before it
   // awaits the role, then writes that stale copy back, wiping the ranges
@@ -79,7 +79,7 @@ void main() {
 
       // Assert
       expect(shell.rangeDropdown, findsOneWidget);
-    });
+    }, timeout: e2eTestTimeout);
   },
       skip: 'FINDING: an admin never gets the bills date-range dropdown '
           '(OrderViewModel.checkLogin overwrites ranges)');
@@ -93,7 +93,7 @@ void main() {
 
     // Act / Assert
     await _expectSellingAndBillsWithoutAdminTools(ShellRobot(tester));
-  });
+  }, timeout: e2eTestTimeout);
 
   testWidgets('a manager sees what a user sees', (tester) async {
     // Arrange
@@ -102,7 +102,7 @@ void main() {
 
     // Act / Assert
     await _expectSellingAndBillsWithoutAdminTools(ShellRobot(tester));
-  });
+  }, timeout: e2eTestTimeout);
 }
 
 /// FINDING (Task 7): with no shop profile yet, 'ร้านของฉัน' shows the red

@@ -93,7 +93,7 @@ void main() {
       // Assert
       expect(cart.isEmpty, isTrue);
     });
-  });
+  }, timeout: e2eTestTimeout);
 
   testWidgets(
       'a cash sale of 3 with exact payment succeeds and takes 3 from '
@@ -142,7 +142,7 @@ void main() {
       expect(orders.lineShows(_product, '75.00'), findsOneWidget);
       await orders.leaveBill();
     });
-  });
+  }, timeout: e2eTestTimeout);
 
   testWidgets('paying less than the total is refused and nothing is sold',
       (tester) async {
@@ -180,7 +180,7 @@ void main() {
       expect(await billsOfProductSince(_product, before), isEmpty);
       await _expectOnHand(shell, 7);
     });
-  });
+  }, timeout: e2eTestTimeout);
 
   testWidgets(
       'a PromptPay sale with a customer and a line discount shows the '
@@ -234,7 +234,7 @@ void main() {
       expect(orders.lineShows(_product, '40.00'), findsOneWidget);
       await orders.leaveBill();
     });
-  });
+  }, timeout: e2eTestTimeout);
 
   testWidgets('returning 1 piece puts 1 back and marks the line',
       (tester) async {
@@ -264,7 +264,7 @@ void main() {
       await orders.leaveBill();
       await _expectOnHand(shell, 6);
     });
-  });
+  }, timeout: e2eTestTimeout);
 
   testWidgets('cancelling a line then the bill puts the rest back',
       (tester) async {
@@ -307,7 +307,7 @@ void main() {
       expect((await billNow(_cashBill.id)).totalText, '75.00');
       await _expectOnHand(shell, 10);
     });
-  });
+  }, timeout: e2eTestTimeout);
 
   // FINDINGs (Task 7). They read the chain's product and bills, so they
   // run, if unskipped, after it; skipped tests do not sign in or write.
@@ -322,7 +322,7 @@ void main() {
       await orders.openList();
 
       expect(await orders.isListed(_cashBill), isFalse);
-    });
+    }, timeout: e2eTestTimeout);
   },
       skip: 'FINDING: a cancelled bill stays in รายการขาย and in its Total '
           '(order_view_model.dart:41-56; pos-api order.go:105-134)');
@@ -338,7 +338,7 @@ void main() {
       await orders.openBill(await billNow(_promptPayBill.id));
 
       expect(orders.detailShows('฿ 0.00'), findsOneWidget);
-    });
+    }, timeout: e2eTestTimeout);
   },
       skip: 'FINDING: a cancelled line stays on the bill detail and in its '
           'Total (order_detail_page.dart:246-269, 386)');
@@ -357,7 +357,7 @@ void main() {
 
       await cart.filterGrid(_product, productName: _product);
       expect(cart.tileShows(_product, 'คงเหลือ 9 ชิ้น'), findsOneWidget);
-    });
+    }, timeout: e2eTestTimeout);
   },
       skip: 'FINDING: the selling grid keeps its stock figures after a sale '
           '(product_search.dart:41-46)');
@@ -375,7 +375,7 @@ void main() {
       await cart.shell.closeDialog();
       await tester.tap(cart.payButtonInCart);
       await tester.pump(const Duration(seconds: 1));
-    });
+    }, timeout: e2eTestTimeout);
   },
       skip: 'FINDING: the quantity keypad (decimal_input.dart:103) and the '
           'payment display (payment_screen.dart:221) overflow');

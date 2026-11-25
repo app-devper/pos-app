@@ -39,7 +39,7 @@ void main() {
 
     // Assert
     expect(apiUrl, expected);
-  });
+  }, timeout: e2eTestTimeout);
 
   testWidgets(
       'signing in opens the selling screen, signing out returns to sign-in',
@@ -60,7 +60,7 @@ void main() {
     // Assert
     expect(find.text('ยินดีต้อนรับ').hitTestable(), findsOneWidget);
     expect(find.text('ตะกร้าสินค้า #1'), findsNothing);
-  });
+  }, timeout: e2eTestTimeout);
 
   testWidgets('a wrong password is refused and the user stays on sign-in',
       (tester) async {
@@ -80,7 +80,7 @@ void main() {
             'the alert should carry the server code $_wrongCredentialsCode');
     expect(find.byKey(const Key('login')).hitTestable(), findsOneWidget);
     expect(find.text('ตะกร้าสินค้า #1'), findsNothing);
-  });
+  }, timeout: e2eTestTimeout);
 
   testWidgets('each role can sign in', (tester) async {
     for (final role in [E2ERole.manager, E2ERole.user]) {
@@ -95,5 +95,5 @@ void main() {
           reason: '$role should reach the selling screen');
       await signOut(tester);
     }
-  });
+  }, timeout: e2eTestTimeout);
 }

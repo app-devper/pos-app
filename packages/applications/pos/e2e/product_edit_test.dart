@@ -83,7 +83,7 @@ void main() {
       // (OrderItem prices by the sale's customer type, order_item.dart:63).
       await _expectSellsAs(shell, '฿30.00');
     });
-  });
+  }, timeout: e2eTestTimeout);
 
   testWidgets('a product can be deleted and no longer sells', (tester) async {
     await _step('delete the product', () async {
@@ -122,7 +122,7 @@ void main() {
       await shell.waitForSnackbarToClose();
       expect(cart.isEmpty, isTrue);
     });
-  });
+  }, timeout: e2eTestTimeout);
 }
 
 /// On the selling screen: the grid tile and a scanned line show the renamed

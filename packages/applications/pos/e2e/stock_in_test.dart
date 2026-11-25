@@ -73,7 +73,7 @@ void main() {
           reason: 'the new product should be listed');
       expect(await productsNamed(_product), hasLength(1));
     });
-  });
+  }, timeout: e2eTestTimeout);
 
   testWidgets('receiving 10 and importing puts 10 in stock', (tester) async {
     await _step('receive and import', () async {
@@ -106,7 +106,7 @@ void main() {
       expect(products.stockTotal(_received, _unit), findsOneWidget);
       expect(products.stockRowExpiring(shortDate(_expiry)), findsOneWidget);
     });
-  });
+  }, timeout: e2eTestTimeout);
 
   testWidgets('an adjustment up then down changes the stock by that much',
       (tester) async {
@@ -153,7 +153,7 @@ void main() {
       expect(products.adjustmentDelta('+2'), findsOneWidget);
       expect(products.adjustmentDelta('-2'), findsOneWidget);
     });
-  });
+  }, timeout: e2eTestTimeout);
 
   testWidgets('a draft receive can be deleted', (tester) async {
     await _step('delete a draft receive', () async {
@@ -185,7 +185,7 @@ void main() {
           reason: 'the app currently keeps listing a deleted receipt');
       expect(await receiveStatus(code), cancelledReceiveStatus);
     });
-  });
+  }, timeout: e2eTestTimeout);
 
   // FINDING (Task 7): DELETE /receives/:id sets status CANCELLED
   // (pos-api app/data/repositories/receive.go:522-535) and GET /receives
@@ -211,7 +211,7 @@ void main() {
 
       // Assert
       expect(await receives.isListed(code), isFalse);
-    });
+    }, timeout: e2eTestTimeout);
   },
       skip: 'FINDING: a deleted draft receipt stays in the list (pos-api '
           'cancels it and lists cancelled receipts; receives_view_model.dart:48-50 '
@@ -236,7 +236,7 @@ void main() {
 
       // Assert: flutter_test fails the test on the overflow it reports
       expect(receives.form.dropdown('ร้านขายสินค้า'), findsOneWidget);
-    });
+    }, timeout: e2eTestTimeout);
   },
       skip: 'FINDING: the receipt page squeezes the supplier picker into '
           '50 px and it overflows (receive_manage_page.dart:225)');
@@ -262,7 +262,7 @@ void main() {
         // Assert: its timer is 3 s; 20 s is ample
         await receives.shell.waitForSnackbarToClose();
       });
-    });
+    }, timeout: e2eTestTimeout);
   },
       skip: 'FINDING: success snackbars never close on their own and cover '
           'the import button (design_system snack_bar.dart:44)');
@@ -282,7 +282,7 @@ void main() {
 
       // Assert
       expect(products.textOnScreen(_lot), findsOneWidget);
-    });
+    }, timeout: e2eTestTimeout);
   },
       skip: 'FINDING: the product stock tab never shows the lot number '
           '(product_detail_widget.dart:593)');

@@ -26,6 +26,11 @@ import 'env.dart';
 import 'pump.dart';
 import 'sign_in_pacing.dart';
 
+/// Every e2e test's time bound. LiveTestWidgetsFlutterBinding sets none, so
+/// a test stuck on a hung request would otherwise wait for ever. Long
+/// enough for the hosted target's sign-in pacing and one rate-limit wait.
+const e2eTestTimeout = Timeout(Duration(minutes: 5));
+
 /// 1400 wide keeps the sidebar expanded (labels shown) and the grid inline.
 const _surfaceSize = Size(1400, 900);
 

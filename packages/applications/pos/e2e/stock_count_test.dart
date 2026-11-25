@@ -60,7 +60,7 @@ void main() {
       await counts.shell.waitForSnackbarToClose();
       await counts.leave();
     });
-  });
+  }, timeout: e2eTestTimeout);
 
   testWidgets(
       'counting 8 where the system has 10 sets the stock to 8 and records '
@@ -110,7 +110,7 @@ void main() {
       // Assert: the stock is 8, and the adjustment the count made shows
       await _expectStockAfterCount(shell);
     });
-  });
+  }, timeout: e2eTestTimeout);
 
   // FINDING (Task 7): the detail titles each line 'สินค้า <productId>'
   // (stock_count_manage_page.dart:124); pos-api's stock count lines carry
@@ -124,7 +124,7 @@ void main() {
       await counts.open(_countNo);
 
       expect(counts.detailShows(_product), findsOneWidget);
-    });
+    }, timeout: e2eTestTimeout);
   },
       skip: 'FINDING: the stock count detail shows the product id, not its '
           'name (stock_count_manage_page.dart:124)');
@@ -149,7 +149,7 @@ void main() {
       await tester.tap(find.text('Clear').hitTestable());
       await tester.pump();
       await shell.waitForSnackbarToClose();
-    });
+    }, timeout: e2eTestTimeout);
   },
       skip: "FINDING: a success snackbar's Clear fails once its screen has "
           'gone, and the snackbar stays (snack_bar.dart:65)');
