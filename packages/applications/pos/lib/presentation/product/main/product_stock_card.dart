@@ -76,16 +76,10 @@ class ProductStockCard extends StatelessWidget {
   /// phone, a long lot number) the table scrolls sideways, so every figure
   /// stays whole and each lot stays on one line across the columns.
   Widget _buildTable(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minWidth: constraints.maxWidth),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: _spaced(_buildColumns(context)),
-          ),
-        ),
+    return _SidewaysTable(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: _spaced(_buildColumns(context)),
       ),
     );
   }
@@ -233,6 +227,52 @@ class ProductStockCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// A table at least as wide as its card that scrolls sideways when it is
+/// wider. Its scrollbar thumb shows whenever it does, under the rows: on a
+/// phone the on-hand quantity and the adjust control are past the right
+/// edge, and nothing else would say so (a touch screen shows no scrollbar,
+/// and a mouse cannot drag the row itself, only the thumb).
+class _SidewaysTable extends StatefulWidget {
+  final Widget child;
+
+  const _SidewaysTable({required this.child});
+
+  @override
+  State<_SidewaysTable> createState() => _SidewaysTableState();
+}
+
+class _SidewaysTableState extends State<_SidewaysTable> {
+  final _scroll = ScrollController();
+
+  static const _thumbRoom = 12.0;
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) => Scrollbar(
+        controller: _scroll,
+        thumbVisibility: true,
+        interactive: true,
+        child: SingleChildScrollView(
+          controller: _scroll,
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.only(bottom: _thumbRoom),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minWidth: constraints.maxWidth),
+            child: widget.child,
+          ),
+        ),
+      ),
     );
   }
 }

@@ -144,4 +144,46 @@ void main() {
     expect(find.text('คงเหลือรวมทั้งหมด: 13 ชิ้น'), findsOneWidget);
     expect(adjusted, ['s2']);
   });
+
+  testWidgets(
+      'on a phone the stock row shows it scrolls, and its adjust control can '
+      'be scrolled to and pressed', (tester) async {
+    // Arrange
+    useViewSize(tester, phoneSize);
+    final adjusted = <String>[];
+    await tester.pumpWidget(MaterialApp(
+      theme: CustomTheme.mainTheme,
+      localizationsDelegates: const [thaiLanguages],
+      home: Scaffold(
+        body: ProductStockCard(
+          unit: _unit,
+          stocks: [_lot('s1', 'L2026A', 10)],
+          price: ProductPrice(
+              id: 'pr1',
+              unitId: 'u1',
+              productId: 'p1',
+              price: 10,
+              customerType: 'General'),
+          onSequence: () {},
+          onAdd: () {},
+          onEdit: (_) {},
+          onQuantity: (_) {},
+          onAdjust: (stock) => adjusted.add(stock.id),
+        ),
+      ),
+    ));
+    final adjust = find.byTooltip('ปรับสต็อก ล็อต L2026A');
+
+    // Act
+    final offScreen = tester.getRect(adjust).right > phoneSize.width;
+    await tester.ensureVisible(adjust);
+    await tester.pumpAndSettle();
+    await tester.tap(adjust);
+
+    // Assert: the row is wider than the phone and says so with a thumb
+    expect(offScreen, isTrue, reason: 'the row overflows a phone');
+    final bar = tester.widget<Scrollbar>(find.byType(Scrollbar));
+    expect(bar.thumbVisibility, isTrue);
+    expect(adjusted, ['s1']);
+  });
 }
