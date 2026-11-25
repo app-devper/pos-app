@@ -93,11 +93,12 @@ void main() {
       await products.openList();
       await products.open(_renamed);
       // The app deletes a product with stock on hand, and pos-api's stock
-      // report keeps counting that stock (a finding, see e2e-findings.md),
-      // so the run takes it to 0 first, as a user can.
+      // reports keep counting its stock rows (a finding, see
+      // e2e-findings.md), so the run takes the lot to 0 and deletes its
+      // stock row through the stock tab first, as a user can.
       await products.openTab('สต็อก');
-      Cleanup.keep('adjustment zeroing "$_renamed" before its deletion '
-          '(cannot be deleted)');
+      Cleanup.keep('adjustment zeroing "$_renamed" and the history entry of '
+          'its deleted stock row (cannot be deleted)');
       await products.adjust(
         lot: _stocked.lot,
         onHand: _stocked.quantity,
@@ -106,6 +107,9 @@ void main() {
         note: zeroingNote,
       );
       await products.expectStockOnHand(_renamed, 0, unit: _stocked.unit);
+      await ProductEditRobot(products).deleteOnlyStockRow();
+      expect(await stockRowsOf(_renamed), isEmpty,
+          reason: 'its only stock row is deleted');
 
       // Act
       await products.delete();

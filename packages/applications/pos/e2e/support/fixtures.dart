@@ -76,16 +76,32 @@ class StockedProduct {
 /// one tear-down while one is pending); that suits a file of tests that
 /// share the product.
 ///
-/// Its stock is brought to 0 first (see [deleteProductsNamed]); those
-/// adjustments cannot be deleted, so they are reported as kept.
+/// Its lots are zeroed and its stock rows deleted first (see
+/// [retireProduct]); the zeroing adjustments and the history entry each
+/// row deletion writes cannot be deleted, so they are reported as kept, as
+/// is any row pos-api refused to delete.
 void deleteProductAfterFile(String name) =>
     Cleanup.add('product "$name"', () async {
-      final zeroed = await deleteProductsNamed(name);
-      if (zeroed > 0) {
-        Cleanup.keep('$zeroed stock-zeroing adjustment(s) of "$name" '
-            '(made before deleting it; cannot be deleted)');
+      for (final r in await deleteProductsNamed(name)) {
+        keepRetirementLeftovers(name, r);
       }
     });
+
+/// Declares what retiring [name] left: the zeroing adjustments, one
+/// stock-row history entry per deleted lot, and any row not deleted.
+void keepRetirementLeftovers(String name, Retired r) {
+  if (r.zeroed > 0) {
+    Cleanup.keep('${r.zeroed} stock-zeroing adjustment(s) of "$name" '
+        '(cannot be deleted)');
+  }
+  if (r.rowsDeleted > 0) {
+    Cleanup.keep('${r.rowsDeleted} stock-row history entr(ies) of "$name" '
+        '(1 per deleted lot; cannot be deleted)');
+  }
+  for (final row in r.rowsKept) {
+    Cleanup.keep('$row of "$name" NOT deleted');
+  }
+}
 
 /// From the receipt list: creates [receipt], adds its line, imports it and
 /// goes back to the list; returns the receipt's code. The imported receipt and the supplier cannot
@@ -104,9 +120,9 @@ Future<String> _receiveAndImport(ReceiveRobot receives, Receipt receipt) async {
   final code = await receiveCodeFor(receipt.reference);
   await receives.import();
   Cleanup.keep('receive $code (imported, cannot be deleted)');
-  Cleanup.keep(
-      'stock, history and adjustments of "${receipt.item.productName}" '
-      '(pos-api keeps them when the product is deleted)');
+  Cleanup.keep('history and adjustments of "${receipt.item.productName}" '
+      '(pos-api keeps them when the product is deleted; its stock rows are '
+      'deleted at clean-up)');
   await receives.expectImported();
   await receives.leave();
   return code;

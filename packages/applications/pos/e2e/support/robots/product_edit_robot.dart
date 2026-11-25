@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pos/presentation/product/edit/product_edit_page.dart';
 import 'package:pos/presentation/product/main/product_detail_widget.dart';
 import 'package:pos/presentation/product/price/product_price_widget.dart';
+import 'package:pos/presentation/product/stock/product_stock_widget.dart';
 import '../pump.dart';
 import 'form_driver.dart';
 import 'product_robot.dart';
@@ -19,6 +20,7 @@ import 'product_robot.dart';
 final _detail = find.byType(ProductDetailWidget);
 final _editPage = find.byType(ProductEditPage);
 final _priceDialog = find.byType(ProductPriceWidget);
+final _stockDialog = find.byType(ProductStockWidget);
 
 /// The dialog's centre is blank space, so it is never hit-testable itself;
 /// its title bar is.
@@ -124,6 +126,35 @@ class ProductEditRobot {
     await form.awaitClosed(_priceDialog);
     // The detail reloads the product once the dialog has closed.
     await pumpUntilFound(tester, priceTabShows('฿${price.toStringAsFixed(2)}'));
+  }
+
+  // --- The สต็อก tab -----------------------------------------------------------
+
+  /// On the สต็อก tab: the only lot row's 'แก้ไข' opens the stock dialog;
+  /// its red 'ลบสต็อกสินค้า' and the confirm delete the stock row. pos-api
+  /// deletes only a row that holds nothing (ledger/stock.go:70-72).
+  Future<void> deleteOnlyStockRow() async {
+    // The row's 'แก้ไข' is an InkWell around the Text itself; the title
+    // bar's 'แก้ไข' is a TextButton, whose InkWell wraps more than a Text.
+    final edit = find
+        .descendant(
+            of: _detail,
+            matching: find.byWidgetPredicate((w) =>
+                w is InkWell &&
+                w.child is Text &&
+                (w.child as Text).data == 'แก้ไข'))
+        .hitTestable();
+    expect(edit, findsOneWidget, reason: 'expected one lot on the stock tab');
+    await tester.tap(edit);
+    await tester.pump();
+    final remove =
+        find.descendant(of: _stockDialog, matching: find.text('ลบสต็อกสินค้า'));
+    await pumpUntilFound(tester, remove.hitTestable());
+    await tester.tap(remove.hitTestable());
+    await tester.pump();
+    await products.shell.confirm();
+    await form.awaitClosed(_stockDialog);
+    await pumpUntilGone(tester, edit);
   }
 
   static String _number(double value) =>

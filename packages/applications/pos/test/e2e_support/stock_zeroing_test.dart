@@ -43,4 +43,36 @@ void main() {
       expect(zeroingDeltas(const []), isEmpty);
     });
   });
+
+  group('stockRowsToDelete', () {
+    test('every row at 0 is deleted', () {
+      // Act
+      final plan = stockRowsToDelete([
+        (stockId: 'a', quantity: 0),
+        (stockId: 'b', quantity: 0),
+      ]);
+
+      // Assert
+      expect(plan.delete, ['a', 'b']);
+      expect(plan.keep, isEmpty);
+    });
+
+    test('a row still above 0 is not deleted and is reported', () {
+      // Act
+      final plan = stockRowsToDelete([
+        (stockId: 'a', quantity: 0),
+        (stockId: 'b', quantity: 3),
+      ]);
+
+      // Assert: pos-api refuses it (ledger/stock.go:70-72)
+      expect(plan.delete, ['a']);
+      expect(plan.keep, [(stockId: 'b', quantity: 3)]);
+    });
+
+    test('nothing to do for no rows', () {
+      final plan = stockRowsToDelete(const []);
+      expect(plan.delete, isEmpty);
+      expect(plan.keep, isEmpty);
+    });
+  });
 }
