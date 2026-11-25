@@ -5,14 +5,15 @@
 #   tools/e2e/run-all.sh local    the local stack (started and seeded if needed)
 #   tools/e2e/run-all.sh hosted   the hosted API; run by the owner only
 #
-# Order: auth, navigation, customer, stock_in, then any other *_test.dart
-# alphabetically. Exits non-zero if any file failed.
+# Order: auth, navigation, customer, stock_in, selling, stock_count,
+# product_edit, then any other *_test.dart alphabetically. Exits non-zero if
+# any file failed.
 set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 E2E_DIR="$(cd "$SCRIPT_DIR/../../packages/applications/pos/e2e" && pwd)"
 HOSTED_API="https://api.devper.app"
-FIRST_FILES="auth_test.dart navigation_test.dart customer_test.dart stock_in_test.dart"
+FIRST_FILES="auth_test.dart navigation_test.dart customer_test.dart stock_in_test.dart selling_test.dart stock_count_test.dart product_edit_test.dart"
 
 usage() { printf 'usage: %s <local|hosted>\n' "$0" >&2; exit 2; }
 
