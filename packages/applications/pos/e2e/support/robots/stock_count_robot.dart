@@ -146,6 +146,11 @@ class StockCountRobot {
             find.byType(SnackBar).evaluate().isNotEmpty,
         'the count to be saved',
         timeout: _saveTimeout);
+    if (_manage.evaluate().isNotEmpty) {
+      // Still on the form: fail with the error snackbar it shows.
+      await shell.expectScreenWithoutError(newCountTitle);
+      fail('the stock count was not saved and no error was shown');
+    }
     await shell.expectScreenWithoutError(shell.appBarTitle(_listTitle));
     await pumpUntil(tester, () => _rows.isNotEmpty, 'the list to reload');
   }
