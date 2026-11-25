@@ -1,7 +1,7 @@
 # Sells two of the run's product, paid with the exact amount, and finds that
 # bill, by the number the row shows, in the bills list: the cart line, the
-# totals, the payment, what the server recorded and what the bill's own
-# page shows.
+# totals, the payment, the next scan going into the search field (web), what
+# the server recorded and what the bill's own page shows.
 appId: app.devper.pos
 ---
 - runFlow:
@@ -27,6 +27,17 @@ appId: app.devper.pos
 - extendedWaitUntil:
     visible: "ยอดรวมสุทธิ\n?฿0\\.00"
     timeout: 15000
+# After the payment the search field has the focus again: a scan typed
+# without touching it adds a line. Only the wide layout shows the field.
+- runFlow:
+    when:
+      true: ${LAYOUT == 'wide'}
+    commands:
+      - inputText: 93${RUN_ID}0001
+      - pressKey: Enter
+      - extendedWaitUntil:
+          visible: "1x ${PRODUCT_NAME}"
+          timeout: 10000
 - repeat:
     times: 15
     while:

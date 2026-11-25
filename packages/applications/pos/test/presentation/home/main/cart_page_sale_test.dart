@@ -168,4 +168,19 @@ void main() {
     // Assert
     expect(find.text('ขายสำเร็จ'), findsOneWidget);
   });
+
+  testWidgets('after a sale the next scan goes into the search field',
+      (tester) async {
+    // Arrange
+    await _openSellingScreen(tester, 'OD_202611260007');
+
+    // Act
+    await _sellOne(tester);
+
+    // Assert
+    final field = tester.widget<EditableText>(_searchField);
+    expect(find.text('ชำระเงิน', skipOffstage: false), findsNothing,
+        reason: 'the payment dialog has closed');
+    expect(FocusManager.instance.primaryFocus, same(field.focusNode));
+  }, variant: TargetPlatformVariant.all());
 }

@@ -22,7 +22,8 @@ import 'package:pos/presentation/home/main/product_search_view_model.dart';
 class ProductSearch extends StatefulWidget {
   final Function(String) onSelected;
 
-  /// Each recorded sale reloads the products: it has moved their stock.
+  /// Each recorded sale reloads the products (it has moved their stock) and
+  /// puts the cursor back in the search field, ready for the next scan.
   final Stream<Object?>? saleRecorded;
 
   const ProductSearch({
@@ -62,8 +63,11 @@ class _ProductSearchState extends State<ProductSearch> {
     super.dispose();
   }
 
+  /// The payment dialog closing does not hand the focus back (on the web it
+  /// stays on the route), so the next scan would go nowhere.
   void _onSaleRecorded() {
     _viewModel.refresh();
+    _serialNumberNode.requestFocus();
   }
 
   @override
