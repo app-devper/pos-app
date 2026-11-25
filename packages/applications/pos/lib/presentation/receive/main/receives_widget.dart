@@ -11,6 +11,7 @@ import 'package:pos/domain/model/receive/receive.dart';
 import 'package:pos/presentation/receive/main/receive_state.dart';
 import 'package:pos/presentation/receive/main/receives_view_model.dart';
 import 'package:design_system/theme/app_colors.dart';
+import 'package:pos/presentation/receive/main/receive_menu_button.dart';
 
 class ReceivesWidget extends StatefulWidget {
   final Function(Receive) onSelected;
@@ -96,14 +97,7 @@ class _ReceivesWidgetState extends State<ReceivesWidget> {
               ),
             ),
             if (isMobile) ...[
-              IconButton(
-                splashRadius: 20,
-                onPressed: () {
-                  widget.onMenu();
-                },
-                icon: const Icon(Icons.menu),
-                color: Theme.of(context).colorScheme.primary,
-              ),
+              ReceiveMenuButton(onPressed: () => widget.onMenu()),
               const SizedBox(width: 8),
             ]
           ],

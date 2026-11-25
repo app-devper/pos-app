@@ -1,0 +1,8 @@
+appId: app.devper.pos
+name: android - receive five of a product into stock
+env:
+  LAYOUT: narrow
+---
+- launchApp:
+    clearState: true
+- runFlow: ../shared/receive_stock.yaml

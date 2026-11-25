@@ -5,7 +5,8 @@
 #
 #   maestro-data.sh up <run-id>    one sellable product "MST-<run-id> product":
 #                                  barcode 93<run-id>0001, price 25, cost 10,
-#                                  1000 on hand in the active branch
+#                                  1000 on hand in the active branch; and one
+#                                  supplier "MST-<run-id> supplier"
 #   maestro-data.sh down <run-id>  delete every product, customer and supplier
 #                                  whose name starts with "MST-<run-id>"
 set -eu
@@ -48,5 +49,7 @@ db.product_prices.insertOne({productId: id, unitId, customerType: "General", pri
 db.product_stocks.insertOne({branchId: branch, productId: id, unitId, receiveCode: prefix,
   sequence: 1, lotNumber: "L" + runId, costPrice: 10, price: 0, import: 1000, quantity: 1000,
   expireDate: new Date(Date.now() + 365*864e5), importDate: now});
-print(`maestro-data: ${name} with 1000 on hand`);
+db.suppliers.insertOne({clientId: "", name: prefix + " supplier", address: "maestro", phone: "",
+  taxId: "", status: "ACTIVE", createdBy: by, createdDate: now, updatedBy: by, updatedDate: now});
+print(`maestro-data: ${name} with 1000 on hand, and ${prefix} supplier`);
 '

@@ -1,0 +1,7 @@
+url: http://127.0.0.1:8090
+name: web - receive five of a product into stock
+env:
+  LAYOUT: wide
+---
+- launchApp
+- runFlow: ../shared/receive_stock.yaml
