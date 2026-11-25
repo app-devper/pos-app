@@ -84,6 +84,24 @@ class OrderRobot {
   Future<void> openBill(Bill bill) async {
     expect(await isListed(bill), isTrue,
         reason: 'bill ${bill.code} (${bill.rowTitle}) is not listed');
+    if (!await _openRowOf(bill)) {
+      fail('no row of the list opens bill ${bill.code}');
+    }
+  }
+
+  /// Whether a row of the list, under its current filter, opens [bill]
+  /// itself (its code in the detail header): exact even when another bill
+  /// has the same minute and total. Leaves the list as it found it.
+  Future<bool> listsBill(Bill bill) async {
+    if (!await isListed(bill)) return false;
+    final opened = await _openRowOf(bill);
+    if (opened) await leaveBill();
+    return opened;
+  }
+
+  /// Opens, one by one, each row with [bill]'s title and total until one
+  /// shows its code; false (back on the list) if none does.
+  Future<bool> _openRowOf(Bill bill) async {
     final count = _rows(bill).hitTestable().evaluate().length;
     for (var i = 0; i < count; i++) {
       if (i > 0) await isListed(bill);
@@ -95,10 +113,10 @@ class OrderRobot {
       await tester.tap(rows.at(i));
       await tester.pump();
       await _awaitDetail();
-      if (find.text(bill.header).evaluate().isNotEmpty) return;
+      if (find.text(bill.header).evaluate().isNotEmpty) return true;
       await leaveBill();
     }
-    fail('no row of the list opens bill ${bill.code}');
+    return false;
   }
 
   Future<void> _awaitDetail() async {
