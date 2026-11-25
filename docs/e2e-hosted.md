@@ -33,10 +33,10 @@ Every item below is a real cost. None of them can be undone from the app.
   - 1 stock count (every admin of the Branch sees it in the นับสต็อก list),
   - 1 return,
   - the stock adjustments, including the ones that zero the stock,
-  - stock rows at 0 of 4 deleted products,
-  - their history rows.
-  The zeroed rows still appear, at 0, in pos-api's stock report and in its
-  low-stock list.
+  - the 4 deleted products' history rows, including one stock-row history
+    entry per deleted lot.
+  The products' stock rows themselves are deleted, so the deleted products
+  do not appear in pos-api's stock report or its low-stock list.
 - **The kept customer `E2E customer`.** Its phone is edited every run, and
   each edit resets its type to ลูกค้าทั่วไป (an app defect). It is never
   removed.
@@ -47,6 +47,9 @@ Every item below is a real cost. None of them can be undone from the app.
   is ACTIVE and every cashier of the Branch can see it and sell it, for a
   minute or two per file. The clean-up cancels only bills made wholly of the
   run's product. A real bill that includes it is left alone and reported.
+- **UM sessions and one failed sign-in.** The five files that write data
+  never sign out, so each leaves a session to expire. `auth_test` makes one
+  deliberate failed sign-in per run.
 - **The shared sign-in limit.** A run makes 12 sign-in calls, paced to at
   most 3 a minute, against a limit that may be shared with every user behind
   the gateway (below).
@@ -61,14 +64,14 @@ Every item below is a real cost. None of them can be undone from the app.
    `tools/e2e/run.sh hosted navigation_test.dart`. These write no POS data.
    They check the credentials, the roles and that every screen opens.
 2. Run one stocking file: `tools/e2e/run.sh hosted stock_in_test.dart`. Read
-   its `E2E leftovers:` line. Then look on the server, in the app, at what
-   it left: the product is gone, the receipts are listed, the stock rows
-   are at 0.
+   its `E2E leftovers:` line. Then look in the app at what it left:
+   - the product is gone from the product list and from the selling grid,
+   - the receipt is listed as imported (and the draft as cancelled),
+   - nothing new is in the low-stock list.
 3. Only then run the rest (`customer`, `selling`, `stock_count`,
    `product_edit`), or `tools/e2e/run-all.sh hosted`.
 
 ## The sign-in limit is shared
-
 
 um-api allows 5 `/auth/login` calls a minute and refuses more with
 `UM-429-001` (`app/featues/api/auth.go:31`). What the code says:
@@ -110,7 +113,6 @@ has ended. Such an error is then missed, or it fails a later step.
 
 ## What a hosted run writes to Client 000, and what stays
 
-
 Everything a run creates is named `E2E-<run id> …` (the run id is
 `yyyyMMddHHmmss-<pid>`), or is one of the fixed `E2E …` records that every
 run reuses. Barcodes start with `2` (the in-store GS1 range), so they never
@@ -123,12 +125,16 @@ also leaves its rows behind, because pos-api keeps them.
 
 Before deleting a run's product, the clean-up takes every lot of it to 0
 with one stock adjustment each (reason อื่นๆ, note `E2E clean-up: stock
-zeroed before the product is deleted`). `product_edit_test` does the same
-through the adjustment dialog before it presses delete. pos-api's stock
-report counts a deleted product's stock (a finding), so without this every
-run would add its stock to that report for good. What stays per product: its
-stock rows at 0, and one extra adjustment row per lot. A zeroed row still
-appears in the stock report (at 0) and in the low-stock list.
+zeroed before the product is deleted`). Then it deletes each stock row
+(`DELETE /products/stocks/{id}`, the stock dialog's 'ลบสต็อกสินค้า'), and
+only then the product. `product_edit_test` does the same through the screens:
+the adjustment dialog, then the stock dialog, then delete. pos-api's stock
+and low-stock reports count a deleted product's stock rows (a finding). With
+no rows left, the product drops out of both. A bill cancelled after that puts
+nothing back, because pos-api skips stock rows that are gone. What stays per
+product: one zeroing adjustment and one stock-row history entry per lot,
+plus its other history rows. A row pos-api refuses to delete (still holding
+goods, or reserved by a pending transfer) is named in the leftovers line.
 
 **The four files that stock a product (stock_in, selling, stock_count,
 product_edit):** the fixed supplier `E2E supplier`. It is created once and
@@ -156,15 +162,15 @@ customers.
 
 **`stock_in_test.dart`, per run:**
 
-- one product, deleted at the end. Its stock row, history and adjustment
-  rows remain in pos-api,
+- one product, deleted at the end. Its stock row is deleted first; its
+  history and adjustment rows remain in pos-api,
 - one imported receipt,
 - one cancelled draft receipt. Both stay in the receipt list, because the app
   lists cancelled receipts too. References: `<run id>` and `<run id>-draft`.
 
 **`selling_test.dart`, per run:**
 
-- one product, deleted, its rows remaining,
+- one product, deleted with its stock rows; its history remains,
 - one imported receipt,
 - two bills, 75.00 (cash) and 40.00 (PromptPay, to `E2E customer`), both
   cancelled before the file ends,
@@ -172,7 +178,7 @@ customers.
 
 **`stock_count_test.dart`, per run:**
 
-- one product, deleted, its rows remaining,
+- one product, deleted with its stock rows; its history remains,
 - one imported receipt,
 - one stock count document (`SC-…`, noted `E2E-<run id> stock count`).
   Every admin of the Branch sees it in the นับสต็อก list, for good.
@@ -214,23 +220,40 @@ The one command that cleans it up:
 tools/e2e/sweep.sh hosted     # or: tools/e2e/sweep.sh local
 ```
 
+Worst-case timing: the "each role can sign in" test signs in twice. On the
+hosted target each sign-in can be paced and then hit one rate-limit wait
+(about 60 s and 65 s). In the worst case that test approaches its 5-minute
+bound.
+
 It signs in as admin, using the same pacing. Then it works only through the
 app's repositories:
 
-- It cancels every bill of the last 3 days whose every line is a suite
-  product (`E2E-…`). A bill that mixes one with anything else is left and
-  reported.
-- It zeroes the stock of every `E2E-…` product not yet deleted, then deletes
-  it.
-- It removes `E2E-…` customers on the local target. On hosted it keeps them.
-- It cancels draft receipts whose reference starts with a run id.
+**Run it only when no run is in progress, on any machine.** It cancels a
+running file's bills and deletes its product.
 
-It prints what it did and what it left. It changes nothing without the
-suite's prefix. For `hosted` it prints the API host and "run by the owner"
+It acts on run names only: `E2E-<yyyyMMddHHmmss>-<pid> <what>`, the shape
+every run name has (`RunData.runNamePattern`). The kept `E2E customer` and
+`E2E supplier` never match, and neither does any other name that merely
+starts with `E2E-`.
+
+- It cancels every bill of the last 3 days whose every line is a run-named
+  product, **whoever rang it up**. That includes a bill a real cashier rang
+  up from the selling grid while a file was running, if it holds only that
+  product. A bill that mixes one with anything else is left and reported.
+- For every run-named product not yet deleted, it zeroes the lots, deletes
+  the stock rows, then deletes the product.
+- It removes run-named customers on the local target. On hosted it keeps
+  them.
+- It cancels draft receipts whose reference starts with a run id followed by
+  a space, a hyphen or nothing (`^\d{14}-\d+`). A receipt reference is free
+  text, so a real reference typed in that shape would match too.
+
+It prints what it did and what it left. For `hosted` it prints the API host and "run by the owner"
 first, and it refuses to run without `.env.e2e`.
 
 Limits:
 
-- It cannot see deleted products. If a bill of an already deleted product is
-  cancelled, the pieces it puts back land on that product's stock row. That
-  row then stays above 0.
+- It cannot see deleted products. For a product deleted by an older version
+  of the suite, which kept its stock rows, cancelling its bill puts the
+  pieces back on a row that then stays above 0. Since the rows are now
+  deleted with the product, nothing is put back.

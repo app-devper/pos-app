@@ -221,13 +221,17 @@ The line holds:
 - every undo that failed or timed out,
 - anything still queued.
 
+A run's products are deleted together with their stock rows (lots zeroed
+first). What stays is their history, including one stock-row history entry
+per lot (see [e2e-hosted.md](e2e-hosted.md)).
+
 `none` means the file left nothing. Undos run after the test, through the
 app's repositories rather than its screens, even when the test failed
 (`support/cleanup.dart`).
 
 To find suite data on a server:
 
-- Look for names that start with `E2E-` (one run: `E2E-<run id>`) or the
+- Look for run names `E2E-<yyyyMMddHHmmss>-<pid> …` (one run: `E2E-<run id>`) or the
   fixed `E2E supplier` and `E2E customer`.
 - Lot numbers are `L<run id>`.
 - Receipt references are `<run id> <what>` (fixtures), and `<run id>` and
