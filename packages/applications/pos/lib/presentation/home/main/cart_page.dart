@@ -284,13 +284,11 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
           ),
           trailing: !showCustomer
               ? const Icon(Icons.arrow_forward_ios, size: 16)
-              : IconButton(
-                  splashRadius: 16,
+              : CartCustomerRemoveButton(
+                  customerName: _viewModel.customer?.name ?? "",
                   onPressed: () {
                     _viewModel.setCustomer(null);
                   },
-                  color: Colors.red,
-                  icon: const Icon(Icons.close, size: 24),
                 ),
           onTap: () {
             _showCustomerDialog();

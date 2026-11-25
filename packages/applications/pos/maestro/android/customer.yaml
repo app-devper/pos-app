@@ -1,0 +1,8 @@
+appId: app.devper.pos
+name: android - add a customer and choose it for a sale
+env:
+  LAYOUT: narrow
+---
+- launchApp:
+    clearState: true
+- runFlow: ../shared/customer.yaml

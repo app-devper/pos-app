@@ -393,3 +393,27 @@ class CartSearchButton extends StatelessWidget {
     );
   }
 }
+
+/// Takes the chosen customer off the sale. Its tooltip names the customer: on
+/// the web the tile's own title does not reach the semantics tree.
+class CartCustomerRemoveButton extends StatelessWidget {
+  final String customerName;
+  final VoidCallback onPressed;
+
+  const CartCustomerRemoveButton({
+    super.key,
+    required this.customerName,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: 'นำลูกค้า $customerName ออก',
+      splashRadius: 16,
+      onPressed: onPressed,
+      color: Colors.red,
+      icon: const Icon(Icons.close, size: 24),
+    );
+  }
+}

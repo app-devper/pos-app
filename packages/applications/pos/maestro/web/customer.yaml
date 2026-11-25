@@ -1,0 +1,7 @@
+url: http://127.0.0.1:8090
+name: web - add a customer and choose it for a sale
+env:
+  LAYOUT: wide
+---
+- launchApp
+- runFlow: ../shared/customer.yaml

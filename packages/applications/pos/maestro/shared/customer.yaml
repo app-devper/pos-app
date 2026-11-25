@@ -1,0 +1,64 @@
+# A customer is added through the form, is on the server, and can be found by
+# name and chosen for a sale on the selling screen.
+#
+# Not here: opening the customer from the list and deleting it. The list has
+# no search, and the local database holds hundreds of customers earlier test
+# runs could not delete, so the new one is far below the fold (and on the web
+# Maestro's scroll does not reach that column). maestro-data.sh removes it.
+appId: app.devper.pos
+env:
+  CUSTOMER: MST-${RUN_ID} customer
+---
+- runFlow:
+    file: steps/sign_in.yaml
+    env:
+      USERNAME: ${MAESTRO_USERNAME}
+      PASSWORD: ${MAESTRO_PASSWORD}
+- runFlow:
+    file: steps/open_screen.yaml
+    env:
+      SCREEN: "จัดการ"
+- tapOn: "จัดการลูกค้า"
+# The list's title does not reach the web's semantics tree; its add button does.
+- extendedWaitUntil:
+    visible: "เพิ่มลูกค้า"
+    timeout: 15000
+- tapOn: "เพิ่มลูกค้า"
+- tapOn: "ชื่อลูกค้า"
+- inputText: ${CUSTOMER}
+- tapOn: "โทรศัพท์"
+- inputText: 08${RUN_ID}0
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
+- tapOn: "ยืนยัน"
+- extendedWaitUntil:
+    visible: "เพิ่มลูกค้า"
+    timeout: 15000
+- runScript:
+    file: ../scripts/api.js
+    env:
+      ACTION: customerCount
+      NAME: ${CUSTOMER}
+- assertTrue: ${output.customerCount == '1'}
+- runFlow:
+    file: steps/open_screen.yaml
+    env:
+      SCREEN: "ขายสินค้า"
+- extendedWaitUntil:
+    visible: "ยอดรวมสุทธิ\n?฿0\\.00"
+    timeout: 15000
+- tapOn: "ข้อมูลลูกค้า\n?เลือกลูกค้า"
+- tapOn: "ค้นหา\\.\\.\\."
+- inputText: MST-${RUN_ID}
+- extendedWaitUntil:
+    visible: "${CUSTOMER}.*"
+    timeout: 15000
+- tapOn: "${CUSTOMER}.*"
+# The cart names the chosen customer on the button that takes them off again.
+- extendedWaitUntil:
+    visible: "นำลูกค้า ${CUSTOMER} ออก"
+    timeout: 10000
+- takeScreenshot: customer-on-sale

@@ -53,4 +53,19 @@ void main() {
     expect(opened, 1);
     expect(find.byIcon(Icons.search), findsOneWidget);
   });
+
+  testWidgets('the button that takes the customer off the sale names them',
+      (tester) async {
+    // Arrange
+    var removed = 0;
+    await tester.pumpWidget(_host(CartCustomerRemoveButton(
+        customerName: 'สมชาย ใจดี', onPressed: () => removed++)));
+
+    // Act
+    await tester.tap(find.byTooltip('นำลูกค้า สมชาย ใจดี ออก'));
+
+    // Assert
+    expect(removed, 1);
+    expect(find.byIcon(Icons.close), findsOneWidget);
+  });
 }
