@@ -183,6 +183,15 @@ The suite deletes whatever it can. Some data cannot be deleted at all:
 receipts, bills, returns and stock counts have no delete. A deleted product
 also leaves its rows behind, because pos-api keeps them.
 
+Before deleting a run's product, the clean-up takes every lot of it to 0
+with one stock adjustment each (reason อื่นๆ, note `E2E clean-up: stock
+zeroed before the product is deleted`). `product_edit_test` does the same
+through the adjustment dialog before it presses delete. pos-api's stock
+report counts a deleted product's stock (a finding), so without this every
+run would add its stock to that report for good. What stays per product: its
+stock rows at 0, and one extra adjustment row per lot. A zeroed row still
+appears in the stock report (at 0) and in the low-stock list.
+
 **The four files that stock a product (stock_in, selling, stock_count,
 product_edit):** the fixed supplier `E2E supplier`. It is created once and
 reused. A supplier cannot be deleted from the app. (auth and navigation write

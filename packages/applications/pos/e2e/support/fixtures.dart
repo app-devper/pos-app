@@ -75,8 +75,17 @@ class StockedProduct {
 /// and so does every undo the file's tests add after it (the ledger keeps
 /// one tear-down while one is pending); that suits a file of tests that
 /// share the product.
+///
+/// Its stock is brought to 0 first (see [deleteProductsNamed]); those
+/// adjustments cannot be deleted, so they are reported as kept.
 void deleteProductAfterFile(String name) =>
-    Cleanup.add('product "$name"', () => deleteProductsNamed(name));
+    Cleanup.add('product "$name"', () async {
+      final zeroed = await deleteProductsNamed(name);
+      if (zeroed > 0) {
+        Cleanup.keep('$zeroed stock-zeroing adjustment(s) of "$name" '
+            '(made before deleting it; cannot be deleted)');
+      }
+    });
 
 /// From the receipt list: creates [receipt], adds its line, imports it and
 /// goes back to the list; returns the receipt's code. The imported receipt and the supplier cannot

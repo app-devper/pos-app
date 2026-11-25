@@ -15,6 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 // Project imports:
 import 'support/api/product_api.dart';
 import 'support/app.dart';
+import 'support/cleanup.dart';
 import 'support/fixtures.dart';
 import 'support/robots/cart_robot.dart';
 import 'support/robots/product_edit_robot.dart';
@@ -91,6 +92,20 @@ void main() {
       final products = ProductRobot(shell);
       await products.openList();
       await products.open(_renamed);
+      // The app deletes a product with stock on hand, and pos-api's stock
+      // report keeps counting that stock (a finding, see e2e-findings.md),
+      // so the run takes it to 0 first, as a user can.
+      await products.openTab('สต็อก');
+      Cleanup.keep('adjustment zeroing "$_renamed" before its deletion '
+          '(cannot be deleted)');
+      await products.adjust(
+        lot: _stocked.lot,
+        onHand: _stocked.quantity,
+        increase: false,
+        quantity: _stocked.quantity,
+        note: zeroingNote,
+      );
+      await products.expectStockOnHand(_renamed, 0, unit: _stocked.unit);
 
       // Act
       await products.delete();

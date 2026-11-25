@@ -141,7 +141,7 @@ void main() {
         (tester) async {
       final shell = await _signedInShell(tester);
       final name = RunData.name('count snackbar product');
-      Cleanup.add('product "$name"', () => deleteProductsNamed(name));
+      deleteProductAfterFile(name);
       await stockProduct(shell,
           what: 'count snackbar product', barcodeNumber: 8);
       await StockCountRobot(shell).openList();
