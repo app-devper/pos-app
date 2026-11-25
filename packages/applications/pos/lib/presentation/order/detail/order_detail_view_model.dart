@@ -54,9 +54,12 @@ class OrderDetailViewModel {
   /// to create one. This is not a failure — see [getSupplier].
   Stream<void> get supplierSetups => _supplierSetups.stream;
 
+  /// The role is awaited first and then set on the state as it is then:
+  /// reading the state before the `await` would write back a copy from
+  /// before the bill arrived.
   Future<void> checkLogin() async {
-    _state.value = _state.value
-        .copyWith(isAdmin: await getRoleUseCase.atLeast(Role.admin));
+    final isAdmin = await getRoleUseCase.atLeast(Role.admin);
+    _state.value = _state.value.copyWith(isAdmin: isAdmin);
   }
 
   Future<void> getOrderById(String orderId) async {

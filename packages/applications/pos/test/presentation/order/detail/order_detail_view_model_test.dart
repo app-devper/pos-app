@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:um/domain/usecase/auth_use_cases.dart';
 import 'package:common/core/error/exception.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -44,6 +46,14 @@ class FakeLoginRepository implements LoginRepository {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+/// Answers the role only when the test completes [role].
+class PendingRoleRepository extends FakeLoginRepository {
+  final pending = Completer<String>();
+
+  @override
+  Future<String> getRole() => pending.future;
 }
 
 class FakeOrderRepository implements OrderRepository {
@@ -220,6 +230,27 @@ OrderDetailViewModel _buildViewModel({
 
 void main() {
   group('checkLogin', () {
+    test('the role answer keeps the bill loaded while it was awaited',
+        () async {
+      // Arrange: the page asks for the role and the bill together
+      final login = PendingRoleRepository();
+      final bill = _buildOrderDetail('order-1');
+      final vm = _buildViewModel(
+          loginRepo: login, orderRepo: FakeOrderRepository(orderDetail: bill));
+
+      // Act: the bill arrives first, then the role
+      final roleRead = vm.checkLogin();
+      await vm.getOrderById('order-1');
+      login.pending.complete('ADMIN');
+      await roleRead;
+
+      // Assert
+      expect(vm.state.value.isAdmin, isTrue);
+      expect(vm.state.value.order, same(bill),
+          reason: 'the role must not write back the state from before');
+      expect(vm.state.value.loading, isFalse);
+    });
+
     test('an admin gets the admin actions', () async {
       final vm = _buildViewModel(loginRepo: FakeLoginRepository(role: 'ADMIN'));
 
