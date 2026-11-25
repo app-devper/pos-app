@@ -207,21 +207,7 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
         Row(children: [
           if (showSearchIcon) ...[
             const SizedBox(width: 4),
-            SizedBox(
-              height: 40,
-              width: 40,
-              child: IconButton(
-                padding: const EdgeInsets.all(0),
-                splashRadius: 20,
-                onPressed: () {
-                  _showProductDialog();
-                },
-                icon: Icon(
-                  Icons.search,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-            )
+            CartSearchButton(onPressed: _showProductDialog),
           ],
           Expanded(
             child: Padding(
