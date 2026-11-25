@@ -80,8 +80,9 @@ void main() {
   group('runNamePattern', () {
     test('matches every name RunData gives', () {
       for (final what in ['product', 'sale customer', 'stock count']) {
-        expect(RunData.runNamePattern.hasMatch(
-                RunData.nameIn('20261125120303-38502', what)),
+        expect(
+            RunData.runNamePattern
+                .hasMatch(RunData.nameIn('20261125120303-38502', what)),
             isTrue,
             reason: what);
       }
