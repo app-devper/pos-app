@@ -11,6 +11,7 @@ import 'package:pos/domain/repositories/product_repository.dart';
 import 'package:pos/domain/usecase/order/checkout_sale_use_case.dart';
 import 'package:pos/presentation/home/main/cart_page.dart';
 import 'package:pos/presentation/home/main/cart_view_model.dart';
+import 'package:pos/presentation/home/main/payment_screen.dart';
 import 'package:pos/presentation/home/main/product_search.dart';
 import 'package:pos/presentation/home/main/product_search_view_model.dart';
 
@@ -92,16 +93,41 @@ Product _product() => Product(
     );
 
 /// The payment dialog's fixed-height boxes overflow by a few pixels (finding
-/// #19, fixed by another task). Only that error is let through here.
+/// #19, fixed by another task). Only that error is let through here: an
+/// overflow anywhere else, such as in the cart, still fails the test.
 void _tolerateDialogOverflow() {
   final original = FlutterError.onError;
   FlutterError.onError = (details) {
-    if (details.exceptionAsString().contains('A RenderFlex overflowed')) {
-      return;
-    }
+    if (_isPaymentDialogOverflow(details)) return;
     original?.call(details);
   };
   addTearDown(() => FlutterError.onError = original);
+}
+
+/// Whether [details] is a RenderFlex overflow inside the [PaymentScreen]:
+/// the overflowing render object's widget sits under it.
+bool _isPaymentDialogOverflow(FlutterErrorDetails details) {
+  if (!details.exceptionAsString().contains('A RenderFlex overflowed')) {
+    return false;
+  }
+  final information = details.informationCollector?.call() ?? const [];
+  for (final node in information) {
+    final creator = switch (node.value) {
+      final RenderObject renderObject => renderObject.debugCreator,
+      _ => null,
+    };
+    if (creator is DebugCreator) return _isUnderPaymentScreen(creator.element);
+  }
+  return false;
+}
+
+bool _isUnderPaymentScreen(Element element) {
+  var found = element.widget is PaymentScreen;
+  element.visitAncestorElements((ancestor) {
+    found = ancestor.widget is PaymentScreen;
+    return !found;
+  });
+  return found;
 }
 
 /// The selling screen on a wide window (grid, cart and slots side by side),
@@ -183,4 +209,31 @@ void main() {
         reason: 'the payment dialog has closed');
     expect(FocusManager.instance.primaryFocus, same(field.focusNode));
   }, variant: TargetPlatformVariant.all());
+
+  testWidgets('an overflow outside the payment dialog still fails the test',
+      (tester) async {
+    // Arrange: record what the filter passes on
+    final passedOn = <FlutterErrorDetails>[];
+    final original = FlutterError.onError;
+    FlutterError.onError = passedOn.add;
+    addTearDown(() => FlutterError.onError = original);
+    _tolerateDialogOverflow();
+
+    // Act: a Column that overflows, as a cart layout regression would
+    await tester.pumpWidget(const Directionality(
+      textDirection: TextDirection.ltr,
+      child: Center(
+        child: SizedBox(
+          height: 10,
+          child: Column(children: [SizedBox(width: 100, height: 50)]),
+        ),
+      ),
+    ));
+
+    // Assert, with the test's own handler back first (an expect failing
+    // while it is replaced cannot be reported)
+    FlutterError.onError = original;
+    expect(passedOn.map((e) => e.exceptionAsString()),
+        [contains('A RenderFlex overflowed')]);
+  });
 }
