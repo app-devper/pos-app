@@ -178,10 +178,16 @@ class StockCountRobot {
     await tester.pump();
     final search = shell.searchField(_pickerSearchHint);
     await pumpUntilFound(tester, search);
-    await pumpUntilGone(tester,
-        find.descendant(of: _picker, matching: find.byType(ProgressIndicator)));
+    // Typing before the products have loaded is lost: the load replaces
+    // the list with every product (stock_count_item_picker_view_model.dart
+    // getProducts). A row of any product means it has loaded.
+    await pumpUntilFound(
+        tester, find.descendant(of: _picker, matching: find.byType(ListTile)),
+        timeout: _saveTimeout);
     await tester.enterText(search, productName);
     await tester.pump();
+    await pumpUntilFound(
+        tester, _inPicker(find.widgetWithText(ListTile, productName)));
     // The search field holds the name too; the row is a ListTile.
     await tester.tap(_inPicker(find.widgetWithText(ListTile, productName)));
     await tester.pump();

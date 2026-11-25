@@ -15,6 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 // Project imports:
 import 'support/app.dart';
 import 'support/env.dart';
+import 'support/pump.dart';
 
 const _hostedApiUrl = 'https://api.devper.app';
 const _localApiUrl = 'http://127.0.0.1:8585';
@@ -78,7 +79,8 @@ void main() {
     expect(refusal, contains(_wrongCredentialsCode),
         reason:
             'the alert should carry the server code $_wrongCredentialsCode');
-    expect(find.byKey(const Key('login')).hitTestable(), findsOneWidget);
+    // The alert's barrier fades out after it is dismissed.
+    await pumpUntilFound(tester, find.byKey(const Key('login')).hitTestable());
     expect(find.text('ตะกร้าสินค้า #1'), findsNothing);
   }, timeout: e2eTestTimeout);
 
