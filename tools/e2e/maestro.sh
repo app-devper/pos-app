@@ -1,0 +1,191 @@
+#!/usr/bin/env bash
+# Runs the POS app's Maestro flows against the LOCAL test stack, on the
+# Android emulator or in a browser.
+#
+#   maestro.sh <android|web> [<flow>|all] [--headless]
+#
+#   maestro.sh android all            every flow on the emulator
+#   maestro.sh web sell_and_bill      one flow in a browser window
+#   maestro.sh web all --headless     every flow, no window (1400x900)
+#
+# It starts the local stack, builds and installs (or serves) the app, gives
+# each flow a product of its own, and stops what it started. There is no way
+# to name another target: the app is built from config/e2e-local.json, which
+# must point at 127.0.0.1. Maestro's output (it holds typed text) goes to
+# ${TMPDIR}/pos-e2e-maestro, never into the repository.
+#
+# Environment: E2E_AVD (emulator name, default Medium_Phone);
+# E2E_MAESTRO_REUSE_BUILD=1 skips the build when the artefact exists.
+set -eu
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+APP_DIR="$(cd "$SCRIPT_DIR/../../packages/applications/pos" && pwd)"
+FLOWS_DIR="$APP_DIR/maestro"
+CONFIG="${E2E_MAESTRO_CONFIG:-$APP_DIR/config/e2e-local.json}"
+ENV_FILE="${E2E_MAESTRO_ENV_FILE:-$APP_DIR/.env.e2e.local}"
+MAESTRO="${MAESTRO_BIN:-maestro}"
+SDK="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
+ADB="$SDK/platform-tools/adb"
+AVD="${E2E_AVD:-Medium_Phone}"
+APP_ID=app.devper.pos
+WEB_PORT=8090
+OUT_ROOT="${TMPDIR:-/tmp}"
+OUT_ROOT="${OUT_ROOT%/}/pos-e2e-maestro"
+BOOT_TIMEOUT_SEC=240
+ALL_FLOWS="auth navigation sell_and_bill customer receive_stock product_edit"
+
+log() { printf 'maestro.sh: %s\n' "$*"; }
+die() { printf 'maestro.sh: %s\n' "$*" >&2; exit 1; }
+usage() { echo "usage: $0 <android|web> [<flow>|all] [--headless]" >&2; exit 2; }
+
+platform=""; flow="all"; headless=0
+for arg in "$@"; do
+  case "$arg" in
+    android|web) [ -z "$platform" ] || usage; platform="$arg" ;;
+    --headless) headless=1 ;;
+    -*) usage ;;
+    *) [ -n "$platform" ] || usage; flow="$arg" ;;
+  esac
+done
+[ -n "$platform" ] || usage
+
+refuse() { printf 'maestro.sh: %s\n' "$*" >&2; exit 2; }
+
+# The local-only guard: both API addresses in the app's build config.
+grep -q '"apiUrl": *"http://127\.0\.0\.1:8585"' "$CONFIG" 2>/dev/null \
+  && grep -q '"hostApp": *"http://127\.0\.0\.1:8586"' "$CONFIG" \
+  || refuse "$CONFIG does not point at the local stack (127.0.0.1:8585 and :8586); refusing to run"
+
+if [ "$flow" = all ]; then
+  flows=""
+  for f in $ALL_FLOWS; do [ -f "$FLOWS_DIR/$platform/$f.yaml" ] && flows="$flows $f"; done
+  [ -n "$flows" ] || refuse "no such flow: nothing under $FLOWS_DIR/$platform"
+else
+  [ -f "$FLOWS_DIR/$platform/$flow.yaml" ] || refuse "no such flow: $FLOWS_DIR/$platform/$flow.yaml"
+  flows="$flow"
+fi
+
+export MAESTRO_CLI_NO_ANALYTICS=1
+export MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED=true
+export MAESTRO_DISABLE_UPDATE_CHECK=true
+export SE_OFFLINE=true   # Selenium Manager uses the browser it already has; it downloads nothing
+
+# The seeded local accounts reach the flows as MAESTRO_* variables, which
+# Maestro hands to a flow by name; they are never on a command line.
+value_of() { sed -n "s/^$1=//p" "$ENV_FILE" | head -1; }
+load_accounts() {
+  [ -f "$ENV_FILE" ] || die "$ENV_FILE is missing; run tools/e2e/local-stack.sh start"
+  local role key
+  for role in ADMIN MANAGER USER; do
+    for key in USERNAME PASSWORD; do
+      [ -n "$(value_of "E2E_${role}_${key}")" ] || die "E2E_${role}_${key} is missing from $ENV_FILE"
+    done
+  done
+  MAESTRO_USERNAME="$(value_of E2E_ADMIN_USERNAME)"; MAESTRO_PASSWORD="$(value_of E2E_ADMIN_PASSWORD)"
+  MAESTRO_MANAGER_USERNAME="$(value_of E2E_MANAGER_USERNAME)"; MAESTRO_MANAGER_PASSWORD="$(value_of E2E_MANAGER_PASSWORD)"
+  MAESTRO_USER_USERNAME="$(value_of E2E_USER_USERNAME)"; MAESTRO_USER_PASSWORD="$(value_of E2E_USER_PASSWORD)"
+  export MAESTRO_USERNAME MAESTRO_PASSWORD MAESTRO_MANAGER_USERNAME MAESTRO_MANAGER_PASSWORD \
+    MAESTRO_USER_USERNAME MAESTRO_USER_PASSWORD
+}
+
+started_emulator=0; server_pid=""; device=""; data_run_id=""
+
+cleanup() {
+  [ -z "$data_run_id" ] || "$SCRIPT_DIR/maestro-data.sh" down "$data_run_id" >/dev/null 2>&1 || true
+  if [ -n "$server_pid" ]; then kill "$server_pid" 2>/dev/null || true; fi
+  if [ "$started_emulator" -eq 1 ] && [ -n "$device" ]; then
+    "$ADB" -s "$device" emu kill >/dev/null 2>&1 || true
+    log "stopped the emulator this run started"
+  fi
+}
+trap cleanup EXIT
+trap 'exit 130' INT TERM
+
+running_emulator() { "$ADB" devices | awk '$1 ~ /^emulator-/ && $2 == "device" {print $1; exit}'; }
+
+start_emulator() {
+  local waited=0
+  device="$(running_emulator)"
+  if [ -z "$device" ]; then
+    log "starting the emulator $AVD"
+    "$SDK/emulator/emulator" -avd "$AVD" -no-snapshot-save -no-boot-anim -no-audio \
+      > "$OUT_ROOT/emulator.log" 2>&1 &
+    started_emulator=1
+  fi
+  until [ -n "$device" ] && [ "$("$ADB" -s "$device" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ]; do
+    [ "$waited" -lt "$BOOT_TIMEOUT_SEC" ] || die "the emulator did not boot in ${BOOT_TIMEOUT_SEC}s (see $OUT_ROOT/emulator.log)"
+    sleep 2; waited=$((waited + 2)); device="$(running_emulator)"
+  done
+}
+
+artefact() { # artefact <apk|web> <path it would have>
+  if [ "${E2E_MAESTRO_REUSE_BUILD:-0}" = 1 ] && [ -e "$2" ]; then printf '%s\n' "$2"; return; fi
+  log "building the $1 (a few minutes the first time)" >&2
+  "$SCRIPT_DIR/maestro-build.sh" "$1" | tail -1
+}
+
+prepare_android() {
+  local apk
+  [ -x "$ADB" ] || die "adb not found at $ADB (set ANDROID_HOME)"
+  start_emulator
+  apk="$(artefact apk "$APP_DIR/build/app/outputs/flutter-apk/app-debug.apk")"
+  "$ADB" -s "$device" install -r "$apk" >/dev/null
+  # The emulator reaches the host's stack on its own 127.0.0.1; lost on every boot.
+  "$ADB" -s "$device" reverse tcp:8585 tcp:8585 >/dev/null
+  "$ADB" -s "$device" reverse tcp:8586 tcp:8586 >/dev/null
+}
+
+prepare_web() {
+  local dir waited=0
+  ! lsof -nP -iTCP:"$WEB_PORT" -sTCP:LISTEN >/dev/null 2>&1 \
+    || die "port $WEB_PORT is taken; stop what is listening there"
+  dir="$(artefact web "$APP_DIR/build/web-maestro")"
+  python3 -m http.server "$WEB_PORT" --bind 127.0.0.1 --directory "$dir" > "$OUT_ROOT/web-server.log" 2>&1 &
+  server_pid=$!
+  until curl -fsS -o /dev/null "http://127.0.0.1:$WEB_PORT/"; do
+    [ "$waited" -lt 20 ] || die "the web server did not answer on $WEB_PORT"
+    sleep 1; waited=$((waited + 1))
+  done
+}
+
+run_flow() { # run_flow <name> <run id>; prints the PASS/FAIL line, returns maestro's status
+  local name="$1" run_id="$2" out="$OUT_ROOT/$2-$1" started code=0
+  mkdir -p "$out"
+  set -- test -e RUN_ID="$run_id" -e PRODUCT_NAME="MST-$run_id product" --test-output-dir "$out"
+  if [ "$platform" = android ]; then
+    [ -z "$device" ] || set -- --device "$device" "$@"
+  elif [ "$headless" -eq 1 ]; then
+    set -- "$@" --headless --screen-size 1400x900
+  fi
+  started="$(date +%s)"
+  "$MAESTRO" "$@" "$FLOWS_DIR/$platform/$name.yaml" > "$out/maestro.log" 2>&1 || code=$?
+  [ "$code" -eq 0 ] || tail -25 "$out/maestro.log"
+  [ "${E2E_MAESTRO_SKIP_SETUP:-0}" != 1 ] || cat "$out/maestro.log"
+  if [ "$code" -eq 0 ]; then printf 'PASS %s %s %ss\n' "$platform" "$name" "$(( $(date +%s) - started ))"
+  else printf 'FAIL %s %s %ss  (output: %s)\n' "$platform" "$name" "$(( $(date +%s) - started ))" "$out"; fi
+  return "$code"
+}
+
+mkdir -p "$OUT_ROOT"
+load_accounts
+setup=1; [ "${E2E_MAESTRO_SKIP_SETUP:-0}" != 1 ] || setup=0   # the self-test runs without devices
+if [ "$setup" -eq 1 ]; then
+  "$SCRIPT_DIR/local-stack.sh" start
+  load_accounts   # a first start writes the env file
+  "prepare_$platform"
+fi
+
+failed=0; index=0; base_id="$(date +%H%M%S)"
+for name in $flows; do
+  index=$((index + 1)); run_id="$base_id$index"
+  if [ "$setup" -eq 1 ]; then
+    "$SCRIPT_DIR/local-stack.sh" reset-limits
+    data_run_id="$run_id"
+    "$SCRIPT_DIR/maestro-data.sh" up "$run_id" >/dev/null
+  fi
+  run_flow "$name" "$run_id" || failed=$((failed + 1))
+  if [ "$setup" -eq 1 ]; then "$SCRIPT_DIR/maestro-data.sh" down "$run_id" >/dev/null; data_run_id=""; fi
+done
+
+[ "$failed" -eq 0 ] || { log "$failed flow(s) failed"; exit 1; }
+log "all flows passed"
