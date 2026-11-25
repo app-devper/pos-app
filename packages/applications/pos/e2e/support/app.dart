@@ -124,6 +124,7 @@ Future<void> launchApp(WidgetTester tester, {bool keepSession = false}) async {
   }
   final restoring = keepSession && _sessionRole != null;
   if (!restoring) await _forgetSession();
+  _expectTargetApi();
   await tester.pumpWidget(const DevperPos());
   _expectWideLayout(tester);
   if (!restoring) {
@@ -166,6 +167,18 @@ Future<void> _useWideSurface(WidgetTester tester) async {
   addTearDown(tester.view.reset);
   await tester.binding.setSurfaceSize(_surfaceSize);
   addTearDown(() => tester.binding.setSurfaceSize(null));
+}
+
+/// The API each config must point at; checked on every launch, so that no
+/// file can run against a server other than the one its target names.
+const _apiUrlFor = {
+  'e2e-local': 'http://127.0.0.1:8585',
+  'app': 'https://api.devper.app',
+};
+
+void _expectTargetApi() {
+  expect(getIt()<AppConfig>().apiUrl, _apiUrlFor[E2EEnv.config],
+      reason: 'config/${E2EEnv.config}.json points the app elsewhere');
 }
 
 /// Fails at once if the app is not laid out, or not told, at 1400x900.
