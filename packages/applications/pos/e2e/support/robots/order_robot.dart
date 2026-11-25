@@ -105,14 +105,16 @@ class OrderRobot {
       find.descendant(of: _rows(bill), matching: find.text(text));
 
   /// The amount the list's foot reads next to ยอดรวม, `฿ #,##0.00`.
-  String listTotal() {
-    final row = find.descendant(
-        of: _list,
-        matching: find
-            .ancestor(of: find.text('ยอดรวม'), matching: find.byType(Row))
-            .first);
-    final texts = form.textsUnder(row);
-    return texts.last;
+  String listTotal() => _totalOn(_list);
+
+  String _totalOn(Finder screen) {
+    final row = find
+        .descendant(
+            of: screen,
+            matching: find.ancestor(
+                of: find.text('ยอดรวม'), matching: find.byType(Row)))
+        .first;
+    return form.textsUnder(row).last;
   }
 
   /// Opens, one by one, each row with [bill]'s title and total until one
@@ -197,6 +199,9 @@ class OrderRobot {
   /// [text] (exactly) anywhere on the detail, e.g. its Total `฿ 40.00`.
   Finder detailShows(String text) =>
       find.descendant(of: _detail, matching: find.text(text)).hitTestable();
+
+  /// The amount the bill's foot reads next to ยอดรวม, `฿ #,##0.00`.
+  String detailTotal() => _totalOn(_detail);
 
   /// [icon] (an action such as delete or return) on [productName]'s row.
   Finder lineIcon(String productName, IconData icon) =>

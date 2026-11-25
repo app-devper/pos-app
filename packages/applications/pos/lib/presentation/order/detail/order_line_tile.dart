@@ -43,11 +43,24 @@ class OrderLineTile extends StatelessWidget {
       title: Text(line.product?.name ?? ""),
       trailing: Text(_format.format(line.paid()),
           style: amountStyle(cancelled: line.isCancelled)),
-      subtitle: isAdmin
-          ? Text(costAndProfitText(
-              cost: line.costPrice, profit: line.paid() - line.costPrice))
-          : null,
+      subtitle: _buildSubtitle(),
       onTap: onTap,
+    );
+  }
+
+  /// The cancelled mark sits here, not by the quantity, so that a line
+  /// with its oversold or returned marks still fits its row.
+  Widget? _buildSubtitle() {
+    if (!isAdmin && !line.isCancelled) return null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (line.isCancelled) const CancelledBadge(),
+        if (isAdmin)
+          Text(costAndProfitText(
+              cost: line.costPrice, profit: line.paid() - line.costPrice)),
+      ],
     );
   }
 
@@ -75,7 +88,6 @@ class OrderLineTile extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: <Widget>[
         Text('${line.quantity}'),
-        if (line.isCancelled) const CancelledBadge(),
         if (line.oversoldQty > 0)
           StatusBadge(label: 'เกิน ${line.oversoldQty}', color: Colors.orange),
         if (line.returnedQty > 0)

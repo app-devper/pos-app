@@ -8,7 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pos/domain/model/order/order_item_detail.dart';
 import 'package:pos/presentation/order/detail/order_line_tile.dart';
 
-OrderItemDetail _line({String status = 'CONFIRMED'}) => OrderItemDetail(
+OrderItemDetail _line({String status = 'CONFIRMED', int returnedQty = 0}) =>
+    OrderItemDetail(
       id: 'i1',
       product: null,
       quantity: 2,
@@ -18,9 +19,13 @@ OrderItemDetail _line({String status = 'CONFIRMED'}) => OrderItemDetail(
       createdDate: '2026-11-26T10:00:00Z',
       order: null,
       status: status,
+      returnedQty: returnedQty,
     );
 
+/// Compact, the app's density on desktop and the web, where the E2E suite
+/// saw a cancelled, returned line overflow its row.
 Widget _host(OrderItemDetail line, {bool isAdmin = true}) => MaterialApp(
+      theme: ThemeData(visualDensity: VisualDensity.compact),
       home: Scaffold(
         body: OrderLineTile(
           line: line,
@@ -69,5 +74,18 @@ void main() {
     // Assert
     expect(find.text('ยกเลิกแล้ว'), findsOneWidget);
     expect(find.text('2'), findsOneWidget);
+  });
+
+  testWidgets('a cancelled line with a return fits its row', (tester) async {
+    for (final isAdmin in [true, false]) {
+      // Arrange / Act: the E2E bill's line, 1 of 2 returned, then cancelled
+      await tester.pumpWidget(
+          _host(_line(status: 'CANCELLED', returnedQty: 1), isAdmin: isAdmin));
+
+      // Assert: no overflow was reported while laying it out
+      expect(tester.takeException(), isNull, reason: 'admin: $isAdmin');
+      expect(find.text('ยกเลิกแล้ว'), findsOneWidget);
+      expect(find.text('คืน 1'), findsOneWidget);
+    }
   });
 }

@@ -345,7 +345,7 @@ void main() {
 
       // Assert
       expect(orders.lineShows(_product, 'ยกเลิกแล้ว'), findsOneWidget);
-      expect(orders.detailShows('฿ 0.00'), findsOneWidget);
+      expect(orders.detailTotal(), '฿ 0.00');
       for (final action in [
         Icons.delete,
         Icons.history,
