@@ -39,11 +39,22 @@ class DropdownInput<T> extends StatelessWidget {
       dropdownColor: AppColors.of(context).surfaceRaised,
       borderRadius: BorderRadius.circular(16),
       initialValue: value,
+      // The closed dropdown shows the chosen option as plain text, read with
+      // the field's label.
+      selectedItemBuilder: (_) =>
+          options.map((T value) => Text(getLabel(value))).toList(),
       items: options.map((T value) {
         return DropdownMenuItem<T>(
           alignment: Alignment.centerLeft,
           value: value,
-          child: Text(getLabel(value)),
+          // Flutter web writes a menu item's label only as an aria-label;
+          // the option's name in a node of its own is written as text.
+          child: Semantics(
+            container: true,
+            label: getLabel(value),
+            excludeSemantics: true,
+            child: Text(getLabel(value)),
+          ),
         );
       }).toList(),
       onChanged: (value) {
