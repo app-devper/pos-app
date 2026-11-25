@@ -113,7 +113,7 @@ void main() {
   });
 
   // FINDING (Task 7): the detail titles each line 'สินค้า <productId>'
-  // (stock_count_manage_page.dart:121); pos-api's stock count lines carry
+  // (stock_count_manage_page.dart:124); pos-api's stock count lines carry
   // only productId and stockId (entities/stock_count.go), so a user cannot
   // tell which product a count line is about.
   group('FINDING', () {
@@ -127,7 +127,7 @@ void main() {
     });
   },
       skip: 'FINDING: the stock count detail shows the product id, not its '
-          'name (stock_count_manage_page.dart:121)');
+          'name (stock_count_manage_page.dart:124)');
 
   // FINDING (Task 7): CustomSnackBar's 'Clear' calls
   // ScaffoldMessenger.of(context) with the context of the screen that showed

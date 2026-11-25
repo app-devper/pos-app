@@ -240,6 +240,9 @@ finding is fixed.
 
 ## 5. Findings
 
+The full list of what the suite found, each with its file:line and the test
+that pins it, is in [e2e-findings.md](e2e-findings.md).
+
 Where the app does something a user would call wrong, the suite does not
 quietly accept it:
 
@@ -255,7 +258,8 @@ quietly accept it:
     the two dialogs.
 
   The tests expect each count to be at least 1. So when the app is fixed,
-  those assertions fail, with a message saying what to delete.
+  those assertions fail, with a message saying what to delete. The two
+  files use the same mechanism twice; they are kept apart for now.
 
 When a FINDING test or a tolerance starts failing, the app has probably
 been fixed:
