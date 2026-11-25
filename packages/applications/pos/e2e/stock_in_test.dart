@@ -265,7 +265,7 @@ void main() {
     }, timeout: e2eTestTimeout);
   },
       skip: 'FINDING: success snackbars never close on their own and cover '
-          'the import button (design_system snack_bar.dart:44)');
+          'the import button (design_system snack_bar.dart:48)');
 
   // FINDING (Task 7): the stock tab shows a lot's import date, expiry, cost,
   // price and quantities but never its lot number

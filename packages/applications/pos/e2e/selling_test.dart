@@ -317,8 +317,8 @@ void main() {
   group('FINDING', () {
     // DELETE /orders/:id marks the bill CANCELLED and keeps its total (pos-api
     // app/data/ledger/cancel.go:23-60); GET /orders returns every status
-    // (order.go:105-134); the app maps no status (order_mapper.dart) and
-    // lists and sums every bill (order_view_model.dart:41-56).
+    // (order.go:105); the app maps no status (order_mapper.dart) and
+    // lists and sums every bill (order_view_model.dart:40-57).
     testWidgets('a cancelled bill is no longer listed', (tester) async {
       final orders = OrderRobot(await _signedInShell(tester));
       await orders.openList();
@@ -327,11 +327,11 @@ void main() {
     }, timeout: e2eTestTimeout);
   },
       skip: 'FINDING: a cancelled bill stays in รายการขาย and in its Total '
-          '(order_view_model.dart:41-56; pos-api order.go:105-134)');
+          '(order_view_model.dart:40-57; pos-api order.go:105)');
 
   // DELETE /orders/items/:id marks the line CANCELLED and recomputes the
   // bill (ledger/cancel.go:64-90); GET /orders/:id returns every line
-  // (order.go:444-477) and the detail sums them (order_detail_page.dart:386).
+  // (order.go:444) and the detail sums them (order_detail_page.dart:386).
   group('FINDING', () {
     testWidgets('a cancelled line no longer counts on the bill',
         (tester) async {
@@ -343,9 +343,9 @@ void main() {
     }, timeout: e2eTestTimeout);
   },
       skip: 'FINDING: a cancelled line stays on the bill detail and in its '
-          'Total (order_detail_page.dart:246-269, 386)');
+          'Total (order_detail_page.dart:248, 386)');
 
-  // ProductSearch loads in initState only (product_search.dart:41-46); the
+  // ProductSearch loads in initState only (product_search.dart:41-44); the
   // sale invalidates the product cache but nothing reloads the grid
   // (cart_page.dart:75-81).
   group('FINDING', () {
@@ -362,7 +362,7 @@ void main() {
     }, timeout: e2eTestTimeout);
   },
       skip: 'FINDING: the selling grid keeps its stock figures after a sale '
-          '(product_search.dart:41-46)');
+          '(product_search.dart:41-44)');
 
   // Fixed-height dialogs too low for their Sarabun text: see
   // selling_faults.dart. flutter_test fails these on the overflow.

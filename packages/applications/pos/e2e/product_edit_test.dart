@@ -78,7 +78,7 @@ void main() {
       // Assert: the selling screen shows the new name at the General price.
       // cart.open() enters the selling screen afresh, which reloads the grid,
       // so this does not meet the known "grid does not refresh until the
-      // screen is re-entered" finding (product_search.dart:41-46).
+      // screen is re-entered" finding (product_search.dart:41-44).
       // The wholesale price applies only once a wholesale customer is chosen
       // (OrderItem prices by the sale's customer type, order_item.dart:63).
       await _expectSellsAs(shell, '฿30.00');

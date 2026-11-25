@@ -19,9 +19,14 @@ its screens and checks what a user would see, against a real backend
   by side). The app's Sarabun and Roboto fonts are loaded so that Thai text
   is measured the way it is on a real screen.
 - Each file signs in once, as admin unless it tests roles
-  (`launchApp(tester, keepSession: true)` + `continueSignedIn`).
-- The tests in a file form one ordered chain (`StepChain`). When a step
-  fails, every later test fails at once and names the step that broke.
+  (`launchApp(tester, keepSession: true)` + `continueSignedIn`). Every launch
+  checks that the app points at the run's target API.
+- In the four files that write POS data (stock_in, selling, stock_count,
+  product_edit), the tests form one ordered chain (`StepChain`). When a step
+  fails, every later test fails at once and names the step that broke. auth,
+  navigation and customer tests are independent.
+- Every test has a 5-minute bound (`e2eTestTimeout`); every list search is
+  bounded too (`support/robots/scroll.dart`).
 - The app's own HTTP logging is left off, because it would print passwords
   and tokens. No credential or token is printed.
 
@@ -43,9 +48,9 @@ What it cannot see:
 | Navigation and roles | `navigation_test.dart` | every sidebar area opens its screen without an error; the five จัดการ tiles are shown, and ร้านค้าของฉัน, customers, Goods Receipt, นับสต็อก and ข้อมูลผู้ใช้งาน open and return; a user and a manager see only selling and bills |
 | Customers (จัดการ → จัดการลูกค้า) | `customer_test.dart` | add, list, detail, edit phone, remove (local), the kept customer reused (hosted), a missing name is refused |
 | Products, Goods Receipt, stock adjustment | `stock_in_test.dart` | a product is created and listed (an empty name is refused); receiving 10 and importing gives exactly 10 on hand, on the list and the stock tab; +2/−2 adjustments give 12 then 10, with history rows and notes; a draft receipt can be deleted |
-| Selling, payment, bills, returns, cancelling | `selling_test.dart` | barcode + Enter adds a line, an unknown barcode says `Error: ไม่พบสินค้า`; a cash sale of 3 (`฿75.00`); a short payment is refused; a PromptPay sale with a customer and a per-unit discount (`฿40.00`); a return of 1; cancelling a line and a bill puts stock back: 10 → 7 → 7 → 5 → 6 → 7 → 10 |
+| Selling, payment, bills, returns, cancelling | `selling_test.dart` | barcode + Enter adds a line (the grid is filtered by name before a tile is read, since a real catalogue does not fit on screen), an unknown barcode says `Error: ไม่พบสินค้า`; a cash sale of 3 (`฿75.00`); a short payment is refused; a PromptPay sale with a customer and a per-unit discount (`฿40.00`); a return of 1; cancelling a line and a bill puts stock back: 10 → 7 → 7 → 5 → 6 → 7 → 10 |
 | Stock count (จัดการ → นับสต็อก) | `stock_count_test.dart` | an empty count is refused (`โปรดเพิ่มสินค้าอย่างน้อย 1 รายการ`); counting 8 of a lot of 10 sets the stock to 8 (list and stock tab), the count's list row (found by its number, not its position, since another admin may count at the same time) shows `รายการ: 1`, the detail shows `ในระบบ 10 / นับได้ 8` and `-2`, and the product shows the `นับสต็อก` adjustment of −2 |
-| Product edit, price, delete | `product_edit_test.dart` | a rename shows in the detail and the list; changing the General price to 30 and adding a wholesale price of 20 shows both on the ราคา tab; the selling grid and a scanned line show the new name at `฿30.00` (the selling screen is entered afresh, so the "grid does not refresh" finding is not met here); deleting the product removes it from the list and its barcode then gives `Error: ไม่พบสินค้า` |
+| Product edit, price, delete | `product_edit_test.dart` | a rename shows in the detail and the list; changing the General price to 30 and adding a wholesale price of 20 shows both on the ราคา tab; the selling grid and a scanned line show the new name at `฿30.00` (the selling screen is entered afresh, so the "grid does not refresh" finding is not met here); the stock is taken to 0 through the adjustment dialog, then deleting the product removes it from the list and its barcode then gives `Error: ไม่พบสินค้า` |
 
 The helpers in `e2e/support/` that hold logic have unit tests in
 `packages/applications/pos/test/e2e_support/`. Those tests run with the
@@ -129,13 +134,21 @@ alphabetically. All files share one run id. At the end it prints:
 It exits non-zero if any file failed. The logs stay in
 `${TMPDIR}/pos-e2e-run-all.*`.
 
+`tools/e2e/seed-catalogue.sh local` crowds the local database like a real
+shop's: 400 products (`AA filler …`, `ZZ filler …`), 150 customers and 50
+suppliers. It runs once and adds nothing the second time. The robots are
+proven against it: lists are searched or scrolled to the end, never assumed
+to show the run's row.
+
 ### State, and stopping the stack
 
 Everything the stack writes is under `${TMPDIR:-/tmp}/pos-e2e-stack`
 (override with `E2E_STACK_STATE`):
 
 - the Mongo data (databases `e2e_um` and `e2e_pos`),
-- the Redis dump,
+- a Redis directory with nothing in it: Redis runs with saving off
+  (`--save '' --appendonly no`), so sessions and rate-limit counters live
+  only while it runs,
 - the built binaries,
 - logs and pid files.
 
@@ -146,106 +159,17 @@ tools/e2e/local-stack.sh stop     # stops only what the script started
 
 To start from an empty database, stop the stack and delete that directory.
 
+`config/e2e-local.json` is in the app's `config/` asset directory, so it
+ships in every release bundle. It holds only loopback URLs, so this is
+harmless; `pubspec.yaml` is left as it is.
+
 ## 4. Running against the hosted API
 
-Only the owner runs this. It writes to the real Client `000` behind
-`api.devper.app`, where real users see the data.
-
-1. Copy `packages/applications/pos/.env.e2e.example` to `.env.e2e` in the
-   same folder (git-ignored). Fill in three accounts of Client `000`: one
-   ADMIN, one MANAGER and one USER, as `E2E_ADMIN_USERNAME`,
-   `E2E_ADMIN_PASSWORD`, `E2E_MANAGER_…` and `E2E_USER_…`. Never commit it.
-   The test reads the file at run time, so the credentials are neither
-   compiled in nor visible on the command line.
-2. `tools/e2e/run-all.sh hosted` (or `tools/e2e/run.sh hosted <file>`).
-
-um-api allows 5 sign-ins a minute per address and refuses more with
-`UM-429-001`. The hosted target cannot reset this limit, so the suite keeps
-its sign-ins down:
-
-- every file signs in once and keeps the session between its tests,
-- `navigation_test.dart` signs in three times (once per role),
-- `auth_test.dart` signs in a few times by design.
-
-If the limit is hit, `signIn` waits 65 s and tries once more. A full run
-therefore may pause a minute at a time. The per-file `sign-ins` count in the
-summary shows each file's share.
-
-### What a hosted run writes to Client 000, and what stays
-
-Everything a run creates is named `E2E-<run id> …` (the run id is
-`yyyyMMddHHmmss-<pid>`), or is one of the fixed `E2E …` records that every
-run reuses. Barcodes start with `2` (the in-store GS1 range), so they never
-match a real product. No test edits anything that already existed, except
-the suite's own kept records.
-
-The suite deletes whatever it can. Some data cannot be deleted at all:
-receipts, bills, returns and stock counts have no delete. A deleted product
-also leaves its rows behind, because pos-api keeps them.
-
-Before deleting a run's product, the clean-up takes every lot of it to 0
-with one stock adjustment each (reason อื่นๆ, note `E2E clean-up: stock
-zeroed before the product is deleted`). `product_edit_test` does the same
-through the adjustment dialog before it presses delete. pos-api's stock
-report counts a deleted product's stock (a finding), so without this every
-run would add its stock to that report for good. What stays per product: its
-stock rows at 0, and one extra adjustment row per lot. A zeroed row still
-appears in the stock report (at 0) and in the low-stock list.
-
-**The four files that stock a product (stock_in, selling, stock_count,
-product_edit):** the fixed supplier `E2E supplier`. It is created once and
-reused. A supplier cannot be deleted from the app. (auth and navigation write
-nothing; customer touches only customers.)
-
-**`customer_test.dart`:** on hosted it does not create a customer per run.
-It reuses the kept customer `E2E customer` (address marked
-`created by the E2E suite — safe to edit`) and changes its phone each run.
-That edit also resets its type to ลูกค้าทั่วไป, because the app resets a
-customer's type on every edit (a finding). The customer is never removed:
-pos-api only archives a removed customer, and the app keeps listing archived
-customers.
-
-**`stock_in_test.dart`, per run:**
-
-- one product, deleted at the end. Its stock row, history and adjustment
-  rows remain in pos-api,
-- one imported receipt,
-- one cancelled draft receipt. Both stay in the receipt list, because the app
-  lists cancelled receipts too.
-
-**`selling_test.dart`, per run:**
-
-- one product, deleted, its rows remaining,
-- one imported receipt,
-- two bills, 75.00 (cash) and 40.00 (PromptPay, to `E2E customer`), both
-  cancelled before the file ends,
-- one return of 1 piece on the second bill. A return cannot be undone.
-
-**`stock_count_test.dart`, per run:**
-
-- one product, deleted, its rows remaining,
-- one imported receipt,
-- one stock count document (`SC-…`, noted `E2E-<run id> stock count`).
-  Every admin of the Branch sees it in the นับสต็อก list, for good.
-
-**`product_edit_test.dart`, per run:**
-
-- one product, renamed to `… edit product renamed` and then deleted through
-  the screen, its rows remaining,
-- one imported receipt.
-
-**Cancelled bills stay in the bills screen, and in its Total.** pos-api marks
-a cancelled bill CANCELLED and keeps its amount. The app's รายการขาย list
-shows every bill whatever its status and adds all of them into the day's
-Total (a finding: `order_view_model.dart:41-56`). The 40.00 bill has its only
-line cancelled first, which brings that bill's amount to 0.00. The 75.00 bill
-is cancelled whole and keeps its amount. So after a hosted run, the bills
-screen for that day lists two extra bills and its Total shows **75.00 more**
-than was really sold, for every run made that day. (The selling file prints
-this note when it starts. pos-api's own reports exclude cancelled bills.)
-The app's bills screen for that day will not match what was taken. Run the
-hosted suite on a day when that is acceptable, or not at all, until the
-finding is fixed.
+Only the owner runs this, and only after reading
+[e2e-hosted.md](e2e-hosted.md). That page covers what a run writes to Client
+`000` and what stays, the shared sign-in limit, the first run in stages,
+everything the owner accepts by running it, and how to clean up after an
+interrupted run (`tools/e2e/sweep.sh`).
 
 ## 5. Findings
 
@@ -306,7 +230,8 @@ To find suite data on a server:
 - Look for names that start with `E2E-` (one run: `E2E-<run id>`) or the
   fixed `E2E supplier` and `E2E customer`.
 - Lot numbers are `L<run id>`.
-- Receipt references are `<run id> <what>`.
+- Receipt references are `<run id> <what>` (fixtures), and `<run id>` and
+  `<run id>-draft` (stock_in).
 - A stock count's note is `E2E-<run id> stock count`. Its adjustment notes
   read `SC-… E2E-<run id> stock count`.
 - Bills carry the run's product name on their lines.

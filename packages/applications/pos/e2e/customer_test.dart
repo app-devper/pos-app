@@ -136,7 +136,7 @@ void main() {
 
   // FINDING (Task 7): on a wide screen CustomerPage keeps the same
   // CustomersWidget while the right panel changes, and that widget loads
-  // only in initState (customers_widget.dart:42, customer_page.dart:73-93),
+  // only in initState (customers_widget.dart:38-42, customer_page.dart:74-85),
   // so a customer just added (or removed) is not shown (or still shown)
   // until the user leaves the page and comes back. The running test above
   // re-enters; this one states what a user expects. Skipped tests do not
@@ -157,12 +157,12 @@ void main() {
     }, timeout: e2eTestTimeout);
   },
       skip: 'FINDING: on a wide screen the customer list does not reload '
-          'after an add or a removal (customers_widget.dart:42)');
+          'after an add or a removal (customers_widget.dart:38-42)');
 
   // FINDING (Task 7): DELETE /customers/:id sets status ARCHIVED
   // (pos-api app/data/repositories/customer.go:109-129) and GET /customers
   // returns every status (customer.go:40-54); CustomersViewModel shows them
-  // all (customers_view_model.dart:27), so a removed customer never leaves
+  // all (customers_view_model.dart:24-28), so a removed customer never leaves
   // the list.
   group('customer removal', () {
     testWidgets('a removed customer is no longer listed', (tester) async {
