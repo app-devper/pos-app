@@ -108,7 +108,12 @@ env:
             NAME: ${CUSTOMER}
 - assertTrue: ${output.customerCount == '0'}
 # Finding 7, fixed: the server keeps the removed customer as ARCHIVED, and the
-# list leaves archived customers out, so the row leaves the list.
+# list leaves archived customers out, so the row leaves the list. The list's
+# search field first, still holding the query (so its hint is hidden): without
+# the list on screen, "not visible" says nothing.
+- extendedWaitUntil:
+    visible: "MST-${RUN_ID}"
+    timeout: 15000
 - extendedWaitUntil:
     notVisible: "${CUSTOMER}.*"
     timeout: 15000
