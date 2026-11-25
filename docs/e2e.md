@@ -68,7 +68,7 @@ only picks up `test/`.
 | Passkey sign-in | native/browser prompt |
 | CSV import of products | OS file dialog |
 | PDF and CSV export, receipts to print | web-only download code. The buttons are checked to exist, not pressed |
-| Date-range pickers | platform date picker. Also, an admin never gets the bills date-range dropdown (a finding) |
+| Date-range pickers | platform date picker. The admin's bills date-range dropdown is checked to be shown (`navigation_test.dart`), not opened |
 | UM user management (จัดการ → จัดการผู้ใช้งาน) | belongs to UM. The tile is checked to be shown, not opened |
 
 #### Not reachable from the UI
