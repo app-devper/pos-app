@@ -1,46 +1,116 @@
+// The tolerances are checked against overflows the real widgets raise, laid
+// out at the sizes the app's dialogs give them and drawn in the app's font,
+// so the reports have the shape the e2e run sees.
+
 // Flutter imports:
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 // Package imports:
+import 'package:design_system/theme/theme.dart';
+import 'package:design_system/widgets/decimal_input.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // Project imports:
+import 'package:pos/presentation/home/main/payment_screen.dart';
 import '../../e2e/support/selling_faults.dart';
 
-FlutterErrorDetails _overflowUnder(String creators) => FlutterErrorDetails(
-      exception: FlutterError('A RenderFlex overflowed by 12 pixels on the '
-          'bottom.'),
-      library: 'rendering library',
-      informationCollector: () => [
-        DiagnosticsNode.message('The specific RenderFlex in question is:'),
-        DiagnosticsNode.message('  creator: Column ← $creators'),
-      ],
+/// The quantity dialog is 320 x 430; its TitleBar and divider take 49.
+const _keypadBox = Size(320, 381);
+
+/// The payment dialog is 640 x 600; its TitleBar and divider take 49.
+const _paymentBox = Size(640, 551);
+
+/// Too low for the payment screen's outer Column (payment_screen.dart:38).
+const _crampedPaymentBox = Size(640, 300);
+
+const _fonts = [
+  'packages/common/assets/font/Sarabun-Regular.ttf',
+  'packages/common/assets/font/Sarabun-Medium.ttf',
+  'packages/common/assets/font/Sarabun-Bold.ttf',
+];
+
+Widget _keypad() => DecimalInput(
+    title: 'จำนวนสินค้า',
+    onChange: (_) {},
+    onDone: (_) {},
+    maxLength: 3,
+    isShowDot: false);
+
+Widget _payment() =>
+    PaymentScreen(amount: 75, onCompleted: (_, __) {}, onError: () {});
+
+/// Lays [child] out in [box] and returns every error reported meanwhile.
+Future<List<FlutterErrorDetails>> _overflowsOf(
+    WidgetTester tester, Widget child, Size box) async {
+  final reported = <FlutterErrorDetails>[];
+  final testHandler = FlutterError.onError;
+  FlutterError.onError = reported.add;
+  try {
+    await tester.pumpWidget(_inApp(child, box));
+  } finally {
+    FlutterError.onError = testHandler;
+  }
+  return reported;
+}
+
+Widget _inApp(Widget child, Size box) => MaterialApp(
+      theme: CustomTheme.mainTheme,
+      home: Scaffold(
+        body: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox.fromSize(size: box, child: child),
+        ),
+      ),
     );
 
-final _keypadOverflow =
-    _overflowUnder('Padding ← Container ← DecimalInput ← Expanded');
+/// Runs [wrapper] around pumping [child] in [box]; returns what reached the
+/// handler that was in place.
+Future<List<FlutterErrorDetails>> _passedOn(
+  WidgetTester tester,
+  Future<void> Function(Future<void> Function() body) wrapper,
+  List<(Widget, Size)> layouts,
+) async {
+  final reached = <FlutterErrorDetails>[];
+  final testHandler = FlutterError.onError;
+  FlutterError.onError = reached.add;
+  try {
+    await wrapper(() async {
+      for (final (child, box) in layouts) {
+        await tester.pumpWidget(_inApp(child, box));
+      }
+    });
+  } finally {
+    FlutterError.onError = testHandler;
+  }
+  return reached;
+}
 
 void main() {
+  setUpAll(() async {
+    final loader = FontLoader('Sarabun');
+    for (final font in _fonts) {
+      loader.addFont(rootBundle.load(font));
+    }
+    await loader.load();
+  });
+
   group('isQuantityKeypadOverflow', () {
-    test('matches an overflow inside the quantity keypad', () {
-      // Act / Assert
-      expect(isQuantityKeypadOverflow(_keypadOverflow), isTrue);
+    testWidgets('matches the keypad display overflowing in the dialog',
+        (tester) async {
+      // Act
+      final reported = await _overflowsOf(tester, _keypad(), _keypadBox);
+
+      // Assert
+      expect(reported, hasLength(1));
+      expect(isQuantityKeypadOverflow(reported.single), isTrue);
+      expect(isPaymentDisplayOverflow(reported.single), isFalse);
     });
 
-    test('does not match an overflow anywhere else', () {
-      // Act / Assert
-      expect(
-          isQuantityKeypadOverflow(_overflowUnder('Padding ← PaymentScreen')),
-          isFalse);
-    });
-
-    test('does not match another error inside the keypad', () {
+    test('does not match an error that is not an overflow', () {
       // Arrange
       final other = FlutterErrorDetails(
-        exception: FlutterError('setState() called after dispose()'),
-        informationCollector: () =>
-            [DiagnosticsNode.message('creator: DecimalInput')],
-      );
+          exception: FlutterError('setState() called after dispose()'));
 
       // Act / Assert
       expect(isQuantityKeypadOverflow(other), isFalse);
@@ -48,50 +118,104 @@ void main() {
   });
 
   group('isPaymentDisplayOverflow', () {
-    test('matches an overflow inside the payment screen only', () {
-      // Act / Assert
-      expect(
-          isPaymentDisplayOverflow(_overflowUnder('Padding ← PaymentScreen')),
-          isTrue);
-      expect(isPaymentDisplayOverflow(_keypadOverflow), isFalse);
+    testWidgets('matches the amount display overflowing in the dialog',
+        (tester) async {
+      // Act
+      final reported = await _overflowsOf(tester, _payment(), _paymentBox);
+
+      // Assert
+      expect(reported, hasLength(1));
+      expect(isPaymentDisplayOverflow(reported.single), isTrue);
+      expect(isQuantityKeypadOverflow(reported.single), isFalse);
+    });
+
+    testWidgets('does not match another overflow inside the payment screen',
+        (tester) async {
+      // Act
+      final reported =
+          await _overflowsOf(tester, _payment(), _crampedPaymentBox);
+      final others =
+          reported.where((d) => !isPaymentDisplayOverflow(d)).toList();
+
+      // Assert: there, the screen's outer Column (payment_screen.dart:38)
+      expect(others, isNotEmpty,
+          reason: 'a cramped payment screen overflows elsewhere');
+      for (final details in others) {
+        expect(details.toString(), contains('A RenderFlex overflowed'));
+      }
+    });
+  });
+
+  group('onPaymentDialog', () {
+    testWidgets('swallows and counts the display overflow only',
+        (tester) async {
+      // Arrange
+      final before = paymentDisplayOverflowsSwallowed;
+
+      // Act
+      final reached = await _passedOn(tester, onPaymentDialog, [
+        (_payment(), _paymentBox),
+        (_payment(), _crampedPaymentBox),
+      ]);
+
+      // Assert
+      expect(reached, isNotEmpty, reason: 'the other overflows are passed on');
+      expect(reached.where(isPaymentDisplayOverflow), isEmpty);
+      expect(paymentDisplayOverflowsSwallowed, before + 1);
+    });
+
+    test('restores the handler in place when the body throws', () async {
+      // Arrange
+      final inPlace = FlutterError.onError;
+
+      // Act
+      await expectLater(
+          onPaymentDialog(() async => throw StateError('step failed')),
+          throwsStateError);
+
+      // Assert
+      expect(FlutterError.onError, same(inPlace));
     });
   });
 
   group('onQuantityKeypad', () {
-    late FlutterExceptionHandler? testHandler;
-    late List<FlutterErrorDetails> reached;
-
-    setUp(() {
-      testHandler = FlutterError.onError;
-      reached = [];
-      FlutterError.onError = reached.add;
-    });
-
-    tearDown(() => FlutterError.onError = testHandler);
-
-    test('swallows the keypad overflow and counts it', () async {
+    testWidgets('swallows and counts the keypad overflow', (tester) async {
       // Arrange
       final before = quantityKeypadOverflowsSwallowed;
 
       // Act
-      await onQuantityKeypad(
-          () async => FlutterError.reportError(_keypadOverflow));
+      final reached =
+          await _passedOn(tester, onQuantityKeypad, [(_keypad(), _keypadBox)]);
 
       // Assert
       expect(reached, isEmpty);
       expect(quantityKeypadOverflowsSwallowed, before + 1);
     });
 
-    test('passes any other error on and restores the handler', () async {
+    testWidgets('passes the payment screen overflows on, uncounted',
+        (tester) async {
       // Arrange
-      final inPlace = FlutterError.onError;
-      final other = _overflowUnder('Row');
+      final before = quantityKeypadOverflowsSwallowed;
 
       // Act
-      await onQuantityKeypad(() async => FlutterError.reportError(other));
+      final reached = await _passedOn(
+          tester, onQuantityKeypad, [(_payment(), _crampedPaymentBox)]);
 
       // Assert
-      expect(reached, [other]);
+      expect(reached, isNotEmpty);
+      expect(quantityKeypadOverflowsSwallowed, before);
+    });
+
+    test('restores the handler in place when the body throws', () async {
+      // Arrange
+      final inPlace = FlutterError.onError;
+
+      // Act
+      await expectLater(
+          onQuantityKeypad(() async => throw StateError('step failed')),
+          throwsStateError);
+
+      // Assert
       expect(FlutterError.onError, same(inPlace));
     });
   });
