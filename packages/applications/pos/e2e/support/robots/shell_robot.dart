@@ -186,6 +186,9 @@ class ShellRobot {
   /// Presses 'ยืนยัน' in the 'แจ้งเตือน' confirm dialog.
   Future<void> confirm() => _pressInDialog(_confirmTitle, 'ยืนยัน');
 
+  /// Presses 'ยกเลิก' in the 'แจ้งเตือน' confirm dialog.
+  Future<void> cancelConfirm() => _pressInDialog(_confirmTitle, 'ยกเลิก');
+
   /// Presses 'ตกลง' in the 'พบข้อผิดพลาด' alert.
   Future<void> dismissAlert() => _pressInDialog(_errorAlertTitle, 'ตกลง');
 

@@ -92,10 +92,15 @@ void main() {
       final products = ProductRobot(shell);
       await products.openList();
       await products.open(_renamed);
-      // The app deletes a product with stock on hand, and pos-api's stock
-      // reports keep counting its stock rows (a finding, see
-      // e2e-findings.md), so the run takes the lot to 0 and deletes its
-      // stock row through the stock tab first, as a user can.
+      // Deleting a product with stock on hand asks first, naming the stock
+      // (was finding #6); the run answers no.
+      await products.askToDeleteAndCancel(
+          'สินค้านี้มีสต็อกคงเหลือ ${_stocked.quantity} ${_stocked.unit} '
+          'ต้องการลบใช่หรือไม่?');
+      // pos-api's stock reports keep counting a deleted product's stock
+      // rows (a server follow-up, see e2e-findings.md), so the run takes the
+      // lot to 0 and deletes its stock row through the stock tab first, as
+      // a user can.
       await products.openTab('สต็อก');
       Cleanup.keep('adjustment zeroing "$_renamed" and the history entry of '
           'its deleted stock row (cannot be deleted)');
