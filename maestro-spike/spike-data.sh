@@ -7,7 +7,7 @@ set -eu
 [ "$#" -eq 1 ] || { echo "usage: $0 up|down" >&2; exit 2; }
 mongosh --quiet --port 27719 e2e_pos --eval "const mode='$1';"'
 const name = "MSPIKE product", barcode = "9300000000001";
-const old = db.products.find({name}).toArray().map(p => p._id);
+const old = db.products.find({$or: [{name}, {serialNumber: barcode}]}).toArray().map(p => p._id);
 db.product_stocks.deleteMany({productId: {$in: old}});
 db.product_prices.deleteMany({productId: {$in: old}});
 db.product_units.deleteMany({productId: {$in: old}});
