@@ -1,10 +1,6 @@
-# A customer is added through the form, is on the server, and can be found by
-# name and chosen for a sale on the selling screen.
-#
-# Not here: opening the customer from the list and deleting it. The list has
-# no search, and the local database holds hundreds of customers earlier test
-# runs could not delete, so the new one is far below the fold (and on the web
-# Maestro's scroll does not reach that column). maestro-data.sh removes it.
+# A customer's life: added through the form, on the server, found by name and
+# chosen for a sale on the selling screen, then deleted from its own page and
+# gone from the server.
 appId: app.devper.pos
 env:
   CUSTOMER: MST-${RUN_ID} customer
@@ -62,3 +58,39 @@ env:
     visible: "นำลูกค้า ${CUSTOMER} ออก"
     timeout: 10000
 - takeScreenshot: customer-on-sale
+- runFlow:
+    file: steps/open_screen.yaml
+    env:
+      SCREEN: "จัดการ"
+- tapOn: "จัดการลูกค้า"
+- extendedWaitUntil:
+    visible: "${CUSTOMER}.*"
+    timeout: 15000
+- tapOn: "${CUSTOMER}.*"
+- tapOn: "แก้ไข"
+- scrollUntilVisible:
+    element: "ลบลูกค้า"
+    direction: DOWN
+    timeout: 20000
+- tapOn: "ลบลูกค้า"
+- assertVisible: "ต้องการลบลูกค้าใช่หรือไม่\\?"
+- tapOn: "ยืนยัน"
+- extendedWaitUntil:
+    visible: "เพิ่มลูกค้า"
+    timeout: 15000
+# The server archives the customer a moment after the tap: ask until it has.
+- repeat:
+    times: 10
+    while:
+      true: ${output.customerCount != '0'}
+    commands:
+      - runScript:
+          file: ../scripts/api.js
+          env:
+            ACTION: customerCount
+            NAME: ${CUSTOMER}
+- assertTrue: ${output.customerCount == '0'}
+# FINDING 7 (docs/e2e-findings.md): the removed customer stays in the list,
+# because the server keeps it as ARCHIVED and the list shows every status.
+# When that is fixed this line fails; turn it into assertNotVisible then.
+- assertVisible: "${CUSTOMER}.*"

@@ -1,5 +1,5 @@
 appId: app.devper.pos
-name: android - add a customer and choose it for a sale
+name: android - add a customer, choose it for a sale, delete it
 env:
   LAYOUT: narrow
 ---

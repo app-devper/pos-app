@@ -5,7 +5,7 @@
 // runScript: { file: ../scripts/api.js, env: { ACTION: newestBill } }
 //   newestBill             -> output.billCode, output.billTotal
 //   productOnHand  (NAME)  -> output.onHand, output.productPrice
-//   customerCount  (NAME)  -> output.customerCount
+//   customerCount  (NAME)  -> output.customerCount (customers of that name that are not archived)
 const UM = 'http://127.0.0.1:8585';
 const POS = 'http://127.0.0.1:8586';
 
@@ -45,7 +45,9 @@ function productOnHand() {
 }
 
 function customerCount() {
-  output.customerCount = String(get('/api/pos/v1/customers').filter((c) => c.name === NAME).length);
+  // pos-api archives a removed customer and still lists it (finding 7).
+  const named = get('/api/pos/v1/customers').filter((c) => c.name === NAME);
+  output.customerCount = String(named.filter((c) => c.status !== 'ARCHIVED').length);
 }
 
 const actions = { newestBill: newestBill, productOnHand: productOnHand, customerCount: customerCount };

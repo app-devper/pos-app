@@ -1,5 +1,5 @@
 url: http://127.0.0.1:8090
-name: web - add a customer and choose it for a sale
+name: web - add a customer, choose it for a sale, delete it
 env:
   LAYOUT: wide
 ---
