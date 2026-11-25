@@ -97,17 +97,9 @@ env:
             NAME: ${CUSTOMER}
 - assertTrue: ${output.customerCount == '0'}
 # Finding 7, fixed: the server keeps the removed customer as ARCHIVED, and the
-# list leaves archived customers out, so the row leaves the list. The list is
-# searched again and the keeper, found by the same search, must be listed
-# first: only a loaded list makes "not visible" mean something.
-- tapOn: "MST-${RUN_ID}"
-- eraseText: 40
-- inputText: MST-${RUN_ID}
-- runFlow:
-    when:
-      platform: Android
-    commands:
-      - hideKeyboard
+# list leaves archived customers out, so the row leaves the list. The list
+# still holds the search for MST-<run>, and the keeper, found by it, must be
+# listed first: only a loaded list makes "not visible" mean something.
 - extendedWaitUntil:
     visible: "${KEEPER}.*"
     timeout: 15000
