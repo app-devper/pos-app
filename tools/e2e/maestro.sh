@@ -129,11 +129,28 @@ artefact() { # artefact <apk|web> <path it would have>; prints the artefact's pa
   printf '%s\n' "$built" | tail -1
 }
 
+# The lock screen is the emulator owner's: this script never types a PIN and
+# never changes the lock. It keeps the screen from turning off (which is what
+# locks it while a build runs) and, when the device is locked anyway, stops
+# with the emulator left open so it can be unlocked.
+keep_awake_and_unlocked() {
+  "$ADB" -s "$device" shell svc power stayon true
+  "$ADB" -s "$device" shell input keyevent KEYCODE_WAKEUP
+  "$ADB" -s "$device" shell wm dismiss-keyguard >/dev/null 2>&1 || true   # a swipe lock only
+  sleep 2
+  if "$ADB" -s "$device" shell dumpsys window | grep -qE 'mDreamingLockscreen=true|isStatusBarKeyguard=true|mShowingLockscreen=true'; then
+    started_emulator=0   # leave it open for its owner
+    die "the emulator $device shows its lock screen. Unlock it (or set Settings > Security > Screen lock to None) and run again; the emulator is left running."
+  fi
+}
+
 prepare_android() {
   local apk
   [ -x "$ADB" ] || die "adb not found at $ADB (set ANDROID_HOME)"
-  start_emulator
+  # Build first: the emulator must not sit idle through a build of minutes.
   apk="$(artefact apk "$APP_DIR/build/app/outputs/flutter-apk/app-debug.apk")"
+  start_emulator
+  keep_awake_and_unlocked
   "$ADB" -s "$device" install -r "$apk" >/dev/null
   # The emulator reaches the host's stack on its own 127.0.0.1; lost on every boot.
   "$ADB" -s "$device" reverse tcp:8585 tcp:8585 >/dev/null
