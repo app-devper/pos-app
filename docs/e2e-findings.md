@@ -4,18 +4,16 @@ This list was made while the end-to-end UI suite was being built (see
 [e2e.md](e2e.md)). It is as of 2026-11-25, re-checked at the final review fixes (pos-app branch
 `feature/ui-e2e-tests`), run against pos-api `28cbb3e` on the local stack.
 
-Each item is pinned in one of two ways:
-
-- **A skipped test.** It is marked `skip: 'FINDING: …'`, states what a user
-  expects, and fails until the app is fixed.
-- **A counted tolerance.** It lets one known error through and fails once
-  the error stops happening.
+Each open item is pinned by **a skipped test**: it is marked
+`skip: 'FINDING: …'`, states what a user expects, and fails until the app
+is fixed. (The suite also used counted tolerances, which let one known
+layout overflow through; the last three went with findings #17-#19, fixed
+2026-11-26, and nothing is let through now.)
 
 To act on an item:
 
 1. Fix the app.
-2. Unskip the named test, or remove the named tolerance (and the assertion
-   that counts it).
+2. Unskip the named test.
 3. Change the running test's "asserted as the app behaves" line next to it.
 4. Run `tools/e2e/run.sh local <file>`.
 
@@ -49,21 +47,29 @@ pos-api paths are under `pos-api/app/`.
 | 11 | **Fixed 2026-11-26** (a success bar closes after 4 s; the test below runs). Success snackbars (`Add success`, `นำเข้าสต็อกสำเร็จ`, `Order success`) never close on their own | `libraries/design_system/lib/widgets/snack_bar.dart:48` (`action` defaults to true), `:61-67`; Flutter 3.38 keeps a snackbar with an action until dismissed | The snackbar covers buttons at the bottom of later screens: the receipt page's `นำเข้าสต็อก`, the stock count's `เพิ่มสินค้า`. Observed | `stock_in_test.dart` "the receipt page success snackbar closes on its own" |
 | 12 | **Fixed 2026-11-26** (Clear uses the messenger captured when shown; `stock_count_test.dart` "success bar from an earlier screen closes, and can be cleared while it shows"). Once the screen that showed one of those snackbars is gone, its `Clear` does nothing (debug builds throw "Looking up a deactivated widget's ancestor is unsafe") | `libraries/design_system/lib/widgets/snack_bar.dart:65` (uses the showing screen's `context`) | Combined with #11, the user must swipe it away. Observed | `stock_count_test.dart` "a success snackbar from an earlier screen can be cleared" |
 | 13 | **Fixed 2026-11-26** (the page reloads the list after an add, a rename and a removal). On a wide screen the customer list does not show an added customer, a removal or a rename until the user leaves and returns | `presentation/customer/main/customers_widget.dart:38-42` (loads in `initState` only), `presentation/customer/main/customer_page.dart:74-85` | A new customer looks as if it was not saved. Observed | `customer_test.dart` "a new customer appears in the list without leaving the page"; `customer_page_test.dart` |
-| 14 | **Fixed 2026-11-26** (with no profile the form is empty and says `ยังไม่มีข้อมูลร้านค้า กรอกแล้วกดบันทึก`). ร้านค้าของฉัน with no shop profile yet shows a red `Error: ไม่พบข้อมูลที่ต้องการ [SY-404-002]` over the empty form | `presentation/supplier/info/supplier_info_view_model.dart:37-43` (no not-found branch); the bill detail sends the user here on exactly that error, `presentation/order/detail/order_detail_view_model.dart:113` | The screen meant to create the profile greets the user with an error. Observed. Cosmetic | `navigation_test.dart` (the tolerance is gone: the stop must show no error, and the hint when there is no profile); `supplier_info_view_model_test.dart` |
+| 14 | **Fixed 2026-11-26** (with no profile the form is empty and says `ยังไม่มีข้อมูลร้านค้า กรอกแล้วกดบันทึก`). ร้านค้าของฉัน with no shop profile yet shows a red `Error: ไม่พบข้อมูลที่ต้องการ [SY-404-002]` over the empty form | `presentation/supplier/info/supplier_info_view_model.dart:37-43` (no not-found branch); the bill detail sends the user here on exactly that error, `presentation/order/detail/order_detail_view_model.dart:113` | The screen meant to create the profile greets the user with an error. Observed. Cosmetic | `navigation_test.dart` (the tolerance is gone: the stop must show no error, and the hint when there is no profile); `supplier_info_view_model_test.dart` (the hint also goes once a profile is saved or found) |
 | 15 | **Fixed 2026-11-26** (the stock tab has a ล็อต column). The product's stock tab never shows a lot's number | `presentation/product/main/product_detail_widget.dart:593` (`_buildStocks`: dates, cost, price, quantities, no lot) | A user who received lot L… cannot find it except by opening each row's adjustment dialog. Observed | `stock_in_test.dart` "the stock tab shows the received lot number"; `product_stock_card_test.dart` |
 | 16 | An adjustment's note shows on the ปรับสต็อก tab but not on ประวัติ | pos-api `domain/request/product_history.go:141-151` (description from the reason only); `presentation/product/stock/stock_adjustment_history_widget.dart:123-126` shows the note | Observed. Probably by design: the note is visible where adjustments are listed. Not pinned | — |
 
 ### Layout (fixed sizes too small for the app's Sarabun text)
 
+All fixed 2026-11-26. Every layout test now pumps with the app's own fonts
+(`test/support/app_fonts.dart`) at 360×640 and 1400×900, and
+`test/presentation/layout_sweep_test.dart` lays out each main screen and
+dialog the widget tests can build at both sizes and fails on any overflow.
+The sweep does not reach screens no widget test can build yet: the bills
+list and bill detail pages, the receipt list and receipt page as a whole,
+the stock count pages, the supplier pages, the shop profile, the product
+detail with its tabs, sign-in and splash (UM), and the home shell with
+real navigation.
+
 | # | What a user sees | Where | Effect | Pinned by |
 |---|---|---|---|---|
-| 17 | The receipt page's supplier picker overflows its box; the chosen name is clipped | `presentation/receive/manage/receive_manage_page.dart:224-225` (a labelled dropdown in a 50 px `SizedBox`) | Clipped text, about 30 px of overflow. Observed | Tolerance `onReceiptPage` in `e2e/support/known_faults.dart`, counted in `stock_in_test.dart`; skipped test "the receipt page shows the chosen supplier without overflow" |
-| 18 | The quantity dialog `จำนวนสินค้า` overflows | `libraries/design_system/lib/widgets/dialogs.dart:99-100` (430 px), `libraries/design_system/lib/widgets/decimal_input.dart:94` (100 px box), `:103` (the Column that overflows) | 12–13 px overflow. Observed | Tolerance `onQuantityKeypad` in `e2e/support/selling_faults.dart`, counted in `selling_test.dart`; skipped test "the quantity and payment dialogs fit their text" |
-| 19 | The payment dialog's `ยอดรับเงินรวม` display overflows | `presentation/home/main/payment_screen.dart:214` (100 px box), `:221` (the Column that overflows) | 18 px overflow. Observed | Tolerance `onPaymentDialog` in `e2e/support/selling_faults.dart`; same skipped test as #18 |
-
-The two tolerance files, `known_faults.dart` and `selling_faults.dart`, use
-the same mechanism twice. Both were reviewed as they are and are left
-unmerged.
+| 17 | **Fixed 2026-11-26** (the picker's row has no fixed height). The receipt page's supplier picker overflows its box; the chosen name is clipped | `presentation/receive/manage/receive_manage_page.dart:224-225` (a labelled dropdown in a 50 px `SizedBox`) | Clipped text, about 30 px of overflow. Observed | `stock_in_test.dart` "the receipt page shows the chosen supplier without overflow" (runs; the tolerance is gone); `receive_supplier_picker_test.dart` |
+| 18 | **Fixed 2026-11-26** (`DecimalInput`'s display sizes itself and the dialog grows to its content, up to 600 px). The quantity dialog `จำนวนสินค้า` overflows | `libraries/design_system/lib/widgets/dialogs.dart:99-100` (430 px), `libraries/design_system/lib/widgets/decimal_input.dart:94` (100 px box), `:103` (the Column that overflows) | 12–13 px overflow. Observed | `selling_test.dart` "the quantity and payment dialogs fit their text" (runs; the tolerance is gone); `quantity_dialog_layout_test.dart` |
+| 19 | **Fixed 2026-11-26** (the dialog is as tall as its content, up to 720 px, and scrolls on a phone lower than that; the summary amounts shrink to one line on a narrow phone instead of wrapping). The payment dialog's `ยอดรับเงินรวม` display overflows | `presentation/home/main/payment_screen.dart:214` (100 px box), `:221` (the Column that overflows) | 18 px overflow (42 and 27 px on a 360×640 phone). Observed | Same E2E test as #18; `payment_dialog_layout_test.dart`; `cart_page_sale_test.dart` (its filter for this overflow is gone) |
+| 28 | **Fixed 2026-11-26**, found by the layout sweep: the stock tab's ปรับจำนวนคงเหลือ dialog overflows, like #18 | `presentation/product/stock/product_stock_quantity_widget.dart` (`showStockQuantityDialog`, a fixed 320×430 dialog around `DecimalInput`) | 13 px overflow. Observed in a widget test | `layout_sweep_test.dart` "the stock quantity dialog lays out without overflow" |
+| — | **Checked 2026-11-26, no fault**: the product's stock row (eight columns since #15) overflowed by 264 px on a 360 px phone with a long lot number; it now scrolls sideways. The cart line's price column, the cancelled-bill marks and the bill code fit at 360 px in the app's fonts | `presentation/product/main/product_stock_card.dart` | — | `product_stock_card_test.dart`; `cart_order_item_layout_test.dart`; `cancelled_marks_layout_test.dart` |
 
 ### Security and hygiene
 
@@ -84,7 +90,7 @@ accessibility tree, on a phone layout and on the web. What that showed:
 | 24 | On the web, text inside a list row that also holds a button does not reach assistive technology: the product name on a cart line, the chosen customer, the lines of a bill; nor do page and cart titles, nor the options of an open dropdown | Flutter web semantics of `ListTile` with a trailing control, `DropdownButton` | web |
 | 25 | **Fixed 2026-11-26** (the customer list has a search, `ค้นหาลูกค้า...`, by name, code and phone; a receipt line picks its product through the app's product picker and its search; the flows use both). Choosing needs scrolling through everything: the customer list has no search, and a receipt line picks its product from a plain dropdown of every product | `customers_widget.dart`, `receive_item_dialog.dart:48` | both |
 | 26 | **Fixed 2026-11-26**: the sale says `ขายสำเร็จ เลขที่บิล <code>`, a bill row shows its number above its time, the labels read ยอดรวม, ต้นทุน, กำไร. After a sale the app shows no bill number (only "Order success"); the bills list numbers rows by position, so a bill can only be recognised by its time and total. Labels there are English (Total, Cost, Profit) among Thai | `order_page.dart`, `order_detail_page.dart` | both |
-| 27 | On the phone layout the menu button of the products screen sits partly under the status bar | products screen, narrow layout | Android |
+| 27 | **Fixed 2026-11-26** (`AppShell` keeps its body in a `SafeArea`; `design_system/test/app_shell_safe_area_test.dart`). On the phone layout the menu button of the products screen sits partly under the status bar | products screen, narrow layout | Android |
 
 Findings 7 (a removed customer stays listed, fixed 2026-11-26: the customer
 flow now waits for the row to leave the list), 19 (payment dialog overflow) and
