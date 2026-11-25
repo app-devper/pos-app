@@ -52,8 +52,8 @@ void main() {
   setUpAll(() {
     debugPrint('E2E: this file records $_billsRecorded bills and cancels '
         'both, and records 1 return that cannot be undone; the cancelled '
-        'bills stay listed in รายการขาย today and its Total keeps 75.00 of '
-        'them (server reports exclude them)');
+        'bills stay listed in รายการขาย today, marked ยกเลิกแล้ว, and '
+        'count in no total');
     // Queued first, so it runs last: after every bill is cancelled.
     deleteProductAfterFile(_product);
     Cleanup.add('bills of "$_product"', _bills.cancelAll);
@@ -302,11 +302,10 @@ void main() {
       await orders.cancelBill();
       _bills.markCancelled(_cashBill);
 
-      // Assert: pos-api only marks a cancelled bill, total and all, and the
-      // app maps no status, so it stays listed unmarked at 75.00 (FINDING,
-      // skipped test below); with bill 2 at 0.00 the Total keeps 75.00
+      // Assert: pos-api only marks a cancelled bill, total and all; the app
+      // keeps listing it, marked (see 'the bills list' below)
       expect(await orders.isListed(_cashBill), isTrue,
-          reason: 'the app currently keeps listing a cancelled bill');
+          reason: 'a cancelled bill stays listed, marked');
       expect((await billNow(_cashBill.id)).totalText, '75.00');
       await _expectOnHand(shell, 10);
     });
@@ -315,20 +314,23 @@ void main() {
   // FINDINGs (Task 7). They read the chain's product and bills, so they
   // run, if unskipped, after it; skipped tests do not sign in or write.
 
-  group('FINDING', () {
-    // DELETE /orders/:id marks the bill CANCELLED and keeps its total (pos-api
-    // app/data/ledger/cancel.go:23-60); GET /orders returns every status
-    // (order.go:105); the app maps no status (order_mapper.dart) and
-    // lists and sums every bill (order_view_model.dart:40-57).
-    testWidgets('a cancelled bill is no longer listed', (tester) async {
+  // Was finding #1: DELETE /orders/:id marks the bill CANCELLED and keeps
+  // its total (pos-api ledger/cancel.go); GET /orders still returns it. The
+  // app lists it marked and leaves it out of the screen's ยอดรวม.
+  group('the bills list', () {
+    testWidgets('a cancelled bill is marked and not counted', (tester) async {
+      // Arrange
       final orders = OrderRobot(await _signedInShell(tester));
+
+      // Act
       await orders.openList();
 
-      expect(await orders.isListed(_cashBill), isFalse);
+      // Assert
+      expect(await orders.isListed(_cashBill), isTrue);
+      expect(orders.rowShows(_cashBill, 'ยกเลิกแล้ว'), findsOneWidget);
+      expect(orders.listTotal(), await todaysCountedTotalText());
     }, timeout: e2eTestTimeout);
-  },
-      skip: 'FINDING: a cancelled bill stays in รายการขาย and in its Total '
-          '(order_view_model.dart:40-57; pos-api order.go:105)');
+  });
 
   // DELETE /orders/items/:id marks the line CANCELLED and recomputes the
   // bill (ledger/cancel.go:64-90); GET /orders/:id returns every line

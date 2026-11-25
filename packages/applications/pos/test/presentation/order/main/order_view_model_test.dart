@@ -16,7 +16,7 @@ import 'package:um/domain/entities/auth/passkey.dart';
 import 'package:um/domain/repositories/login_repository.dart';
 
 OrderSummary order(String id, String type,
-    {double total = 100, double cost = 60}) {
+    {double total = 100, double cost = 60, String status = 'CONFIRMED'}) {
   return OrderSummary(
     id: id,
     code: 'OD-$id',
@@ -27,6 +27,7 @@ OrderSummary order(String id, String type,
     totalCost: cost,
     discount: 0,
     type: type,
+    status: status,
   );
 }
 
@@ -49,7 +50,8 @@ class FakeOrderRepository implements OrderRepository {
 
 class FakeLoginRepository implements LoginRepository {
   @override
-  Future<PasskeyChallenge> passkeyLoginOptions(String system) => throw UnimplementedError();
+  Future<PasskeyChallenge> passkeyLoginOptions(String system) =>
+      throw UnimplementedError();
 
   @override
   Future<Session> loginWithPasskey({
@@ -61,7 +63,8 @@ class FakeLoginRepository implements LoginRepository {
       throw UnimplementedError();
 
   @override
-  Future<Session> exchangeTicket(String ticket, String system) => throw UnimplementedError();
+  Future<Session> exchangeTicket(String ticket, String system) =>
+      throw UnimplementedError();
 
   FakeLoginRepository({this.role = 'USER', this.throws});
 
@@ -168,6 +171,27 @@ void main() {
 
     expect(viewModel.state.value.total, 150);
     expect(viewModel.state.value.totalCost, 80);
+  });
+
+  test('a cancelled bill stays listed but counts in no total', () async {
+    // Arrange
+    final viewModel = buildViewModel(
+      orders: FakeOrderRepository(orders: [
+        order('1', 'Cash', total: 50, cost: 20),
+        order('2', 'Cash', total: 50, cost: 20, status: 'CANCELLED'),
+      ]),
+    );
+
+    // Act
+    await viewModel.getOrderItem('All', anyRange());
+
+    // Assert
+    final state = viewModel.state.value;
+    expect(state.orders!.map((e) => e.id), ['1', '2']);
+    expect(state.total, 50);
+    expect(state.totalCost, 20);
+    // The profit the bills screen shows (BillSummary: total - cost).
+    expect(state.total - state.totalCost, 30);
   });
 
   test('a failed refresh reports the error and keeps what is on screen',

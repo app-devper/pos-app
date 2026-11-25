@@ -150,7 +150,7 @@ void main() {
       );
 
       final result = await _repo(recorder).createOrder(CreateOrderParam(
-          saleId: 'sale-1',
+        saleId: 'sale-1',
         customerCode: 'C1',
         customerName: 'ลูกค้าทั่วไป',
         amount: 120,
@@ -169,7 +169,7 @@ void main() {
       final recorder = _Recorder(body: jsonEncode({'data': _orderJson}));
 
       final result = await _repo(recorder).createOrder(CreateOrderParam(
-          saleId: 'sale-1',
+        saleId: 'sale-1',
         customerCode: '',
         customerName: '',
         amount: 0,
@@ -192,6 +192,23 @@ void main() {
       expect(summaries.single.totalCost, 60);
       expect(recorder.calls.single,
           'GET /api/pos/v1/orders?startDate=2026-09-01&endDate=2026-09-30');
+    });
+
+    test('getOrderRange reads a cancelled bill as cancelled', () async {
+      // Arrange
+      final recorder = _Recorder(
+          body: jsonEncode([
+        {..._orderJson, 'id': 'o1', 'status': 'CANCELLED'},
+        {..._orderJson, 'id': 'o2', 'status': 'CONFIRMED'},
+        {..._orderJson, 'id': 'o3'},
+      ]));
+
+      // Act
+      final summaries = await _repo(recorder).getOrderRange(
+          GetOrderRangeParam(startDate: '2026-09-01', endDate: '2026-09-30'));
+
+      // Assert
+      expect(summaries.map((e) => e.isCancelled), [true, false, false]);
     });
 
     test('getOrderById maps the detail and its items', () async {
@@ -360,7 +377,7 @@ void main() {
           posService: recorder.service(), productCache: cache);
       await expectLater(
           repo.createOrder(CreateOrderParam(
-          saleId: 'sale-1',
+              saleId: 'sale-1',
               customerCode: '',
               customerName: '',
               amount: 20,
@@ -402,7 +419,7 @@ void main() {
 
     test('an explicit payment list wins over the single amount', () async {
       final body = await bodyFor(CreateOrderParam(
-          saleId: 'sale-1',
+        saleId: 'sale-1',
         customerCode: '',
         customerName: '',
         amount: 100,
@@ -421,7 +438,7 @@ void main() {
     test('with no payment list one is synthesised from amount and type',
         () async {
       final body = await bodyFor(CreateOrderParam(
-          saleId: 'sale-1',
+        saleId: 'sale-1',
         customerCode: '',
         customerName: '',
         amount: 75,
@@ -436,7 +453,7 @@ void main() {
 
     test('the printed message lists every line and the total', () async {
       final body = await bodyFor(CreateOrderParam(
-          saleId: 'sale-1',
+        saleId: 'sale-1',
         customerCode: '',
         customerName: '',
         amount: 0,
@@ -450,7 +467,7 @@ void main() {
 
     test('an explicit message replaces the generated one', () async {
       final body = await bodyFor(CreateOrderParam(
-          saleId: 'sale-1',
+        saleId: 'sale-1',
         customerCode: '',
         customerName: '',
         amount: 0,

@@ -66,6 +66,7 @@ extension OrderJson on Map<String, dynamic> {
       totalCost: json.readDouble("totalCost"),
       discount: json.readDouble("discount"),
       type: json["type"] ?? "Cash",
+      status: json["status"] ?? "",
     );
   }
 

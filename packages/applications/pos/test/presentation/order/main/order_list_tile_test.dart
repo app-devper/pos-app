@@ -8,7 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pos/domain/model/order/order_summary.dart';
 import 'package:pos/presentation/order/main/order_list_tile.dart';
 
-OrderSummary _order() => OrderSummary(
+OrderSummary _order({String status = 'CONFIRMED'}) => OrderSummary(
       id: 'o1',
       code: 'OD_202611250007',
       customerCode: '',
@@ -18,6 +18,7 @@ OrderSummary _order() => OrderSummary(
       totalCost: 20,
       discount: 0,
       type: 'Store',
+      status: status,
     );
 
 Widget _host(Widget child) => MaterialApp(home: Scaffold(body: child));
@@ -63,6 +64,33 @@ void main() {
     // Assert
     expect(find.text('OD_202611250007'), findsOneWidget);
     expect(find.textContaining('ต้นทุน'), findsNothing);
+  });
+
+  testWidgets('a cancelled bill row is marked and its amount struck through',
+      (tester) async {
+    // Arrange / Act
+    await tester.pumpWidget(_host(OrderListTile(
+        index: 0,
+        order: _order(status: 'CANCELLED'),
+        showCost: true,
+        onTap: () {})));
+
+    // Assert
+    expect(find.text('ยกเลิกแล้ว'), findsOneWidget);
+    final amount = tester.widget<Text>(find.text('50.00'));
+    expect(amount.style?.decoration, TextDecoration.lineThrough);
+  });
+
+  testWidgets('a bill row that is not cancelled carries no mark',
+      (tester) async {
+    // Arrange / Act
+    await tester.pumpWidget(_host(OrderListTile(
+        index: 0, order: _order(), showCost: true, onTap: () {})));
+
+    // Assert
+    expect(find.text('ยกเลิกแล้ว'), findsNothing);
+    final amount = tester.widget<Text>(find.text('50.00'));
+    expect(amount.style?.decoration, isNot(TextDecoration.lineThrough));
   });
 
   testWidgets('tapping a bill row opens that bill', (tester) async {

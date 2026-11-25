@@ -44,7 +44,7 @@ class OrderViewModel {
       final orders = _filterOrders(type, result);
       double total = 0;
       double totalCost = 0;
-      for (var x in orders) {
+      for (var x in orders.where((order) => !order.isCancelled)) {
         total += x.total;
         totalCost += x.totalCost;
       }

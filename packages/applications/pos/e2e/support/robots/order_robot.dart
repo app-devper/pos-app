@@ -99,6 +99,22 @@ class OrderRobot {
     return opened;
   }
 
+  /// [text] (exactly) on [bill]'s row, e.g. its `ยกเลิกแล้ว` mark; scroll
+  /// to it first with [isListed].
+  Finder rowShows(Bill bill, String text) =>
+      find.descendant(of: _rows(bill), matching: find.text(text));
+
+  /// The amount the list's foot reads next to ยอดรวม, `฿ #,##0.00`.
+  String listTotal() {
+    final row = find.descendant(
+        of: _list,
+        matching: find
+            .ancestor(of: find.text('ยอดรวม'), matching: find.byType(Row))
+            .first);
+    final texts = form.textsUnder(row);
+    return texts.last;
+  }
+
   /// Opens, one by one, each row with [bill]'s title and total until one
   /// shows its code; false (back on the list) if none does.
   Future<bool> _openRowOf(Bill bill) async {
