@@ -1,5 +1,6 @@
-# Sign-in: a wrong password is refused with UM's code and the user stays on
-# sign-in; each of the three roles signs in to the selling screen and out again.
+# Sign-in: a wrong password is refused as a wrong password, with UM's code,
+# and the user stays on sign-in; each of the three roles signs in to the
+# selling screen and out again.
 appId: app.devper.pos
 ---
 - runFlow:
@@ -8,7 +9,7 @@ appId: app.devper.pos
       USERNAME: ${MAESTRO_USERNAME}
       PASSWORD: ${MAESTRO_PASSWORD + 'x'}
 - extendedWaitUntil:
-    visible: ".*\\[UM-401-004\\].*"
+    visible: ".*ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง \\[UM-401-004\\].*"
     timeout: 15000
 - tapOn: "ตกลง"
 - assertVisible: "ยินดีต้อนรับ"
