@@ -75,14 +75,19 @@ class CustomerListHeader extends StatelessWidget {
           ),
         ),
         Expanded(
-          child: Text(
-            title,
-            maxLines: 1,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: AppColors.of(context).textPrimary,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+          // A header node of its own, so the web writes it into the page.
+          child: Semantics(
+            container: true,
+            header: true,
+            child: Text(
+              title,
+              maxLines: 1,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.of(context).textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),

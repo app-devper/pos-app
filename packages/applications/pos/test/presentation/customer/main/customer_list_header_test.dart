@@ -92,4 +92,26 @@ void main() {
     // Assert
     expect(searched, ['สม']);
   });
+
+  testWidgets('the customer list title is a header of its own', (tester) async {
+    // Arrange
+    final semantics = tester.ensureSemantics();
+
+    // Act
+    await tester.pumpWidget(_host(CustomerListHeader(
+      title: 'ข้อมูลลูกค้า',
+      backLabel: 'ย้อนกลับ',
+      addLabel: 'เพิ่มลูกค้า',
+      showAdd: true,
+      onBack: () {},
+      onAdd: () {},
+      onSearch: (_) {},
+    )));
+
+    // Assert
+    final title = tester.getSemantics(find.bySemanticsLabel('ข้อมูลลูกค้า'));
+    expect(title.childrenCount, 0);
+    expect(title.getSemanticsData().flagsCollection.isHeader, isTrue);
+    semantics.dispose();
+  });
 }
