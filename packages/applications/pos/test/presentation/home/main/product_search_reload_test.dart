@@ -139,6 +139,26 @@ void main() {
       // Assert
       expect(vm.error.value, isNotNull);
     });
+
+    test('the load that started last wins, whichever finishes last', () async {
+      // Arrange: loaded at 1000, then two quick sales reload twice
+      final repo = _ScriptedRepository();
+      final vm = ProductSearchViewModel(productRepo: repo);
+      final first = vm.prepareData();
+      repo.pending.single.complete([_product(1000)]);
+      await first;
+      final older = vm.refresh();
+      final newer = vm.refresh();
+
+      // Act: the newer load (998) comes back before the older one (999)
+      repo.pending[2].complete([_product(998)]);
+      await newer;
+      repo.pending[1].complete([_product(999)]);
+      await older;
+
+      // Assert
+      expect(vm.items.value!.single.getQuantity(), 998);
+    });
   });
 
   group('ProductSearch', () {

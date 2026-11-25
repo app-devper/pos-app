@@ -31,6 +31,10 @@ class ProductSearchViewModel {
   List<ProductUnitItem> _products = const [];
   String _query = '';
 
+  /// Counts the loads started; only the latest one's answer is shown, so two
+  /// quick sales cannot leave the older stock on screen.
+  int _loadId = 0;
+
   Future<void> prepareData() async {
     await getProducts();
   }
@@ -58,7 +62,9 @@ class ProductSearchViewModel {
   }
 
   Future<void> _load() async {
+    final id = ++_loadId;
     final products = await productRepo.getLocalProducts();
+    if (id != _loadId) return;
     _products = List<ProductUnitItem>.unmodifiable([
       for (final item in products)
         if (item.status == productStatusActive) ...item.toProductItems(),
