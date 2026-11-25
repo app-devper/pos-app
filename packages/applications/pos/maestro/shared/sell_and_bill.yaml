@@ -1,0 +1,54 @@
+# Sells two of the run's product, paid with the exact amount, and finds that bill, by its number,
+# in the bills list: the cart line, the totals, the payment, what the server
+# recorded and what the bill's own page shows.
+appId: app.devper.pos
+---
+- runFlow:
+    file: steps/sign_in.yaml
+    env:
+      USERNAME: ${MAESTRO_USERNAME}
+      PASSWORD: ${MAESTRO_PASSWORD}
+- runFlow: steps/add_product_twice.yaml
+- extendedWaitUntil:
+    visible: "ยอดรวมสุทธิ\n?฿50\\.00"
+    timeout: 10000
+- assertVisible: "2x ${PRODUCT_NAME}"
+- takeScreenshot: cart
+# The newest bill before paying: the sale must add one after it, or an earlier
+# run's bill of the same amount would pass for this one.
+- runScript:
+    file: ../scripts/api.js
+    env:
+      ACTION: newestBill
+- evalScript: ${output.billBefore = output.billCode}
+- tapOn: "ชำระเงิน \\(1 รายการ\\)\n?฿50\\.00"
+- tapOn: "รับชำระพอดี ไม่มีเงินทอน"
+- extendedWaitUntil:
+    visible: "ยอดรวมสุทธิ\n?฿0\\.00"
+    timeout: 15000
+- repeat:
+    times: 15
+    while:
+      true: ${output.billCode == output.billBefore}
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 1000
+      - runScript:
+          file: ../scripts/api.js
+          env:
+            ACTION: newestBill
+- assertTrue: ${output.billCode != output.billBefore}
+- assertTrue: ${output.billTotal == '50'}
+- runFlow:
+    file: steps/open_screen.yaml
+    env:
+      SCREEN: "รายการขาย"
+- extendedWaitUntil:
+    visible: "\\d+ ${output.billCode}.*"
+    timeout: 15000
+- tapOn: "\\d+ ${output.billCode}.*"
+- extendedWaitUntil:
+    visible: "${output.billCode} .*"
+    timeout: 10000
+- assertVisible: "(Total\n?)?฿ 50\\.00"
+- takeScreenshot: bill

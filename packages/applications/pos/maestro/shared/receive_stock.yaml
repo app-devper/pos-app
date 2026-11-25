@@ -1,0 +1,95 @@
+# Goods come in: a receipt for the run's supplier, one line of five of the
+# run's product, imported into stock. The server then holds 1005 on hand.
+appId: app.devper.pos
+---
+- runScript:
+    file: ../scripts/api.js
+    env:
+      ACTION: productOnHand
+      NAME: ${PRODUCT_NAME}
+- assertTrue: ${output.onHand == '1000'}
+- runFlow:
+    file: steps/sign_in.yaml
+    env:
+      USERNAME: ${MAESTRO_USERNAME}
+      PASSWORD: ${MAESTRO_PASSWORD}
+- runFlow:
+    file: steps/open_screen.yaml
+    env:
+      SCREEN: "จัดการ"
+- tapOn: "ใบรับสินค้า / Goods Receipt"
+- extendedWaitUntil:
+    visible: "ค้นหาเลขที่ใบรับสินค้า\\.\\.\\."
+    timeout: 15000
+# The narrow layout keeps the add entry in the list's menu.
+- runFlow:
+    when:
+      true: ${LAYOUT == 'narrow'}
+    commands:
+      - tapOn: "เมนูใบรับสินค้า"
+- tapOn: "เพิ่มใบรับสินค้า"
+- extendedWaitUntil:
+    visible: "สร้างใบรับสินค้า"
+    timeout: 15000
+- tapOn: "ร้านขายสินค้า"
+- runFlow:
+    file: steps/choose_dropdown_option.yaml
+    env:
+      OPTION: MST-${RUN_ID} supplier
+- tapOn: "หมายเลขอางอิง"
+- inputText: REF-${RUN_ID}
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
+- tapOn: "สร้างใบรับสินค้า"
+- extendedWaitUntil:
+    visible: "เพิ่มรายการสินค้า"
+    timeout: 15000
+- takeScreenshot: receipt-created
+- tapOn: "เพิ่มรายการสินค้า"
+- extendedWaitUntil:
+    visible: "เพิ่มรายการรับสินค้า"
+    timeout: 10000
+- tapOn: "สินค้า"
+- runFlow:
+    file: steps/choose_dropdown_option.yaml
+    env:
+      OPTION: ${PRODUCT_NAME}
+- tapOn: "จำนวน \\(.*"
+- inputText: "5"
+- tapOn: "เลขล็อต"
+- inputText: LOT${RUN_ID}
+- tapOn: "วันหมดอายุ \\(YYYY-MM-DD\\)"
+- inputText: "2030-01-31"
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
+- tapOn: "เพิ่มรายการ"
+- extendedWaitUntil:
+    visible: "Name: ${PRODUCT_NAME}.*"
+    timeout: 15000
+# Known finding: the green "Update success" bar never closes by itself and,
+# on a narrow screen, lies over the import button. A user presses Clear first.
+- extendedWaitUntil:
+    visible: "Clear"
+    timeout: 10000
+- tapOn: "Clear"
+- extendedWaitUntil:
+    notVisible: "Clear"
+    timeout: 10000
+- tapOn: "นำเข้าสต็อก"
+- tapOn: "ยืนยัน"
+- extendedWaitUntil:
+    visible: "นำเข้าสต็อกแล้ว"
+    timeout: 15000
+- takeScreenshot: receipt-imported
+- runScript:
+    file: ../scripts/api.js
+    env:
+      ACTION: productOnHand
+      NAME: ${PRODUCT_NAME}
+- assertTrue: ${output.onHand == '1005'}

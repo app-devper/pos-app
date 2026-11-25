@@ -321,6 +321,9 @@ class CartOrderItem extends StatelessWidget {
                     alignment: Alignment.center,
                     child: Text(
                       '${quantity}x',
+                      // Says which line the quantity belongs to: on the web the
+                      // line's title does not reach the semantics tree.
+                      semanticsLabel: '${quantity}x $title',
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       style: const TextStyle(
@@ -361,6 +364,56 @@ class CartOrderItem extends StatelessWidget {
           height: 1,
         ),
       ],
+    );
+  }
+}
+
+/// Opens the product picker on a narrow (phone) layout, where the product grid
+/// is not on the selling screen itself.
+class CartSearchButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const CartSearchButton({super.key, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 40,
+      width: 40,
+      child: IconButton(
+        tooltip: 'เลือกสินค้า',
+        padding: const EdgeInsets.all(0),
+        splashRadius: 20,
+        onPressed: onPressed,
+        icon: Icon(
+          Icons.search,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    );
+  }
+}
+
+/// Takes the chosen customer off the sale. Its tooltip names the customer: on
+/// the web the tile's own title does not reach the semantics tree.
+class CartCustomerRemoveButton extends StatelessWidget {
+  final String customerName;
+  final VoidCallback onPressed;
+
+  const CartCustomerRemoveButton({
+    super.key,
+    required this.customerName,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: 'นำลูกค้า $customerName ออก',
+      splashRadius: 16,
+      onPressed: onPressed,
+      color: Colors.red,
+      icon: const Icon(Icons.close, size: 24),
     );
   }
 }

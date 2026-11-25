@@ -1,0 +1,9 @@
+# Signs in as ${USERNAME} / ${PASSWORD} and ends on the selling screen with an
+# empty cart. (A widget's texts reach Maestro as one node: joined by a newline
+# on Android, by nothing on the web — hence "\n?".)
+appId: app.devper.pos
+---
+- runFlow: fill_sign_in.yaml
+- extendedWaitUntil:
+    visible: "ยอดรวมสุทธิ\n?฿0\\.00"
+    timeout: 30000

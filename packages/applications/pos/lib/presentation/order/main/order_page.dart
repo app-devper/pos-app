@@ -18,6 +18,7 @@ import 'package:pos/presentation/constants.dart';
 import 'package:pos/presentation/order/argument.dart';
 import 'package:design_system/theme/app_colors.dart';
 import 'package:design_system/theme/color.dart';
+import 'order_list_tile.dart';
 import 'order_state.dart';
 import 'order_ui_model.dart';
 import 'order_view_model.dart';
@@ -297,17 +298,10 @@ class _OrderPageState extends State<OrderPage> {
               itemCount: orders.length,
               itemBuilder: (context, index) {
                 final item = orders[index];
-                return ListTile(
-                  leading: Text("${index + 1}"),
-                  title: Text(item.getCreatedDate() +
-                      (item.customerName.isNotEmpty
-                          ? " Name: ${item.customerName}"
-                          : "")),
-                  trailing: Text(_format.format(item.total)),
-                  subtitle: _isAdmin
-                      ? Text(
-                          "Cost: ${_format.format(item.totalCost)}  Profit: ${_format.format(item.total - item.totalCost)}")
-                      : null,
+                return OrderListTile(
+                  index: index,
+                  order: item,
+                  showCost: _isAdmin,
                   onTap: () {
                     _nextToOrderDetail(context, item);
                   },

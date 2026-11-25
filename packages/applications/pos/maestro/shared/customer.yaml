@@ -1,0 +1,105 @@
+# A customer's life: added through the form, on the server, found by name and
+# chosen for a sale on the selling screen, then deleted from its own page and
+# gone from the server.
+appId: app.devper.pos
+env:
+  CUSTOMER: MST-${RUN_ID} customer
+---
+- runFlow:
+    file: steps/sign_in.yaml
+    env:
+      USERNAME: ${MAESTRO_USERNAME}
+      PASSWORD: ${MAESTRO_PASSWORD}
+- runFlow:
+    file: steps/open_screen.yaml
+    env:
+      SCREEN: "จัดการ"
+- tapOn: "จัดการลูกค้า"
+# The list's title does not reach the web's semantics tree; its add button does.
+- extendedWaitUntil:
+    visible: "เพิ่มลูกค้า"
+    timeout: 15000
+- tapOn: "เพิ่มลูกค้า"
+- tapOn: "ชื่อลูกค้า"
+- inputText: ${CUSTOMER}
+- tapOn: "โทรศัพท์"
+- inputText: 08${RUN_ID}0
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
+- tapOn: "ยืนยัน"
+# The form closes when the server has answered; "เพิ่มลูกค้า" is on both the
+# form and the list, so the server is asked until it has the customer.
+- evalScript: ${output.customerCount = '0'}
+- repeat:
+    times: 15
+    while:
+      true: ${output.customerCount != '1'}
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 1000
+      - runScript:
+          file: ../scripts/api.js
+          env:
+            ACTION: customerCount
+            NAME: ${CUSTOMER}
+- assertTrue: ${output.customerCount == '1'}
+- runFlow:
+    file: steps/open_screen.yaml
+    env:
+      SCREEN: "ขายสินค้า"
+- extendedWaitUntil:
+    visible: "ยอดรวมสุทธิ\n?฿0\\.00"
+    timeout: 15000
+- tapOn: "ข้อมูลลูกค้า\n?เลือกลูกค้า"
+- tapOn: "ค้นหา\\.\\.\\."
+- inputText: MST-${RUN_ID}
+- extendedWaitUntil:
+    visible: "${CUSTOMER}.*"
+    timeout: 15000
+- tapOn: "${CUSTOMER}.*"
+# The cart names the chosen customer on the button that takes them off again.
+- extendedWaitUntil:
+    visible: "นำลูกค้า ${CUSTOMER} ออก"
+    timeout: 10000
+- takeScreenshot: customer-on-sale
+- runFlow:
+    file: steps/open_screen.yaml
+    env:
+      SCREEN: "จัดการ"
+- tapOn: "จัดการลูกค้า"
+- extendedWaitUntil:
+    visible: "${CUSTOMER}.*"
+    timeout: 15000
+- tapOn: "${CUSTOMER}.*"
+- tapOn: "แก้ไข"
+- scrollUntilVisible:
+    element: "ลบลูกค้า"
+    direction: DOWN
+    timeout: 20000
+- tapOn: "ลบลูกค้า"
+- assertVisible: "ต้องการลบลูกค้าใช่หรือไม่\\?"
+- tapOn: "ยืนยัน"
+- extendedWaitUntil:
+    visible: "เพิ่มลูกค้า"
+    timeout: 15000
+# The server archives the customer a moment after the tap: ask until it has.
+- repeat:
+    times: 15
+    while:
+      true: ${output.customerCount != '0'}
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 1000
+      - runScript:
+          file: ../scripts/api.js
+          env:
+            ACTION: customerCount
+            NAME: ${CUSTOMER}
+- assertTrue: ${output.customerCount == '0'}
+# FINDING 7 (docs/e2e-findings.md): the removed customer stays in the list,
+# because the server keeps it as ARCHIVED and the list shows every status.
+# When that is fixed this line fails; turn it into assertNotVisible then.
+- assertVisible: "${CUSTOMER}.*"
