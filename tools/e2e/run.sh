@@ -30,7 +30,8 @@ case "$target" in
     config=app
     env_file=.env.e2e
     printf 'run.sh: target API %s — run by the owner\n' "$HOSTED_API"
-    printf 'run.sh: the API allows 5 sign-ins a minute; a full run may pause 65s to wait it out\n'
+    printf 'run.sh: sign-ins are paced to at most 3 a minute on this target (the API allows 5, possibly shared);\n'
+    printf 'run.sh: a full run-all gets about 3 minutes longer\n'
     [ -f "$APP_DIR/$env_file" ] || {
       printf 'run.sh: %s/%s is missing (copy .env.e2e.example and fill it in)\n' "$APP_DIR" "$env_file" >&2
       exit 2
@@ -44,9 +45,11 @@ run_id="${E2E_RUN_ID:-$(date +%Y%m%d%H%M%S)-$$}"
 cd "$APP_DIR"
 # Only the file's path is passed: the test reads the credentials at run time,
 # so they are neither compiled into the test nor visible in `ps`.
-# Hosted only: the sign-in times, shared by a run's files so that the pacing
-# (at most 3 sign-ins a minute) spans them, and the file whose existence
-# tells run-all.sh to stop (the suite's own credentials were refused).
+# Hosted only: the sign-in times, in one persistent file shared by every
+# hosted run.sh, run-all.sh and sweep.sh, so that the pacing (at most 3
+# sign-ins a minute) spans files and runs; entries older than the window
+# are ignored and pruned. Also the file whose existence tells run-all.sh to
+# stop (the suite's own credentials were refused).
 signin_log=""
 if [ "$target" = hosted ]; then
   signin_log="${E2E_SIGNIN_LOG:-${TMPDIR:-/tmp}/pos-e2e-hosted-signins.log}"

@@ -25,12 +25,20 @@ Duration waitBeforeSignIn(
   int max = signInPacingMax,
   Duration window = signInPacingWindow,
 }) {
-  final recent = earlier.where((t) => now.difference(t) < window).toList()
-    ..sort();
+  final recent = recentSignIns(earlier, now, window: window);
   if (recent.length < max) return Duration.zero;
   final oldestCounted = recent[recent.length - max];
   return oldestCounted.add(window).difference(now) + signInPacingMargin;
 }
+
+/// The sign-ins of [times] within [window] before [now], oldest first; the
+/// log is rewritten with only these, so older entries never count.
+List<DateTime> recentSignIns(
+  Iterable<DateTime> times,
+  DateTime now, {
+  Duration window = signInPacingWindow,
+}) =>
+    times.where((t) => now.difference(t) < window).toList()..sort();
 
 /// The sign-in log: one epoch-millisecond time per line; other lines are
 /// skipped.

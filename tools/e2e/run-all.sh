@@ -64,7 +64,6 @@ sign_ins() {
 export E2E_RUN_ID="$(date +%Y%m%d%H%M%S)-$$"
 LOG_DIR="$(mktemp -d "${TMPDIR:-/tmp}/pos-e2e-run-all.XXXXXX")"
 export E2E_STOP_FILE="$LOG_DIR/stop"
-export E2E_SIGNIN_LOG="$LOG_DIR/signins.log"
 summary=""
 failed=0
 for f in $(files); do

@@ -232,8 +232,12 @@ Future<void> _pace(WidgetTester tester) async {
         'the hosted target): waiting ${wait.inSeconds}s');
     await _wait(tester, wait);
   }
-  log.writeAsStringSync('${DateTime.now().millisecondsSinceEpoch}\n',
-      mode: FileMode.append);
+  // Rewritten with the recent entries only, so the shared file never grows
+  // and stale entries never count.
+  final now = DateTime.now();
+  final kept = [...recentSignIns(earlier, now), now];
+  log.writeAsStringSync(
+      kept.map((t) => '${t.millisecondsSinceEpoch}\n').join());
 }
 
 Finder _field(String label) =>

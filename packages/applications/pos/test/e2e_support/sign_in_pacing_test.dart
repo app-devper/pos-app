@@ -46,4 +46,10 @@ void main() {
       expect(times, [at(0), at(5)]);
     });
   });
+
+  group('recentSignIns', () {
+    test('keeps only the sign-ins within the window, oldest first', () {
+      expect(recentSignIns([at(70), at(0), at(30)], at(80)), [at(30), at(70)]);
+    });
+  });
 }
