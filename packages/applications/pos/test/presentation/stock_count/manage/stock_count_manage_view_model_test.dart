@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:common/core/error/exception.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pos/domain/model/stock_count/param.dart';
@@ -6,6 +8,19 @@ import 'package:pos/domain/repositories/stock_count_repository.dart';
 import 'package:pos/presentation/stock_count/manage/stock_count_manage_view_model.dart';
 import 'package:pos/domain/repositories/product_repository.dart';
 import 'package:pos/domain/model/product/product.dart';
+
+/// A catalogue whose names arrive only when [release] completes.
+class _SlowProductRepository extends FakeProductRepository {
+  final release = Completer<void>();
+
+  _SlowProductRepository({super.products});
+
+  @override
+  Future<List<Product>> getLocalProducts() async {
+    await release.future;
+    return products;
+  }
+}
 
 /// The mutation use cases invalidate the product cache after writing, so they
 /// need a repository even though these tests only assert on the write.
@@ -133,6 +148,26 @@ void main() {
       await vm.getStockCountById('sc9');
 
       // Assert
+      expect(vm.state.value.productNames['p1'], 'Paracetamol');
+    });
+
+    test('a line added while the names are looked up is kept', () async {
+      // Arrange
+      final products =
+          _SlowProductRepository(products: [_named('p1', 'Paracetamol')]);
+      final vm = buildViewModel(
+          FakeStockCountRepository(result: _countOf('p1')),
+          products: products);
+      final loading = vm.getStockCountById('sc9');
+      await Future<void>.delayed(Duration.zero);
+
+      // Act: the user adds a line while the lookup is awaited
+      vm.addItem(buildItem(productId: 'p2'));
+      products.release.complete();
+      await loading;
+
+      // Assert
+      expect(vm.state.value.items.map((item) => item.productId), ['p2']);
       expect(vm.state.value.productNames['p1'], 'Paracetamol');
     });
 

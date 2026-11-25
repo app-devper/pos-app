@@ -43,8 +43,10 @@ class StockCountManageViewModel {
     _state.value = _state.value.copyWith(loading: true);
     try {
       final stockCount = await stockCountRepo.getStockCountById(stockCountId);
-      _state.value = _state.value.copyWith(
-          stockCount: stockCount, productNames: await _productNames());
+      // Awaited first: the state is read after the lookup, not before it.
+      final productNames = await _productNames();
+      _state.value = _state.value
+          .copyWith(stockCount: stockCount, productNames: productNames);
     } on Exception catch (e) {
       _errors.emit(toFailure(e).getMessage());
     } finally {
