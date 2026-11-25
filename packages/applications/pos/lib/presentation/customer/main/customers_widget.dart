@@ -9,6 +9,7 @@ import 'package:pos/container.dart';
 import 'package:pos/domain/model/customer/customer.dart';
 import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/customer/main/customers_state.dart';
+import 'customer_list_header.dart';
 import 'package:pos/presentation/customer/main/customers_view_model.dart';
 import 'package:design_system/theme/app_colors.dart';
 import 'package:design_system/widgets/error_state.dart';
@@ -56,54 +57,12 @@ class _CustomersWidgetState extends State<CustomersWidget> {
     final isMobile = Responsive.isMobile(context);
     return Column(
       children: <Widget>[
-        Row(
-          children: [
-            InkWell(
-              onTap: () {
-                widget.onBack();
-              },
-              child: Container(
-                width: 40,
-                height: 40,
-                padding: const EdgeInsets.all(8.0),
-                child: Icon(
-                  Icons.arrow_back_ios,
-                  color: AppColors.of(context).textSecondary,
-                  size: 16,
-                ),
-              ),
-            ),
-            Expanded(
-              child: Text(
-                Languages.of(context).customerTitle,
-                maxLines: 1,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: AppColors.of(context).textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            if (isMobile) ...[
-              InkWell(
-                onTap: () {
-                  widget.onAdd();
-                },
-                child: SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: Icon(
-                    Icons.add,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 24,
-                  ),
-                ),
-              ),
-            ] else ...[
-              const SizedBox(width: 40)
-            ]
-          ],
+        CustomerListHeader(
+          title: Languages.of(context).customerTitle,
+          addLabel: Languages.of(context).customerAddTitle,
+          showAdd: isMobile,
+          onBack: () => widget.onBack(),
+          onAdd: () => widget.onAdd(),
         ),
         const Divider(height: 1),
         _buildCustomerList(),
