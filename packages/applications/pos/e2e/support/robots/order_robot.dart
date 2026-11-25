@@ -18,10 +18,10 @@ import 'package:pos/presentation/order/return/product_returns_history_widget.dar
 import '../api/order_api.dart';
 import '../pump.dart';
 import 'form_driver.dart';
+import 'scroll.dart';
 import 'shell_robot.dart';
 
 /// One drag of the list; a few rows.
-const _scrollStep = Offset(0, -300);
 const _step = Duration(milliseconds: 100);
 
 /// A reload shows nothing when it starts, so the list counts as reloaded
@@ -72,28 +72,12 @@ class OrderRobot {
 
   /// Whether a row with [bill]'s title and total is listed, scrolling the
   /// whole list (today's bills, in the server's order).
-  Future<bool> isListed(Bill bill) async {
-    final row = _rows(bill);
-    final scrollable =
-        find.descendant(of: _list, matching: find.byType(Scrollable)).first;
-    await _scrollToTop(scrollable);
-    while (row.hitTestable().evaluate().isEmpty) {
-      final position = tester.state<ScrollableState>(scrollable).position;
-      if (position.pixels >= position.maxScrollExtent) return false;
-      await tester.drag(scrollable, _scrollStep);
-      await tester.pump(_step);
-    }
-    return true;
-  }
-
-  Future<void> _scrollToTop(Finder scrollable) async {
-    while (true) {
-      final position = tester.state<ScrollableState>(scrollable).position;
-      if (position.pixels <= position.minScrollExtent) return;
-      await tester.drag(scrollable, -_scrollStep);
-      await tester.pump(_step);
-    }
-  }
+  Future<bool> isListed(Bill bill) => scrollUntilShown(
+        tester,
+        find.descendant(of: _list, matching: find.byType(Scrollable)),
+        _rows(bill),
+        what: 'the bill row ${bill.rowTitle} ${bill.totalText}',
+      );
 
   /// Opens the row of [bill] whose detail header shows its code; tries each
   /// row with the same title and total.

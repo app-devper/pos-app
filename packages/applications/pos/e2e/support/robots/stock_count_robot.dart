@@ -13,6 +13,7 @@ import 'package:pos/presentation/stock_count/manage/stock_count_item_picker_widg
 import 'package:pos/presentation/stock_count/manage/stock_count_manage_page.dart';
 import '../pump.dart';
 import 'form_driver.dart';
+import 'scroll.dart';
 import 'shell_robot.dart';
 
 const _listTitle = 'นับสต็อก';
@@ -56,12 +57,10 @@ class StockCountRobot {
             w is ListTile &&
             w.title is Text &&
             (w.title as Text).data == countNo));
-    if (tile.evaluate().isEmpty) {
-      await tester.scrollUntilVisible(tile, 200,
-          scrollable: find
-              .descendant(of: _list, matching: find.byType(Scrollable))
-              .first);
-    }
+    final shown = await scrollUntilShown(tester,
+        find.descendant(of: _list, matching: find.byType(Scrollable)), tile,
+        what: 'the stock count $countNo');
+    if (!shown) fail('stock count $countNo is not listed');
     return tile.hitTestable();
   }
 

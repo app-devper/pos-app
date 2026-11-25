@@ -11,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 // Project imports:
 import '../pump.dart';
+import 'scroll.dart';
 import 'shell_robot.dart';
 
 /// A save's outcome (the next screen, or an error alert) arrives over HTTP.
@@ -81,9 +82,12 @@ class FormDriver {
     await pumpUntilFound(tester, menu);
     final menuElement = menu.evaluate().last;
     final item = find.text(option);
-    if (item.hitTestable().evaluate().isEmpty) {
-      await tester.scrollUntilVisible(item.last, 100, scrollable: menu);
-    }
+    // A real catalogue's menu is long and unsorted: scroll it from the top
+    // until the option shows or the menu ends.
+    final shown = await scrollUntilShown(
+        tester, find.byElementPredicate((e) => e == menuElement), item,
+        what: '"$option" in the $label menu');
+    if (!shown) fail('"$option" is not in the $label menu');
     await tester.tap(item.hitTestable().last);
     await tester.pump();
     await pumpUntil(tester, () => !menuElement.mounted,

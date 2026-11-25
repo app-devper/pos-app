@@ -130,9 +130,11 @@ void main() {
 Future<void> _expectSellsAs(ShellRobot shell, String price) async {
   final cart = CartRobot(shell);
   await cart.open();
+  await cart.filterGrid(_renamed, productName: _renamed);
   expect(cart.tileShows(_renamed, price), findsOneWidget);
   expect(cart.tileShows(_renamed, '฿20.00'), findsNothing,
       reason: 'the grid shows the General price');
+  await cart.clearGridFilter();
 
   await cart.addByBarcode(_stocked.barcode);
   expect(cart.line(_renamed), findsOneWidget);

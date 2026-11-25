@@ -126,8 +126,10 @@ void main() {
       await cart.expectSold();
       // FINDING: the grid loads once, when the screen opens, and a sale does
       // not reload it, so it still shows 10 (skipped test below).
+      await cart.filterGrid(_product, productName: _product);
       expect(cart.tileShows(_product, 'คงเหลือ 10 ชิ้น'), findsOneWidget,
           reason: 'the grid currently keeps the stock it opened with');
+      await cart.clearGridFilter();
       _cashBill = await _bills.recordNew(before);
       expect(_cashBill.totalText, '75.00');
 
@@ -353,6 +355,7 @@ void main() {
       await cart.pay();
       await _bills.recordNew(before);
 
+      await cart.filterGrid(_product, productName: _product);
       expect(cart.tileShows(_product, 'คงเหลือ 9 ชิ้น'), findsOneWidget);
     });
   },

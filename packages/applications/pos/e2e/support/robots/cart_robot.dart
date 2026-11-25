@@ -236,7 +236,24 @@ class CartRobot {
     await expectSold();
   }
 
+  /// Types [text] into the grid's search field, which filters the grid (as
+  /// a user narrows a long catalogue; only Enter adds to the sale), until
+  /// the grid shows [productName]'s tile. Clear it with [clearGridFilter].
+  Future<void> filterGrid(String text, {required String productName}) async {
+    await tester.enterText(shell.searchField(_searchHint), text);
+    await tester.pump();
+    await pumpUntilFound(
+        tester, find.descendant(of: _grid, matching: find.text(productName)));
+  }
+
+  Future<void> clearGridFilter() async {
+    await tester.enterText(shell.searchField(_searchHint), '');
+    await tester.pump();
+  }
+
   /// The grid tile of [productName] showing [text], e.g. `คงเหลือ 7 ชิ้น`.
+  /// The grid is built lazily: filter it first ([filterGrid]) so that the
+  /// tile is on screen.
   Finder tileShows(String productName, String text) => find
       .descendant(
           of: find.ancestor(

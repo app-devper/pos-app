@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 // Project imports:
 import 'package:pos/presentation/customer/main/customers_widget.dart';
 import '../pump.dart';
+import 'scroll.dart';
 import 'shell_robot.dart';
 
 const _manageTile = 'จัดการลูกค้า';
@@ -29,8 +30,6 @@ const _deleteQuestion = 'ต้องการลบลูกค้าใช่�
 const _saveTimeout = Duration(seconds: 30);
 
 /// One drag of the list; about four rows.
-const _scrollStep = Offset(0, -300);
-const _step = Duration(milliseconds: 100);
 
 final _list = find.byType(CustomersWidget);
 final _menu = find.widgetWithText(ListTile, _addMenuItem).hitTestable();
@@ -90,28 +89,12 @@ class CustomerRobot {
   /// Scrolls the list from its top to its end looking for [name] (and
   /// [code]); true once its row is on screen. The list may hold real
   /// customers, in any order, so the E2E one is found by its exact name.
-  Future<bool> scrollListTo(String name, {String? code}) async {
-    final row = _listRow(name, code);
-    final scrollable =
-        find.descendant(of: _list, matching: find.byType(Scrollable));
-    await _scrollToTop(scrollable);
-    while (row.hitTestable().evaluate().isEmpty) {
-      final position = tester.state<ScrollableState>(scrollable).position;
-      if (position.pixels >= position.maxScrollExtent) return false;
-      await tester.drag(scrollable, _scrollStep);
-      await tester.pump(_step);
-    }
-    return true;
-  }
-
-  Future<void> _scrollToTop(Finder scrollable) async {
-    while (true) {
-      final position = tester.state<ScrollableState>(scrollable).position;
-      if (position.pixels <= position.minScrollExtent) return;
-      await tester.drag(scrollable, -_scrollStep);
-      await tester.pump(_step);
-    }
-  }
+  Future<bool> scrollListTo(String name, {String? code}) => scrollUntilShown(
+        tester,
+        find.descendant(of: _list, matching: find.byType(Scrollable)),
+        _listRow(name, code),
+        what: 'the customer $name ${code ?? ''}',
+      );
 
   /// Opens the detail of [name] (with [code]) from the list.
   Future<void> open(String name, {String? code}) async {
