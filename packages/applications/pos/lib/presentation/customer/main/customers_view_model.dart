@@ -22,19 +22,43 @@ class CustomersViewModel {
 
   ValueListenable<CustomersState> get state => _state;
 
+  /// The customers that are listed (archived ones never are), and the
+  /// search typed above them.
+  List<Customer> _all = const [];
+  String _query = '';
+
   Future<void> getCustomers() async {
     _state.value = _state.value.copyWith(loading: true, clearError: true);
     try {
       final customers = await customerRepo.getLocalCustomers();
       // A removed customer is only archived by pos-api, which still returns
       // it; the repository keeps it (an old bill still names it).
-      final items = List<Customer>.unmodifiable(
+      _all = List<Customer>.unmodifiable(
           customers.where((customer) => !customer.isArchived));
-      _state.value = _state.value.copyWith(loading: false, items: items);
+      _state.value = _state.value.copyWith(loading: false, items: _filter());
     } on Exception catch (e) {
       _state.value = _state.value
           .copyWith(loading: false, error: toFailure(e).getMessage());
     }
+  }
+
+  /// What was typed in the search; a list built afresh shows it again.
+  String get query => _query;
+
+  /// Lists the customers whose name, code or phone holds [query], ignoring
+  /// case; an empty query lists them all.
+  void search(String query) {
+    _query = query;
+    _state.value = _state.value.copyWith(items: _filter());
+  }
+
+  List<Customer> _filter() {
+    final lower = _query.trim().toLowerCase();
+    if (lower.isEmpty) return _all;
+    return List<Customer>.unmodifiable(_all.where((customer) =>
+        customer.name.toLowerCase().contains(lower) ||
+        customer.code.toLowerCase().contains(lower) ||
+        customer.phone.toLowerCase().contains(lower)));
   }
 
   /// Loads the list again: after an add, a rename or a removal beside it,

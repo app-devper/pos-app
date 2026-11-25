@@ -128,6 +128,65 @@ void main() {
     });
   });
 
+  group('CustomersViewModel search', () {
+    final shop = [
+      buildCustomer('1', name: 'Somchai Shop', code: 'CU001', phone: '0811'),
+      buildCustomer('2', name: 'สมหญิง', code: 'CU002', phone: '0899'),
+      buildCustomer('3', name: 'Old', code: 'CU003', status: 'ARCHIVED'),
+    ];
+
+    Future<CustomersViewModel> loaded() async {
+      final vm =
+          buildCustomersViewModel(FakeCustomerRepository(customers: shop));
+      await vm.getCustomers();
+      return vm;
+    }
+
+    test('matches the name ignoring case', () async {
+      final vm = await loaded();
+
+      vm.search('SOMCHAI');
+
+      expect(vm.state.value.items.map((c) => c.id), ['1']);
+    });
+
+    test('matches the code ignoring case', () async {
+      final vm = await loaded();
+
+      vm.search('cu002');
+
+      expect(vm.state.value.items.map((c) => c.id), ['2']);
+    });
+
+    test('matches the phone', () async {
+      final vm = await loaded();
+
+      vm.search('0899');
+
+      expect(vm.state.value.items.map((c) => c.id), ['2']);
+    });
+
+    test('never brings back a removed customer', () async {
+      final vm = await loaded();
+
+      vm.search('cu003');
+
+      expect(vm.state.value.items, isEmpty);
+    });
+
+    test('an empty search lists every customer, and a reload keeps the search',
+        () async {
+      final vm = await loaded();
+      vm.search('สม');
+
+      await vm.reload();
+
+      expect(vm.state.value.items.map((c) => c.id), ['2']);
+      vm.search('');
+      expect(vm.state.value.items.map((c) => c.id), ['1', '2']);
+    });
+  });
+
   group('CustomerViewModel', () {
     test('a lookup emits the customer once', () async {
       final vm = buildCustomerViewModel(

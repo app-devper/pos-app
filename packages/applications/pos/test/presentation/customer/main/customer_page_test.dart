@@ -95,4 +95,35 @@ void main() {
     expect(find.text('ลูกค้าใหม่'), findsOneWidget,
         reason: 'the list reloads when the add form reports success');
   });
+
+  testWidgets(
+      'a search typed in the list is shown again when the list is rebuilt',
+      (tester) async {
+    // Arrange: the narrow layout rebuilds the list after each detail
+    tester.view.physicalSize = const Size(800, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final repo = _ServerRepository();
+    sl.registerFactory(() => CustomersViewModel(customerRepo: repo));
+    sl.registerFactory(() => CustomerViewModel(customerRepo: repo));
+    sl.registerFactory(() => CustomerAddViewModel(customerRepo: repo));
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: const [_EnglishDelegate()],
+      home: Scaffold(body: CustomerPage(onBack: () {})),
+    ));
+    await tester.pump();
+    await tester.enterText(find.byType(TextField), 'ไม่มี');
+    await tester.pump();
+    expect(find.text('ลูกค้าเดิม'), findsNothing);
+
+    // Act: open the add form and leave it
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pump();
+    await tester.tap(find.text('ปิด'));
+    await tester.pump();
+
+    // Assert: the field shows the search the list is filtered by
+    expect(find.widgetWithText(TextField, 'ไม่มี'), findsOneWidget);
+    expect(find.text('ลูกค้าเดิม'), findsNothing);
+  });
 }

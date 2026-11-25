@@ -49,7 +49,8 @@ function productOnHand() {
 }
 
 function customerCount() {
-  // pos-api archives a removed customer and still lists it (finding 7).
+  // pos-api archives a removed customer and still returns it; the app
+  // leaves archived ones out (finding 7), and so does this count.
   const named = get('/api/pos/v1/customers').filter((c) => c.name === NAME);
   output.customerCount = String(named.filter((c) => c.status !== 'ARCHIVED').length);
 }

@@ -37,15 +37,23 @@ class CustomersWidget extends StatefulWidget {
 
 class _CustomersWidgetState extends State<CustomersWidget> {
   CustomersViewModel get _viewModel => widget.viewModel;
+  late final TextEditingController _search;
 
   @override
   void initState() {
     super.initState();
+    _search = TextEditingController(text: _viewModel.query);
     // A narrow layout builds the list afresh each time it is shown; a load
     // the page already started is not repeated.
     if (!_viewModel.state.value.loading) {
       _viewModel.getCustomers();
     }
+  }
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
   }
 
   @override
@@ -63,6 +71,8 @@ class _CustomersWidgetState extends State<CustomersWidget> {
           showAdd: isMobile,
           onBack: () => widget.onBack(),
           onAdd: () => widget.onAdd(),
+          onSearch: _viewModel.search,
+          searchController: _search,
         ),
         const Divider(height: 1),
         _buildCustomerList(),

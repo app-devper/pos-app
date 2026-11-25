@@ -1,6 +1,6 @@
 # A customer's life: added through the form, on the server, found by name and
-# chosen for a sale on the selling screen, then deleted from its own page and
-# gone from the server.
+# chosen for a sale on the selling screen, then found by the list's search,
+# deleted from its own page, gone from the server and from the list.
 appId: app.devper.pos
 env:
   CUSTOMER: MST-${RUN_ID} customer
@@ -70,6 +70,14 @@ env:
     env:
       SCREEN: "จัดการ"
 - tapOn: "จัดการลูกค้า"
+# The list is searched rather than scrolled: a real shop has many customers.
+- tapOn: "ค้นหาลูกค้า\\.\\.\\."
+- inputText: MST-${RUN_ID}
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
 - extendedWaitUntil:
     visible: "${CUSTOMER}.*"
     timeout: 15000
@@ -99,7 +107,8 @@ env:
             ACTION: customerCount
             NAME: ${CUSTOMER}
 - assertTrue: ${output.customerCount == '0'}
-# FINDING 7 (docs/e2e-findings.md): the removed customer stays in the list,
-# because the server keeps it as ARCHIVED and the list shows every status.
-# When that is fixed this line fails; turn it into assertNotVisible then.
-- assertVisible: "${CUSTOMER}.*"
+# Finding 7, fixed: the server keeps the removed customer as ARCHIVED, and the
+# list leaves archived customers out, so the row leaves the list.
+- extendedWaitUntil:
+    notVisible: "${CUSTOMER}.*"
+    timeout: 15000
