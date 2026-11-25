@@ -37,4 +37,20 @@ void main() {
       }
     }
   }
+
+  // The dialogs on a phone held sideways, the shortest screen: they must fit
+  // or scroll.
+  for (final MapEntry(key: name, value: build) in mainDialogs.entries) {
+    testWidgets('$name lays out without overflow at $landscapePhoneSize',
+        (tester) async {
+      // Arrange
+      useViewSize(tester, landscapePhoneSize);
+
+      // Act
+      await showScreen(tester, build(), isDialog: true);
+
+      // Assert
+      expect(tester.takeException(), isNull);
+    });
+  }
 }

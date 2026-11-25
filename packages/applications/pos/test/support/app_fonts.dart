@@ -23,6 +23,9 @@ const _fonts = {
 /// The phone size the layout tests use.
 const phoneSize = Size(360, 640);
 
+/// A phone held sideways, the shortest screen the dialogs must work on.
+const landscapePhoneSize = Size(640, 360);
+
 /// The desktop size the layout tests use (the E2E suite's surface).
 const desktopSize = Size(1400, 900);
 

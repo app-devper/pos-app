@@ -144,21 +144,20 @@ final mainDialogs = <String, Screen>{
   'the return dialog': () {
     sl.registerFactory(() =>
         ProductReturnViewModel(productReturnRepo: product_return.ReturnRepo()));
-    return dialogOpener((context) => showDialog<void>(
+    // As the bill detail opens it (order_detail_page.dart).
+    return dialogOpener((context) => showCenterDialog(
+          minWidth: 360,
+          minHeight: 560,
+          maxHeight: 560,
+          maxWidth: 360,
           context: context,
-          builder: (_) => Dialog(
-            child: SizedBox(
-              width: 400,
-              height: 550,
-              child: ProductReturnWidget(
-                orderId: 'order',
-                orderItemId: 'item',
-                productName: 'พาราเซตามอล 500 มก.',
-                price: 30,
-                maxReturnable: 1,
-                onComplete: () {},
-              ),
-            ),
+          builder: (_) => ProductReturnWidget(
+            orderId: 'order',
+            orderItemId: 'item',
+            productName: 'พาราเซตามอล 500 มก.',
+            price: 30,
+            maxReturnable: 1,
+            onComplete: () {},
           ),
         ));
   },

@@ -66,7 +66,8 @@ class _ProductReturnWidgetState extends State<ProductReturnWidget> {
 
   void _onQuantityChanged() {
     final quantity = int.tryParse(_quantityController.text) ?? 0;
-    _refundController.text = roundMoney(widget.price * quantity).toStringAsFixed(2);
+    _refundController.text =
+        roundMoney(widget.price * quantity).toStringAsFixed(2);
   }
 
   void _showError(String message) {
@@ -116,8 +117,9 @@ class _ProductReturnWidgetState extends State<ProductReturnWidget> {
           onAction: _submit,
         ),
         const Divider(height: 1),
+        // Scrolls on a screen too short for the form (a phone held sideways).
         Expanded(
-          child: Container(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Form(
               key: _formKey,
@@ -126,12 +128,14 @@ class _ProductReturnWidgetState extends State<ProductReturnWidget> {
                 children: [
                   Text(
                     widget.productName,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'คืนได้สูงสุด ${widget.maxReturnable}',
-                    style: TextStyle(color: AppColors.of(context).textSecondary),
+                    style:
+                        TextStyle(color: AppColors.of(context).textSecondary),
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -164,7 +168,8 @@ class _ProductReturnWidgetState extends State<ProductReturnWidget> {
                       LengthLimitingTextInputFormatter(10),
                     ],
                     controller: _refundController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     autovalidateMode: AutovalidateMode.onUserInteraction,
                     decoration: buildInputDecoration(
                       context: context,
@@ -172,7 +177,10 @@ class _ProductReturnWidgetState extends State<ProductReturnWidget> {
                       hintText: 'โปรดระบุจำนวนเงินคืน',
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty || double.tryParse(value) == null || !double.parse(value).isFinite) {
+                      if (value == null ||
+                          value.isEmpty ||
+                          double.tryParse(value) == null ||
+                          !double.parse(value).isFinite) {
                         return 'โปรดระบุจำนวนเงินคืน';
                       }
                       if (double.tryParse(value)! < 0) {

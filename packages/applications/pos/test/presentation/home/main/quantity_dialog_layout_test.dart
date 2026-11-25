@@ -13,13 +13,13 @@ import 'package:flutter_test/flutter_test.dart';
 // Project imports:
 import '../../../support/app_fonts.dart';
 
-Widget _host() => MaterialApp(
+Widget _host({ValueChanged<String>? onCompleted}) => MaterialApp(
       theme: CustomTheme.mainTheme,
       home: Scaffold(
         body: Builder(
           builder: (context) => TextButton(
             onPressed: () => showInputNumberDialog(context,
-                title: 'จำนวนสินค้า', onCompleted: (_) {}),
+                title: 'จำนวนสินค้า', onCompleted: onCompleted ?? (_) {}),
             child: const Text('open'),
           ),
         ),
@@ -57,4 +57,29 @@ void main() {
       expectInside(tester, find.text('125'), _displayOf('125'));
     });
   }
+
+  testWidgets(
+      'on a phone held sideways every key of the quantity dialog can be '
+      'scrolled to and pressed, and the figure confirmed', (tester) async {
+    // Arrange
+    useViewSize(tester, landscapePhoneSize);
+    final completed = <String>[];
+    await tester.pumpWidget(_host(onCompleted: completed.add));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    // Act: 1, then the bottom row's 0, then confirm
+    await tester.tap(find.byKey(const Key('btn_1')));
+    await tester.pump();
+    await tester.ensureVisible(find.byKey(const Key('btn_0')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('btn_0')));
+    await tester.pump();
+    await tester.tap(find.text('ยืนยัน'));
+    await tester.pumpAndSettle();
+
+    // Assert
+    expect(tester.takeException(), isNull);
+    expect(completed, ['10']);
+  });
 }
