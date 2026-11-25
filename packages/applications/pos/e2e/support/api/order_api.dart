@@ -23,6 +23,32 @@ const _alreadyCancelled = 'บิลนี้ถูกยกเลิกไป�
 
 final _money = NumberFormat('#,##0.00', 'en_US');
 
+/// What the clean-up may do with a bill that holds the run's product.
+enum SweepDecision { cancel, refuse, ignore }
+
+/// [lineProducts] are the product names of a bill's lines (null when a line
+/// has none). Only a bill whose every line is [runProduct] can have been
+/// made by the run, and is cancelled. One that mixes it with anything else
+/// was rung up by someone else (the run's product is on the real selling
+/// grid while a file runs) and is refused. Pure, so it is unit-tested.
+SweepDecision sweepDecision(List<String?> lineProducts, String runProduct) {
+  if (!lineProducts.contains(runProduct)) return SweepDecision.ignore;
+  return lineProducts.every((name) => name == runProduct)
+      ? SweepDecision.cancel
+      : SweepDecision.refuse;
+}
+
+SweepDecision decisionFor(OrderDetail bill, String runProduct) => sweepDecision(
+    [for (final item in bill.items) item.product?.name], runProduct);
+
+/// Says loudly that [bill] was left alone and reports it as a leftover.
+void reportMixedBill(OrderDetail bill, String runProduct) {
+  debugPrint('E2E: bill ${bill.code} holds the run\'s product together with '
+      'other items; NOT cancelled — it was not made by this run');
+  Cleanup.keep('bill ${bill.code} holding "$runProduct" with other items '
+      '(NOT cancelled: not made by this run)');
+}
+
 /// A bill as the bill list and its detail show it.
 class Bill {
   Bill.of(OrderDetail detail)
@@ -105,7 +131,13 @@ class BillLedger {
       throw StateError('E2E: expected one new bill of $productName, '
           'found ${bills.length}');
     }
-    return _track(Bill.of(bills.single));
+    final bill = bills.single;
+    if (decisionFor(bill, productName) != SweepDecision.cancel) {
+      reportMixedBill(bill, productName);
+      throw StateError('E2E: the new bill ${bill.code} of $productName holds '
+          'other items too; it is not the test\'s');
+    }
+    return _track(Bill.of(bill));
   }
 
   Bill _track(Bill bill) {
@@ -151,12 +183,18 @@ class BillLedger {
       error is AppException && error.message.contains(_alreadyCancelled);
 
   /// Tracks every bill of [productName] since the first snapshot that no
-  /// test recorded: a step failed between paying and recording it.
+  /// test recorded (a step failed between paying and recording it), if its
+  /// every line is [productName]; a bill that mixes in other items is left
+  /// alone and reported (see [sweepDecision]).
   Future<void> _sweep() async {
     final first = _firstSnapshot;
     if (first == null) return;
     for (final detail in await billsOfProductSince(productName, first)) {
       if (_recorded.contains(detail.id)) continue;
+      if (decisionFor(detail, productName) != SweepDecision.cancel) {
+        reportMixedBill(detail, productName);
+        continue;
+      }
       debugPrint('E2E: bill ${detail.code} of $productName was never '
           'recorded by a test; cancelling it at clean-up');
       _track(Bill.of(detail));

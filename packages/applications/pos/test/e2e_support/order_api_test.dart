@@ -43,4 +43,23 @@ void main() {
       expect(window.end, DateTime(2026, 11, 26, 9, 31));
     });
   });
+
+  group('sweepDecision', () {
+    const run = 'E2E-1 sale product';
+
+    test('a bill whose every line is the run product is cancelled', () {
+      expect(sweepDecision([run, run], run), SweepDecision.cancel);
+    });
+
+    test('a bill mixing the run product with anything else is refused', () {
+      expect(sweepDecision([run, 'Paracetamol'], run), SweepDecision.refuse);
+      expect(sweepDecision([run, null], run), SweepDecision.refuse,
+          reason: 'a line whose product is unknown is not the run product');
+    });
+
+    test('a bill without the run product is ignored', () {
+      expect(sweepDecision(['Paracetamol'], run), SweepDecision.ignore);
+      expect(sweepDecision(const [], run), SweepDecision.ignore);
+    });
+  });
 }
