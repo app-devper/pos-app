@@ -29,6 +29,7 @@ import 'package:pos/presentation/order/return/product_return_widget.dart';
 import 'package:pos/presentation/order/return/product_returns_history_widget.dart';
 import 'package:pos/presentation/product/argument.dart';
 import 'package:design_system/theme/color.dart';
+import 'order_detail_header.dart';
 import 'order_detail_state.dart';
 import 'order_line_tile.dart';
 import 'order_detail_view_model.dart';
@@ -153,51 +154,19 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   List<Widget> _buildAction(BuildContext context) {
-    if (isAdmin) {
-      return <Widget>[
-        IconButton(
-          splashRadius: 20,
-          onPressed: () {
-            _viewModel.getSupplier(order?.customerCode ?? "");
-          },
-          icon: const Icon(Icons.picture_as_pdf),
-        ),
-        IconButton(
-          splashRadius: 20,
-          onPressed: () {
-            // The sync button refetches. It used to set a "total cost updated"
-            // flag in state that this page read back and turned into exactly
-            // this call.
-            _viewModel.getOrderById(widget.orderId);
-          },
-          icon: const Icon(Icons.sync),
-        ),
-        IconButton(
-          splashRadius: 20,
-          onPressed: () {
-            _showProductReturnsHistoryDialog(context);
-          },
-          icon: const Icon(Icons.assignment_return),
-        ),
-        IconButton(
-          splashRadius: 20,
-          onPressed: () {
-            _showRemoveOrderConfirm(context);
-          },
-          icon: const Icon(Icons.delete),
-        ),
-      ];
-    } else {
-      return <Widget>[
-        IconButton(
-          splashRadius: 20,
-          onPressed: () {
-            _viewModel.getSupplier(order?.customerCode ?? "");
-          },
-          icon: const Icon(Icons.picture_as_pdf),
-        ),
-      ];
-    }
+    return <Widget>[
+      OrderDetailActions(
+        bill: order,
+        isAdmin: isAdmin,
+        onPrint: () => _viewModel.getSupplier(order?.customerCode ?? ""),
+        // The sync button refetches. It used to set a "total cost updated"
+        // flag in state that this page read back and turned into exactly
+        // this call.
+        onSync: () => _viewModel.getOrderById(widget.orderId),
+        onReturns: () => _showProductReturnsHistoryDialog(context),
+        onDelete: () => _showRemoveOrderConfirm(context),
+      ),
+    ];
   }
 
   Widget _buildBody(BuildContext context) {
@@ -208,39 +177,13 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          _buildOrderHeader(),
+          OrderDetailHeader(bill: order),
           _buildOrderItem(context),
           BillSummary(
               total: _viewModel.state.value.total,
               totalCost: _viewModel.state.value.totalCost,
               showCost: isAdmin),
         ],
-      ),
-    );
-  }
-
-  Widget _buildOrderHeader() {
-    final Size size = MediaQuery.of(context).size;
-    return Container(
-      width: size.width,
-      padding: const EdgeInsets.all(defaultPagePadding),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: <Widget>[
-          Flexible(
-            child: _buildOrderDetail(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOrderDetail() {
-    return Container(
-      height: 50,
-      alignment: Alignment.centerLeft,
-      child: Text(
-        "${order?.code ?? ""} ${(order?.getCreatedDate() ?? "-")}",
       ),
     );
   }

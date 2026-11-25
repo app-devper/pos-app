@@ -2,6 +2,7 @@
 import 'package:intl/intl.dart';
 
 // Project imports:
+import 'package:pos/domain/model/order/order_status.dart';
 import 'order_item_detail.dart';
 
 class OrderDetail {
@@ -22,6 +23,9 @@ class OrderDetail {
   final String createdDate;
   final List<OrderItemDetail> items;
 
+  /// pos-api's status of the bill; empty when it sent none.
+  final String status;
+
   OrderDetail({
     required this.id,
     required this.createdDate,
@@ -39,7 +43,11 @@ class OrderDetail {
     this.prescriberName,
     this.buyerName,
     this.buyerIdCard,
+    this.status = '',
   });
+
+  /// A cancelled bill stays viewable, marked, and cannot be deleted again.
+  bool get isCancelled => status == orderStatusCancelled;
 
   String getCreatedDate() {
     final date = DateTime.parse(createdDate);

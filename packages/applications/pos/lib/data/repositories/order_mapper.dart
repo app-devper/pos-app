@@ -90,6 +90,7 @@ extension OrderJson on Map<String, dynamic> {
       prescriberName: json["prescriberName"],
       buyerName: json["buyerName"],
       buyerIdCard: json["buyerIdCard"],
+      status: json["status"] ?? "",
     );
   }
 

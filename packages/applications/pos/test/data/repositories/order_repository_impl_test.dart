@@ -248,6 +248,23 @@ void main() {
       expect(detail.items.map((e) => e.isCancelled), [true, false, false]);
     });
 
+    test('getOrderById reads a cancelled bill as cancelled', () async {
+      // Arrange
+      final cancelled = _Recorder(
+          body:
+              jsonEncode({..._orderJson, 'items': [], 'status': 'CANCELLED'}));
+      final confirmed = _Recorder(
+          body:
+              jsonEncode({..._orderJson, 'items': [], 'status': 'CONFIRMED'}));
+
+      // Act
+      final a = await _repo(cancelled).getOrderById('o1');
+      final b = await _repo(confirmed).getOrderById('o1');
+
+      // Assert
+      expect([a.isCancelled, b.isCancelled], [true, false]);
+    });
+
     test('removeOrderById maps the deleted detail', () async {
       final recorder =
           _Recorder(body: jsonEncode({..._orderJson, 'items': []}));
