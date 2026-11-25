@@ -72,6 +72,24 @@ unmerged.
 | 20 | In any debug build, the HTTP logger prints every request header (`Authorization` included) and full request and response bodies: sign-in passwords, access tokens | `libraries/common/lib/core/network/http_logging_interceptor.dart:15-38`; added for every app in `features/um/lib/container.dart:52`; printed by `setupLogging` (`:34-41`), which `main.dart:16` of both POS and SM calls | Credentials in console logs, e.g. a debug build run against production. Read in code. The suite leaves `setupLogging` out so that nothing is printed | — (cannot be asserted without printing secrets) |
 | 21 | The app builds its first screen twice at start: two splash pages, then two sign-in pages, are in the tree | `presentation/app.dart:62` (`initialRoute: '/um-splash'` also pushes `/`), `presentation/router.dart:130-132` (`/` builds the splash again); each splash runs keep-alive, `features/um/lib/presentation/splash/splash_page.dart:51` | Duplicate work at start, and two keep-alive calls are possible. Observed (two sign-in pages; the suite uses `.hitTestable()` to pick the top one). The double keep-alive is read in code | — |
 
+## Found by the Maestro flows
+
+The flows in [e2e-maestro.md](e2e-maestro.md) read the app through its
+accessibility tree, on a phone layout and on the web. What that showed:
+
+| # | Finding | Where | Seen on |
+|---|---|---|---|
+| 22 | A wrong password is answered with "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่ [UM-401-004]" — the text of an expired session, not of a wrong password | the sign-in alert | Android, web |
+| 23 | Controls with no accessible name: the phone layout's product-picker button, the remove-customer button on the cart, the add button of the customer list and the menu button of the receipts list had none (now labelled); still unlabelled: the back arrows of the list headers, the products list's menu and compare buttons, the add-supplier button on a receipt | `cart_page.dart`, `customers_widget.dart`, `receives_widget.dart`, `products_widget.dart`, `receive_manage_page.dart` | Android (TalkBack would say only "button") |
+| 24 | On the web, text inside a list row that also holds a button does not reach assistive technology: the product name on a cart line, the chosen customer, the lines of a bill; nor do page and cart titles, nor the options of an open dropdown | Flutter web semantics of `ListTile` with a trailing control, `DropdownButton` | web |
+| 25 | Choosing needs scrolling through everything: the customer list has no search, and a receipt line picks its product from a plain dropdown of every product | `customers_widget.dart`, `receive_item_dialog.dart:48` | both |
+| 26 | After a sale the app shows no bill number (only "Order success"); the bills list numbers rows by position, so a bill can only be recognised by its time and total. Labels there are English (Total, Cost, Profit) among Thai | `order_page.dart`, `order_detail_page.dart` | both |
+| 27 | On the phone layout the menu button of the products screen sits partly under the status bar | products screen, narrow layout | Android |
+
+Findings 7 (a removed customer stays listed), 19 (payment dialog overflow) and
+the never-closing success bar that covers the import button on a narrow screen
+were met again by the flows; the customer flow pins 7.
+
 ## Questions for the owner
 
 These may be intended. Each needs a decision rather than a fix.

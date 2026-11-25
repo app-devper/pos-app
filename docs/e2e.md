@@ -4,6 +4,9 @@ The e2e suite drives the real POS app (`packages/applications/pos`) through
 its screens and checks what a user would see, against a real backend
 (um-api and pos-api).
 
+A second, smaller set drives the app from outside with Maestro, on the Android
+emulator and in a browser: see [e2e-maestro.md](e2e-maestro.md).
+
 ## 1. What the suite is
 
 - Each file under `packages/applications/pos/e2e/` is a `flutter test` file.

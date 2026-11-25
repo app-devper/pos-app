@@ -1,4 +1,0 @@
-url: http://127.0.0.1:8090
----
-- runScript: shared/api-check.js
-- assertTrue: ${output.spikeCount == '1'}
