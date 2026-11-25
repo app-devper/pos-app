@@ -227,11 +227,15 @@ customers.
 **Cancelled bills stay in the bills screen, and in its Total.** pos-api marks
 a cancelled bill CANCELLED and keeps its amount. The app's รายการขาย list
 shows every bill whatever its status and adds all of them into the day's
-Total (a finding: `order_view_model.dart:41-56`). So after a hosted run, the
-bills screen for that day lists two extra bills and shows **115.00 more**
-than was really sold that day, for every run made that day. The app's
-figures for that day will not match what was taken. Run the hosted suite on
-a day when that is acceptable, or not at all, until the finding is fixed.
+Total (a finding: `order_view_model.dart:41-56`). The 40.00 bill has its only
+line cancelled first, which brings that bill's amount to 0.00. The 75.00 bill
+is cancelled whole and keeps its amount. So after a hosted run, the bills
+screen for that day lists two extra bills and its Total shows **75.00 more**
+than was really sold, for every run made that day. (The selling file prints
+this note when it starts. pos-api's own reports exclude cancelled bills.)
+The app's bills screen for that day will not match what was taken. Run the
+hosted suite on a day when that is acceptable, or not at all, until the
+finding is fixed.
 
 ## 5. Findings
 
