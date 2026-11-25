@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 
 // Package imports:
-import 'package:common/core/ext/date_ext.dart';
 import 'package:common/core/ext/number_ext.dart';
 import 'package:design_system/widgets/title_bar.dart';
 
@@ -11,6 +10,7 @@ import 'package:pos/domain/model/core/core.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:design_system/widgets/dialogs.dart';
 import 'package:pos/presentation/product/history/product_history_widget.dart';
+import 'package:pos/presentation/product/main/product_stock_card.dart';
 import 'package:pos/presentation/product/price/product_price_widget.dart';
 import 'package:pos/presentation/product/stock/product_stock_quantity_widget.dart';
 import 'package:pos/presentation/product/stock/product_stock_sequence_widget.dart';
@@ -19,7 +19,6 @@ import 'package:pos/presentation/product/stock/stock_adjustment_history_widget.d
 import 'package:pos/presentation/product/stock/stock_adjustment_widget.dart';
 import 'package:pos/presentation/product/unit/product_unit_widget.dart';
 import 'package:design_system/theme/app_colors.dart';
-import 'package:design_system/theme/spacing.dart';
 
 class ProductDetailWidget extends StatefulWidget {
   final Product product;
@@ -597,274 +596,21 @@ class _ProductDetailWidgetState extends State<ProductDetailWidget>
       itemCount: product.units.length,
       itemBuilder: (context, index) {
         final unit = product.units[index];
-        final stock = product.getProductStocksUnit(unit.id);
-        final total = stock.fold(
-            0, (previousValue, element) => previousValue + element.quantity);
+        final stocks = product.getProductStocksUnit(unit.id);
         final price = product.getDefaultPriceUnit(unit.id);
-        return Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10.0),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(children: [
-                  Text(
-                    unit.unit,
-                    style: const TextStyle(
-                      fontSize: 24.0,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Spacer(),
-                  Row(children: [
-                    TextButton(
-                      onPressed: () {
-                        _showEditStockSequenceDialog(context,
-                            stocks: stock, unit: unit);
-                      },
-                      child: Text(
-                        'จัดเรียงสต็อก',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        _showAddStockDialog(context, unit: unit, price: price);
-                      },
-                      child: Text(
-                        'เพิ่มสต็อก',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ])
-                ]),
-                const SizedBox(height: 4.0),
-                Text(
-                  'คงเหลือรวมทั้งหมด: $total ${unit.unit}',
-                  style: TextStyle(
-                    fontSize: 16.0,
-                    color: AppColors.of(context).textPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Divider(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'นำเข้าเมื่อ',
-                          style: TextStyle(
-                            fontSize: 14.0,
-                            color: AppColors.of(context).textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 4.0),
-                        ...stock.map(
-                          (e) => Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Text(
-                                e.importDate.formatShortDate(),
-                                style: const TextStyle(
-                                  fontSize: 16.0,
-                                ),
-                              ),
-                              const SizedBox(width: 4.0),
-                              InkWell(
-                                onTap: () {
-                                  _showEditStockDialog(
-                                    context,
-                                    unit: unit,
-                                    price: price,
-                                    stock: e,
-                                  );
-                                },
-                                child: Text(
-                                  'แก้ไข',
-                                  style: TextStyle(
-                                    fontSize: 14.0,
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          'วันหมดอายุ',
-                          style: TextStyle(
-                            fontSize: 14.0,
-                            color: AppColors.of(context).textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 4.0),
-                        ...stock.map(
-                          (e) => Text(
-                            e.expireDate.formatShortDate(),
-                            style: const TextStyle(
-                              fontSize: 16.0,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          'ต้นทุน',
-                          style: TextStyle(
-                            fontSize: 14.0,
-                            color: AppColors.of(context).textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 4.0),
-                        ...stock.map(
-                          (e) => e.costPrice > 0
-                              ? Text(
-                                  '฿${formatDouble(e.costPrice)}',
-                                  style: const TextStyle(
-                                    fontSize: 16.0,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )
-                              : Text(
-                                  '฿${formatDouble(unit.costPrice)}',
-                                  style: TextStyle(
-                                    fontSize: 16.0,
-                                    color: AppColors.of(context).textSecondary,
-                                  ),
-                                ),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          'ราคาขาย',
-                          style: TextStyle(
-                            fontSize: 14.0,
-                            color: AppColors.of(context).textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 4.0),
-                        ...stock.map(
-                          (e) => e.price > 0
-                              ? Text(
-                                  '฿${formatDouble(e.price)}',
-                                  style: const TextStyle(
-                                    fontSize: 16.0,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )
-                              : Text(
-                                  '฿${formatDouble(price.price)}',
-                                  style: TextStyle(
-                                    fontSize: 16.0,
-                                    color: AppColors.of(context).textSecondary,
-                                  ),
-                                ),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          'นำเข้า',
-                          style: TextStyle(
-                            fontSize: 14.0,
-                            color: AppColors.of(context).textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 4.0),
-                        ...stock.map(
-                          (e) => Text(
-                            '${e.import}x',
-                            style: const TextStyle(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          'คงเหลือ',
-                          style: TextStyle(
-                            fontSize: 14.0,
-                            color: AppColors.of(context).textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 4.0),
-                        ...stock.map(
-                          (e) => InkWell(
-                            onTap: () {
-                              _showEditStockQuantityDialog(context, stock: e);
-                            },
-                            child: Text(
-                              '${e.quantity}x',
-                              style: const TextStyle(
-                                fontSize: 16.0,
-                                fontWeight: FontWeight.bold,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        const SizedBox(height: 22.0),
-                        ...stock.map(
-                          (e) => SizedBox(
-                            width: AppSpacing.minTouchTarget,
-                            height: AppSpacing.minTouchTarget,
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              splashRadius: 16,
-                              icon: const Icon(Icons.tune, size: 18),
-                              tooltip: 'ปรับสต็อก',
-                              onPressed: () {
-                                _showStockAdjustmentDialog(context, stock: e);
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+        return ProductStockCard(
+          unit: unit,
+          stocks: stocks,
+          price: price,
+          onSequence: () =>
+              _showEditStockSequenceDialog(context, stocks: stocks, unit: unit),
+          onAdd: () => _showAddStockDialog(context, unit: unit, price: price),
+          onEdit: (stock) => _showEditStockDialog(context,
+              unit: unit, price: price, stock: stock),
+          onQuantity: (stock) =>
+              _showEditStockQuantityDialog(context, stock: stock),
+          onAdjust: (stock) =>
+              _showStockAdjustmentDialog(context, stock: stock),
         );
       },
     );

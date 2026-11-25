@@ -256,10 +256,8 @@ void main() {
     }, timeout: e2eTestTimeout);
   });
 
-  // FINDING (Task 7): the stock tab shows a lot's import date, expiry, cost,
-  // price and quantities but never its lot number
-  // (product_detail_widget.dart:593-870); a user who received lot L… can
-  // only find it by opening the adjustment dialog on each row.
+  // Was a finding (#15): the stock tab showed a lot's dates, cost, price and
+  // quantities but never its number; it now has a ล็อต column.
   group('lot number on the stock tab', () {
     testWidgets('the stock tab shows the received lot number', (tester) async {
       // Arrange
@@ -272,9 +270,7 @@ void main() {
       // Assert
       expect(products.textOnScreen(_lot), findsOneWidget);
     }, timeout: e2eTestTimeout);
-  },
-      skip: 'FINDING: the product stock tab never shows the lot number '
-          '(product_detail_widget.dart:593)');
+  });
 }
 
 final _newProduct = NewProduct(

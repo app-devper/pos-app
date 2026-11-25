@@ -16,7 +16,6 @@ class ProductsWidget extends StatefulWidget {
   final Function(Product) onSelected;
   final Function() onMenu;
 
-
   const ProductsWidget({
     super.key,
     required this.onSelected,
@@ -42,7 +41,6 @@ class _ProductsWidgetState extends State<ProductsWidget> {
     _viewModel = sl<ProductsViewModel>();
     _viewModel.searchProduct('', _sortBalance);
   }
-
 
   @override
   void dispose() {
