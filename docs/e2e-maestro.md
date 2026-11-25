@@ -12,9 +12,9 @@ check that the main paths work on a phone and on the web.
 |---|---|
 | `auth` | a wrong password is refused with UM's code and the user stays on sign-in; admin, manager and user each sign in to the selling screen and out |
 | `navigation` | every main menu item opens its own screen (bills, products, the five manage tiles, profile) and selling is reachable again |
-| `sell_and_bill` | two of a product in the cart, the totals, a payment of the exact amount, on the web a scan typed straight after paying lands in the search field, a new bill on the server with that total, and that bill found by the number its row shows in the bills list |
-| `customer` | a customer added by the form is on the server, can be found and chosen for a sale, is found by the list's search, and is archived by its delete button: it leaves the list (finding 7, fixed) |
-| `receive_stock` | a goods receipt for a supplier, one line of five of the product chosen through the product search, imported: the server holds 1005 on hand |
+| `sell_and_bill` | two of a product in the cart (the line read by its own text), the totals, a payment of the exact amount, on the web a scan typed straight after paying lands in the search field, a new bill on the server with that total, and that bill found by the number its row shows in the bills list, its line read by its own text |
+| `customer` | two customers added by the form are on the server; one is found and chosen for a sale (the cart shows its name and code), found by the list's search, and archived by its delete button: it leaves the list while the other, found by the same search, is listed (finding 7, fixed) |
+| `receive_stock` | a goods receipt for a supplier chosen from the dropdown by its name (and shown chosen), one line of five of the product chosen through the product search, imported: the server holds 1005 on hand |
 | `product_edit` | a product renamed on its page: the server and the selling screen show the new name, stock untouched |
 
 Not covered: iOS; anything hosted (see "Local only"); stock counts, returns,
@@ -85,15 +85,15 @@ packages/applications/pos/maestro/
   android/<flow>.yaml   appId, LAYOUT: narrow, launchApp with clearState
   web/<flow>.yaml       url,   LAYOUT: wide,   launchApp (a fresh profile each run)
   shared/<flow>.yaml    the flow itself, the same file for both
-  shared/steps/         sign_in, sign_out, open_screen, add_product_twice, choose_dropdown_option
+  shared/steps/         sign_in, sign_out, open_screen, add_product_twice, add_customer,
+                        choose_dropdown_option
   scripts/api.js        asks the local API what the server recorded
 ```
 
 - **Layout, not platform.** The phone shows the narrow layout (menu in a
   drawer, product grid behind a button), the browser the wide one. Steps that
   differ are picked with `when: true: ${LAYOUT == 'narrow'}`, which costs no
-  waiting. Only two things are truly per platform: hiding the soft keyboard,
-  and choosing a dropdown option.
+  waiting. Only one thing is truly per platform: hiding the soft keyboard.
 - **Selectors are full-match regular expressions.** Flutter hands a widget's
   texts over as one node — joined by a newline on Android, by nothing on the
   web — so a total is `"ยอดรวมสุทธิ\n?฿50\\.00"`, and a partial text never
@@ -110,27 +110,33 @@ packages/applications/pos/maestro/
 
 ### What had to change in the app
 
-Maestro reads the screen through the accessibility (semantics) tree. Two
-kinds of change, each with a widget test, none changing what a user sees
-except a tooltip on hover or long-press:
+Maestro reads the screen through the accessibility (semantics) tree. On the
+web it reads an element's own DOM text only, and Flutter web writes a node's
+label as text only when the node has no children (a node with children, or
+a menu item, gets an `aria-label`). So the app's changes are of three kinds,
+each with a widget test, none changing what a user sees except a tooltip on
+hover or long-press:
 
 - `lib/main.dart`: `e2eSemanticsEnabled` — a web build made with
   `--dart-define=E2E_SEMANTICS=true` keeps the semantics tree on. An ordinary
   build is unchanged: Maestro sees nothing of it (checked).
-- Labels where a control had none or could not be told apart:
-  `CartSearchButton` (tooltip เลือกสินค้า), the cart line's quantity
-  (`<n>x <product>`), `CartCustomerRemoveButton` (นำลูกค้า … ออก), `CustomerListHeader`'s add icon
-  (เพิ่มลูกค้า), `ReceiveMenuButton` (เมนูใบรับสินค้า).
+- Every icon-only control has a name, in the app's strings (`Languages`,
+  Thai and English), and no two on a screen share one
+  (`test/presentation/accessibility_walk_test.dart` walks the screens the
+  widget tests can build). The ones the flows use: `เลือกสินค้า` (the phone's
+  product picker), `นำลูกค้า <name> ออก`, `เพิ่มลูกค้า`, `เมนูใบรับสินค้า`. A
+  row's buttons name their row: `ลดจำนวน <product>`, `เพิ่มจำนวน <product>`,
+  `แก้ไขจำนวน <product>` on a cart line.
+- A row's texts are one node of their own, beside its buttons
+  (`ReadableTile`): the cart line `2x <product> <unit> ฿<amount> <price
+  kind>`, the chosen customer `<name>\n<code>`, a bill line `<quantity>
+  <product> … <amount>`, a receipt line `Name: <product>\n…`. Dialog and
+  list titles and the cart title `ตะกร้าสินค้า #N` are header nodes of their
+  own. An open dropdown's options each have a text node of their own, so
+  `choose_dropdown_option` taps the option's text on both platforms.
 
 ### Known limits
 
-- On the web an open dropdown exposes no option text, so
-  `choose_dropdown_option` presses Enter on the focused option; it is right
-  only because the flows' database holds exactly one supplier per run. The
-  supplier's name is not readable on the web, so there it is not asserted.
-  (The receipt line's product is chosen through the product search.)
-- Several texts never reach the web's semantics tree (page and cart titles,
-  the lines of a bill); the flows anchor on something beside them.
 - A flow that fails leaves its run's data for `maestro-data.sh down <run id>`,
   which the runner calls in any case.
 - `flutter build apk` fails on this Mac (Flutter picks Android Studio's Java
