@@ -11,7 +11,12 @@
 # It starts the local stack, builds and installs (or serves) the app, gives
 # each flow a product of its own, and stops what it started. There is no way
 # to name another target: the app is built from config/e2e-local.json, which
-# must point at 127.0.0.1. Maestro's output (it holds typed text) goes to
+# must point at 127.0.0.1.
+#
+# The flows have a database of their own (state in ${TMPDIR}/pos-e2e-maestro-stack),
+# not the Dart suite's, which is crowded on purpose: Maestro cannot pick one
+# product out of a plain dropdown of hundreds. Both stacks use the same ports,
+# so only one runs at a time. Maestro's output (it holds typed text) goes to
 # ${TMPDIR}/pos-e2e-maestro, never into the repository.
 #
 # Environment: E2E_AVD (emulator name, default Medium_Phone);
@@ -32,6 +37,8 @@ WEB_PORT=8090
 OUT_ROOT="${TMPDIR:-/tmp}"
 OUT_ROOT="${OUT_ROOT%/}/pos-e2e-maestro"
 BOOT_TIMEOUT_SEC=240
+TMP_ROOT="${TMPDIR:-/tmp}"
+export E2E_STACK_STATE="${E2E_MAESTRO_STACK_STATE:-${TMP_ROOT%/}/pos-e2e-maestro-stack}"
 ALL_FLOWS="auth navigation sell_and_bill customer receive_stock product_edit"
 
 log() { printf 'maestro.sh: %s\n' "$*"; }
@@ -88,11 +95,12 @@ load_accounts() {
     MAESTRO_USER_USERNAME MAESTRO_USER_PASSWORD
 }
 
-started_emulator=0; server_pid=""; device=""; data_run_id=""
+started_emulator=0; started_stack=0; server_pid=""; device=""; data_run_id=""
 
 cleanup() {
   [ -z "$data_run_id" ] || "$SCRIPT_DIR/maestro-data.sh" down "$data_run_id" >/dev/null 2>&1 || true
   if [ -n "$server_pid" ]; then kill "$server_pid" 2>/dev/null || true; fi
+  if [ "$started_stack" -eq 1 ]; then "$SCRIPT_DIR/local-stack.sh" stop >/dev/null 2>&1 || true; fi
   if [ "$started_emulator" -eq 1 ] && [ -n "$device" ]; then
     "$ADB" -s "$device" emu kill >/dev/null 2>&1 || true
     # Gone from adb before we return, so a run started next does not adopt a dying emulator.
@@ -195,8 +203,18 @@ run_flow() { # run_flow <name> <run id>; prints the PASS/FAIL line, returns maes
 mkdir -p "$OUT_ROOT"
 load_accounts
 setup=1; [ "${E2E_MAESTRO_SKIP_SETUP:-0}" != 1 ] || setup=0   # the self-test runs without devices
+# Starts the flows' own stack unless it is up already; refuses when another
+# local stack (the Dart suite's) holds the ports.
+start_stack() {
+  if "$SCRIPT_DIR/local-stack.sh" status | grep -q 'pos-api running'; then return; fi
+  ! lsof -nP -iTCP:8586 -sTCP:LISTEN >/dev/null 2>&1 \
+    || die "another local stack is running on these ports (the Dart suite's?). Stop it first: tools/e2e/local-stack.sh stop"
+  started_stack=1
+  "$SCRIPT_DIR/local-stack.sh" start | tail -1
+}
+
 if [ "$setup" -eq 1 ]; then
-  "$SCRIPT_DIR/local-stack.sh" start
+  start_stack
   load_accounts   # a first start writes the env file
   "prepare_$platform"
 fi
