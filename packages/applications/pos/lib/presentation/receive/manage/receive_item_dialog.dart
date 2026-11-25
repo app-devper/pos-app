@@ -37,20 +37,37 @@ class _ReceiveItemDialogState extends State<ReceiveItemDialog> {
     showCenterDialog(
       context: context,
       builder: (_) => StockCountItemPickerWidget.product(
-        onProductSelected: (item) => _choose(item.id),
+        onProductSelected: _choose,
       ),
     );
   }
 
-  void _choose(String productId) {
-    final product = widget.products.where((p) => p.id == productId).firstOrNull;
-    if (product == null) return;
+  /// The page's own record of the picked product when it has one, else the
+  /// one the picker loaded: the picker's list may be newer than the page's.
+  void _choose(ProductUnitItem item) {
+    final product = widget.products.where((p) => p.id == item.id).firstOrNull ??
+        _fromPicked(item);
     setState(() {
       _product = product;
       _productName.text = product.name;
       _cost.text = '${product.costPrice}';
     });
   }
+
+  static Product _fromPicked(ProductUnitItem item) => Product(
+        id: item.id,
+        name: item.name,
+        nameEn: item.nameEn,
+        description: item.description,
+        costPrice: item.unit.costPrice,
+        unit: item.unit.unit,
+        status: item.status,
+        category: item.category,
+        createdDate: item.createdDate,
+        units: [item.unit],
+        prices: item.prices,
+        stocks: item.stocks,
+      );
 
   DateTime? _expiryDate(String value) {
     if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(value)) return null;

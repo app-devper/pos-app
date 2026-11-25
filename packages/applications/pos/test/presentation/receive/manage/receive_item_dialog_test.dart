@@ -54,68 +54,115 @@ Product _product(String id, String name, double cost) => Product(
       stocks: const [],
     );
 
+/// Opens the dialog for a page that knows [pageProducts], its picker
+/// searching [catalogue]; returns what the dialog hands back, once closed.
+Future<ReceiveItem? Function()> _openDialog(WidgetTester tester,
+    {required List<Product> pageProducts,
+    required List<Product> catalogue}) async {
+  tester.view.physicalSize = const Size(1400, 900);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  sl.registerFactory(
+      () => StockCountItemPickerViewModel(productRepo: _Catalogue(catalogue)));
+  ReceiveItem? added;
+  await tester.pumpWidget(MaterialApp(
+    home: Scaffold(
+      body: Builder(
+        builder: (context) => TextButton(
+          onPressed: () async {
+            added = await showDialog<ReceiveItem>(
+              context: context,
+              builder: (_) =>
+                  ReceiveItemDialog(receiveId: 'r1', products: pageProducts),
+            );
+          },
+          child: const Text('open'),
+        ),
+      ),
+    ),
+  ));
+  await tester.tap(find.text('open'));
+  await tester.pumpAndSettle();
+  return () => added;
+}
+
+/// Picks [name] in the product picker, found by searching [query].
+Future<void> _pick(WidgetTester tester, String query, String name) async {
+  await tester.tap(find.widgetWithText(TextFormField, 'สินค้า'));
+  await tester.pumpAndSettle();
+  await tester.enterText(
+      find.widgetWithText(TextField, 'ค้นหาสินค้า...'), query);
+  await tester.pump();
+  await tester.tap(find.text(name));
+  await tester.pumpAndSettle();
+}
+
+/// Fills the rest of the line and adds it.
+Future<void> _completeLine(WidgetTester tester) async {
+  await tester.enterText(
+      find.widgetWithText(TextFormField, 'จำนวน (ชิ้น)'), '5');
+  await tester.enterText(find.widgetWithText(TextFormField, 'เลขล็อต'), 'L1');
+  await tester.enterText(
+      find.widgetWithText(TextFormField, 'วันหมดอายุ (YYYY-MM-DD)'),
+      '2030-01-31');
+  await tester.tap(find.text('เพิ่มรายการ'));
+  await tester.pumpAndSettle();
+}
+
 void main() {
   tearDown(() async => sl.reset());
+
+  testWidgets(
+      'a product the picker found but the page had not loaded is still chosen',
+      (tester) async {
+    // Arrange: the page's list predates the product the picker loads
+    final added = await _openDialog(tester, pageProducts: [
+      _product('p1', 'Paracetamol', 5)
+    ], catalogue: [
+      _product('p1', 'Paracetamol', 5),
+      _product('p3', 'Cetirizine', 4.25),
+    ]);
+
+    // Act
+    await _pick(tester, 'ceti', 'Cetirizine');
+
+    // Assert: the field names it and the cost is prefilled
+    expect(find.widgetWithText(TextFormField, 'Cetirizine'), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, '4.25'), findsOneWidget);
+
+    // Act
+    await _completeLine(tester);
+
+    // Assert
+    expect(added()?.productId, 'p3');
+    expect(added()?.product?.name, 'Cetirizine');
+    expect(added()?.costPrice, 4.25);
+  });
 
   testWidgets(
       'a receipt line picks its product through the search and the cost '
       'follows', (tester) async {
     // Arrange
-    tester.view.physicalSize = const Size(1400, 900);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
     final catalogue = [
       _product('p1', 'Paracetamol', 5),
       _product('p2', 'Ibuprofen', 7.5),
     ];
-    sl.registerFactory(() =>
-        StockCountItemPickerViewModel(productRepo: _Catalogue(catalogue)));
-    ReceiveItem? added;
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: Builder(
-          builder: (context) => TextButton(
-            onPressed: () async {
-              added = await showDialog<ReceiveItem>(
-                context: context,
-                builder: (_) =>
-                    ReceiveItemDialog(receiveId: 'r1', products: catalogue),
-              );
-            },
-            child: const Text('open'),
-          ),
-        ),
-      ),
-    ));
-    await tester.tap(find.text('open'));
-    await tester.pumpAndSettle();
+    final added = await _openDialog(tester,
+        pageProducts: catalogue, catalogue: catalogue);
 
     // Act: open the picker from the product field, search, choose
-    await tester.tap(find.widgetWithText(TextFormField, 'สินค้า'));
-    await tester.pumpAndSettle();
-    await tester.enterText(
-        find.widgetWithText(TextField, 'ค้นหาสินค้า...'), 'ibu');
-    await tester.pump();
-    await tester.tap(find.text('Ibuprofen'));
-    await tester.pumpAndSettle();
+    await _pick(tester, 'ibu', 'Ibuprofen');
 
     // Assert: the field names it and the cost is prefilled
     expect(find.widgetWithText(TextFormField, 'Ibuprofen'), findsOneWidget);
     expect(find.widgetWithText(TextFormField, '7.5'), findsOneWidget);
 
     // Act: the rest of the line, then add it
-    await tester.enterText(
-        find.widgetWithText(TextFormField, 'จำนวน (ชิ้น)'), '5');
-    await tester.enterText(find.widgetWithText(TextFormField, 'เลขล็อต'), 'L1');
-    await tester.enterText(
-        find.widgetWithText(TextFormField, 'วันหมดอายุ (YYYY-MM-DD)'),
-        '2030-01-31');
-    await tester.tap(find.text('เพิ่มรายการ'));
-    await tester.pumpAndSettle();
+    await _completeLine(tester);
 
     // Assert
-    expect(added?.productId, 'p2');
-    expect(added?.costPrice, 7.5);
-    expect(added?.quantity, 5);
+    expect(added()?.productId, 'p2');
+    expect(added()?.costPrice, 7.5);
+    expect(added()?.quantity, 5);
   });
 }
