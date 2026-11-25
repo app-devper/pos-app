@@ -6,9 +6,8 @@
 // The six tests are one ordered chain sharing the run's product and bills:
 // each one fails at once, naming the step that broke, when an earlier one
 // failed. Bills cannot be deleted, only cancelled: every bill this file
-// records is cancelled before it ends (through the order repository when a
-// test did not already cancel it on screen), so the product's stock is whole
-// again before the product is deleted.
+// records is cancelled before it ends (on screen, or by the clean-up), so
+// the stock is whole again before the product is deleted.
 //
 // Stock on hand, read on the product list after each step:
 //   10 → sale of 3 → 7 → refused payment → 7 → sale of 2 → 5
@@ -51,9 +50,10 @@ void main() {
   initE2E();
 
   setUpAll(() {
-    debugPrint('E2E: this file records and then cancels $_billsRecorded '
-        'bills on the target; today\'s totals are affected until it '
-        'finishes');
+    debugPrint('E2E: this file records $_billsRecorded bills and cancels '
+        'both, and records 1 return that cannot be undone; the cancelled '
+        'bills stay listed in รายการขาย today and its Total keeps 75.00 of '
+        'them (server reports exclude them)');
     // Queued first, so it runs last: after every bill is cancelled.
     deleteProductAfterFile(_product);
     Cleanup.add('bills of "$_product"', _bills.cancelAll);
@@ -124,10 +124,8 @@ void main() {
 
       // Assert: the cart is empty, the bill is recorded
       await cart.expectSold();
-      // FINDING: the grid loads its products once, when the selling screen
-      // opens, and a sale does not reload it, so it still shows 10 until
-      // the user leaves the screen. Asserted as the app behaves; a skipped
-      // test below says what a user expects.
+      // FINDING: the grid loads once, when the screen opens, and a sale does
+      // not reload it, so it still shows 10 (skipped test below).
       expect(cart.tileShows(_product, 'คงเหลือ 10 ชิ้น'), findsOneWidget,
           reason: 'the grid currently keeps the stock it opened with');
       _cashBill = await _bills.recordNew(before);
@@ -227,6 +225,7 @@ void main() {
       await orders.chooseFilter('Store');
       expect(await orders.isListed(_promptPayBill), isFalse,
           reason: 'Store keeps only cash bills');
+      expect(await orders.isListed(_cashBill), isTrue);
       await orders.chooseFilter('All');
       await orders.openBill(_promptPayBill);
       expect(orders.lineShows(_product, '2'), findsOneWidget);
@@ -276,16 +275,17 @@ void main() {
 
       // Act: bill 2's line; 1 of its 2 is back already
       await orders.cancelLine(_product);
+      await orders.leaveBill();
 
-      // Assert
-      // FINDING: pos-api marks the line cancelled and sets the bill's total
-      // to 0, but the detail maps no line status and sums the lines itself,
-      // so the line and its 40.00 stay as they were. Asserted as the app
-      // behaves; a skipped test below says what a user expects.
+      // Assert, on the bill opened again: pos-api cancels the line and sets
+      // the bill to 0.00 (the list row shows 0.00), but the detail maps no
+      // line status and sums the lines itself (FINDING, skipped test below)
+      final cancelledLine = await billNow(_promptPayBill.id);
+      expect(cancelledLine.totalText, '0.00');
+      await orders.openBill(cancelledLine);
       expect(orders.lineShows(_product, '40.00'), findsOneWidget);
       expect(orders.detailShows('฿ 40.00'), findsOneWidget,
           reason: 'the detail currently still counts a cancelled line');
-      expect((await billNow(_promptPayBill.id)).totalText, '0.00');
       await orders.leaveBill();
 
       // Assert
@@ -297,13 +297,12 @@ void main() {
       await orders.cancelBill();
       _bills.markCancelled(_cashBill);
 
-      // Assert
-      // FINDING: pos-api only marks a cancelled bill and lists it, total
-      // and all, and the app maps no status, so it stays listed unmarked.
-      // Asserted as the app behaves; the skipped test below says what a
-      // user expects.
+      // Assert: pos-api only marks a cancelled bill, total and all, and the
+      // app maps no status, so it stays listed unmarked at 75.00 (FINDING,
+      // skipped test below); with bill 2 at 0.00 the Total keeps 75.00
       expect(await orders.isListed(_cashBill), isTrue,
           reason: 'the app currently keeps listing a cancelled bill');
+      expect((await billNow(_cashBill.id)).totalText, '75.00');
       await _expectOnHand(shell, 10);
     });
   });

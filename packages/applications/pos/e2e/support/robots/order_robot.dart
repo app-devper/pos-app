@@ -3,6 +3,7 @@
 // that cancel a line or the whole bill.
 
 // Flutter imports:
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
@@ -23,8 +24,12 @@ import 'shell_robot.dart';
 const _scrollStep = Offset(0, -300);
 const _step = Duration(milliseconds: 100);
 
-/// A list reload after a chip or a return from the detail.
-const _reload = Duration(seconds: 2);
+/// A reload shows nothing when it starts, so the list counts as reloaded
+/// once its rows and footer have read the same for this long...
+const _settled = Duration(seconds: 1);
+
+/// ...which must happen within this.
+const _reloadTimeout = Duration(seconds: 15);
 
 final _list = find.byType(OrderPage);
 final _detail = find.byType(OrderDetailPage);
@@ -97,7 +102,13 @@ class OrderRobot {
         reason: 'bill ${bill.code} (${bill.rowTitle}) is not listed');
     final count = _rows(bill).hitTestable().evaluate().length;
     for (var i = 0; i < count; i++) {
-      await tester.tap(_rows(bill).hitTestable().at(i));
+      if (i > 0) await isListed(bill);
+      final rows = _rows(bill).hitTestable();
+      if (i >= rows.evaluate().length) {
+        fail('bill ${bill.code}: its list rows changed while they were '
+            'tried (${rows.evaluate().length} left of $count)');
+      }
+      await tester.tap(rows.at(i));
       await tester.pump();
       await _awaitDetail();
       if (find.text(bill.header).evaluate().isNotEmpty) return;
@@ -126,13 +137,29 @@ class OrderRobot {
     await _settleList();
   }
 
+  /// Waits until the list's rows and footer have stopped changing for
+  /// [_settled] after a reload, then watches it for errors.
   Future<void> _settleList() async {
+    await pumpUntilFound(tester, find.text('Total').hitTestable());
+    var last = _listTexts();
+    final quiet = Stopwatch()..start();
     final clock = Stopwatch()..start();
-    while (clock.elapsed < _reload) {
+    while (quiet.elapsed < _settled) {
+      if (clock.elapsed > _reloadTimeout) {
+        fail('the bill list kept changing for $_reloadTimeout');
+      }
       await tester.pump(_step);
+      final now = _listTexts();
+      if (!listEquals(now, last)) {
+        last = now;
+        quiet.reset();
+      }
     }
     await shell.expectScreenWithoutError(find.text('Total'));
   }
+
+  /// What the list shows: every row's texts and the footer.
+  List<String> _listTexts() => form.textsUnder(_list);
 
   // --- The detail -----------------------------------------------------------
 
