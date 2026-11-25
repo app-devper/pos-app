@@ -35,4 +35,8 @@ class SupplierInfoState {
       hint: hint ?? this.hint,
     );
   }
+
+  /// This state with no hint: the shop has a profile now.
+  SupplierInfoState withoutHint() =>
+      SupplierInfoState(saving: saving, supplier: supplier);
 }

@@ -43,7 +43,7 @@ class SupplierInfoViewModel {
   Future<void> getSupplierInfo() async {
     try {
       final supplier = await supplierRepo.getSupplierInfo();
-      _state.value = _state.value.copyWith(supplier: supplier);
+      _state.value = _state.value.copyWith(supplier: supplier).withoutHint();
     } on NotFoundException {
       _state.value = _state.value.copyWith(hint: noShopProfileHint);
     } on Exception catch (e) {
@@ -55,6 +55,7 @@ class SupplierInfoViewModel {
     _state.value = _state.value.copyWith(saving: true);
     try {
       final updated = await supplierRepo.updateSupplierInfo(param);
+      _state.value = _state.value.withoutHint();
       _updated.emit(updated);
     } on Exception catch (e) {
       _errors.emit(toFailure(e).getMessage());
