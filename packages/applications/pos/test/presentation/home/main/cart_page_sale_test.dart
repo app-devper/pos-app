@@ -17,7 +17,7 @@ import '../../../support/app_fonts.dart';
 
 const _barcode = '111';
 
-class _Products implements ProductRepository {
+class SaleProducts implements ProductRepository {
   @override
   Future<List<Product>> getLocalProducts() async => [_product()];
 
@@ -30,10 +30,10 @@ class _Products implements ProductRepository {
 }
 
 /// Records every sale as bill [billCode], the code the server gave it.
-class _Orders implements OrderRepository {
+class SaleOrders implements OrderRepository {
   final String billCode;
 
-  _Orders(this.billCode);
+  SaleOrders(this.billCode);
 
   @override
   Future<OrderResult> createOrder(CreateOrderParam param) async => OrderResult(
@@ -92,18 +92,25 @@ Product _product() => Product(
       ],
     );
 
+/// Registers what the selling screen ([CartPage]) needs: one product, and
+/// sales recorded as bill [billCode]. Also used by the layout sweep.
+void registerSellingScreen(String billCode) {
+  sl.registerFactory(() => ProductSearchViewModel(productRepo: SaleProducts()));
+  sl.registerLazySingleton(() => CartViewModel(
+        productRepo: SaleProducts(),
+        till: Till(),
+        checkoutSaleUseCase:
+            CheckoutSaleUseCase(orderRepo: SaleOrders(billCode)),
+      ));
+}
+
 /// The selling screen on a wide window (grid, cart and slots side by side),
 /// recording sales as bill [billCode].
 Future<void> _openSellingScreen(WidgetTester tester, String billCode) async {
   tester.view.physicalSize = const Size(1400, 900);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
-  sl.registerFactory(() => ProductSearchViewModel(productRepo: _Products()));
-  sl.registerLazySingleton(() => CartViewModel(
-        productRepo: _Products(),
-        till: Till(),
-        checkoutSaleUseCase: CheckoutSaleUseCase(orderRepo: _Orders(billCode)),
-      ));
+  registerSellingScreen(billCode);
   await tester.pumpWidget(const MaterialApp(home: Scaffold(body: CartPage())));
   await _settle(tester);
 }

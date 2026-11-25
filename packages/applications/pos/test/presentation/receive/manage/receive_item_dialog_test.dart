@@ -13,10 +13,10 @@ import 'package:pos/domain/repositories/product_repository.dart';
 import 'package:pos/presentation/receive/manage/receive_item_dialog.dart';
 import 'package:pos/presentation/stock_count/manage/stock_count_item_picker_view_model.dart';
 
-class _Catalogue implements ProductRepository {
+class PickerCatalogue implements ProductRepository {
   final List<Product> products;
 
-  _Catalogue(this.products);
+  PickerCatalogue(this.products);
 
   @override
   Future<List<Product>> getProducts() async => products;
@@ -25,7 +25,7 @@ class _Catalogue implements ProductRepository {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
-Product _product(String id, String name, double cost) => Product(
+Product pickerProduct(String id, String name, double cost) => Product(
       id: id,
       name: name,
       price: 10,
@@ -62,8 +62,8 @@ Future<ReceiveItem? Function()> _openDialog(WidgetTester tester,
   tester.view.physicalSize = const Size(1400, 900);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
-  sl.registerFactory(
-      () => StockCountItemPickerViewModel(productRepo: _Catalogue(catalogue)));
+  sl.registerFactory(() =>
+      StockCountItemPickerViewModel(productRepo: PickerCatalogue(catalogue)));
   ReceiveItem? added;
   await tester.pumpWidget(MaterialApp(
     home: Scaffold(
@@ -117,10 +117,10 @@ void main() {
       (tester) async {
     // Arrange: the page's list predates the product the picker loads
     final added = await _openDialog(tester, pageProducts: [
-      _product('p1', 'Paracetamol', 5)
+      pickerProduct('p1', 'Paracetamol', 5)
     ], catalogue: [
-      _product('p1', 'Paracetamol', 5),
-      _product('p3', 'Cetirizine', 4.25),
+      pickerProduct('p1', 'Paracetamol', 5),
+      pickerProduct('p3', 'Cetirizine', 4.25),
     ]);
 
     // Act
@@ -144,8 +144,8 @@ void main() {
       'follows', (tester) async {
     // Arrange
     final catalogue = [
-      _product('p1', 'Paracetamol', 5),
-      _product('p2', 'Ibuprofen', 7.5),
+      pickerProduct('p1', 'Paracetamol', 5),
+      pickerProduct('p2', 'Ibuprofen', 7.5),
     ];
     final added = await _openDialog(tester,
         pageProducts: catalogue, catalogue: catalogue);

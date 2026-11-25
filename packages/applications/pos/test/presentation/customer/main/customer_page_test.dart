@@ -18,7 +18,7 @@ import 'package:pos/presentation/customer/main/customer_view_model.dart';
 import 'package:pos/presentation/customer/main/customers_view_model.dart';
 
 /// The server's customers: an add lands here, as on pos-api.
-class _ServerRepository implements CustomerRepository {
+class ServerCustomers implements CustomerRepository {
   final customers = <Customer>[_customer('1', 'ลูกค้าเดิม')];
 
   @override
@@ -46,8 +46,8 @@ Customer _customer(String id, String name) => Customer(
       type: 'General',
     );
 
-class _EnglishDelegate extends LocalizationsDelegate<Languages> {
-  const _EnglishDelegate();
+class EnglishLanguages extends LocalizationsDelegate<Languages> {
+  const EnglishLanguages();
 
   @override
   bool isSupported(Locale locale) => true;
@@ -70,12 +70,12 @@ void main() {
     tester.view.physicalSize = const Size(1400, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    final repo = _ServerRepository();
+    final repo = ServerCustomers();
     sl.registerFactory(() => CustomersViewModel(customerRepo: repo));
     sl.registerFactory(() => CustomerViewModel(customerRepo: repo));
     sl.registerFactory(() => CustomerAddViewModel(customerRepo: repo));
     await tester.pumpWidget(MaterialApp(
-      localizationsDelegates: const [_EnglishDelegate()],
+      localizationsDelegates: const [EnglishLanguages()],
       home: Scaffold(body: CustomerPage(onBack: () {})),
     ));
     await tester.pump();
@@ -103,12 +103,12 @@ void main() {
     tester.view.physicalSize = const Size(800, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    final repo = _ServerRepository();
+    final repo = ServerCustomers();
     sl.registerFactory(() => CustomersViewModel(customerRepo: repo));
     sl.registerFactory(() => CustomerViewModel(customerRepo: repo));
     sl.registerFactory(() => CustomerAddViewModel(customerRepo: repo));
     await tester.pumpWidget(MaterialApp(
-      localizationsDelegates: const [_EnglishDelegate()],
+      localizationsDelegates: const [EnglishLanguages()],
       home: Scaffold(body: CustomerPage(onBack: () {})),
     ));
     await tester.pump();

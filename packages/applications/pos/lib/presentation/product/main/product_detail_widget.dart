@@ -708,19 +708,9 @@ class _ProductDetailWidgetState extends State<ProductDetailWidget>
     BuildContext context, {
     required ProductStock stock,
   }) {
-    showCenterDialog(
-      minWidth: 320,
-      minHeight: 430,
-      maxHeight: 430,
-      maxWidth: 320,
-      context: context,
-      builder: (context) => ProductStockQuantityWidget(
-        stock: stock,
-        onComplete: (stock) {
-          widget.onEdit();
-        },
-      ),
-    );
+    showStockQuantityDialog(context, stock: stock, onComplete: (_) {
+      widget.onEdit();
+    });
   }
 
   void _showStockAdjustmentDialog(

@@ -14,21 +14,21 @@ import 'package:pos/presentation/customer/edit/customer_edit_page.dart';
 import 'package:pos/presentation/customer/edit/customer_edit_view_model.dart';
 
 /// Records what the edit form sends.
-class _RecordingRepository implements CustomerRepository {
+class RecordingCustomers implements CustomerRepository {
   CustomerParam? sent;
 
   @override
   Future<Customer> updateCustomerById(
       String customerId, CustomerParam param) async {
     sent = param;
-    return _wholesale;
+    return wholesaleCustomer;
   }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
-final _wholesale = Customer(
+final wholesaleCustomer = Customer(
   id: 'c1',
   code: 'CU1',
   name: 'ร้านขายส่ง',
@@ -45,12 +45,12 @@ void main() {
   testWidgets('editing only the phone of a wholesale customer keeps its type',
       (tester) async {
     // Arrange
-    final repo = _RecordingRepository();
+    final repo = RecordingCustomers();
     sl.registerFactory(() => CustomerEditViewModel(customerRepo: repo));
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
         body: CustomerEditPage(
-          customer: _wholesale,
+          customer: wholesaleCustomer,
           onBack: () {},
           onEdit: () {},
           onRemove: () {},

@@ -46,7 +46,7 @@ class Catalogue implements ProductRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-Product _paracetamol() {
+Product paracetamol() {
   return Product(
     id: 'p-1',
     name: 'Paracetamol',
@@ -82,7 +82,7 @@ void main() {
   late Catalogue catalogue;
 
   setUp(() {
-    catalogue = Catalogue([_paracetamol()]);
+    catalogue = Catalogue([paracetamol()]);
     sl.registerFactory<ProductViewModel>(() => ProductViewModel(
           productRepo: catalogue,
         ));
@@ -121,7 +121,7 @@ void main() {
         builder: (context) => Scaffold(
           body: TextButton(
             onPressed: () => Navigator.pushNamed(context, productEditRoute,
-                arguments: ProductArgument(_paracetamol())),
+                arguments: ProductArgument(paracetamol())),
             child: const Text('open'),
           ),
         ),
