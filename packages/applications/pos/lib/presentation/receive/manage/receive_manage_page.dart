@@ -9,7 +9,6 @@ import 'package:common/core/error/failure.dart';
 import 'package:design_system/widgets/app_bar.dart';
 import 'package:design_system/widgets/buttons.dart';
 import 'package:design_system/widgets/snack_bar.dart';
-import 'package:design_system/widgets/dropdown_input.dart';
 import 'package:intl/intl.dart';
 
 // Project imports:
@@ -24,6 +23,7 @@ import 'package:pos/domain/repositories/product_repository.dart';
 import 'receive_item_dialog.dart';
 import 'receive_manage_state.dart';
 import 'receive_manage_view_model.dart';
+import 'receive_supplier_picker.dart';
 
 class ReceiveManagePage extends StatefulWidget {
   final String? receiveId;
@@ -220,39 +220,18 @@ class _ReceiveManagePageState extends State<ReceiveManagePage> {
     );
   }
 
-  SizedBox _buildSuppliers() {
-    return SizedBox(
-      height: 50,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: <Widget>[
-          Flexible(
-            child: DropdownInput<Supplier>(
-              hintText: "ร้านขายสินค้า",
-              options: _suppliers,
-              value: _supplier,
-              onChanged: (Supplier? value) {
-                setState(() {
-                  _supplierId = value?.id;
-                });
-              },
-              getLabel: (Supplier value) => value.name,
-            ),
-          ),
-          const SizedBox(width: 12),
-          SizedBox(
-            width: 60,
-            height: 50,
-            child: ButtonIconWidget(
-              key: const Key("supplier"),
-              onClicked: () {
-                _nextToSupplierAdd(context);
-              },
-              icon: const Icon(Icons.add_business),
-            ),
-          ),
-        ],
-      ),
+  Widget _buildSuppliers() {
+    return ReceiveSupplierPicker(
+      suppliers: _suppliers,
+      value: _supplier,
+      onChanged: (Supplier? value) {
+        setState(() {
+          _supplierId = value?.id;
+        });
+      },
+      onAdd: () {
+        _nextToSupplierAdd(context);
+      },
     );
   }
 
