@@ -50,7 +50,7 @@ class OrderRobot {
   /// bills have loaded without an error.
   Future<void> openList() async {
     await shell.openOrders();
-    await shell.expectScreenWithoutError(find.text('Total'));
+    await shell.expectScreenWithoutError(find.text('ยอดรวม'));
     await pumpUntilGone(tester,
         find.descendant(of: _list, matching: find.byType(ProgressIndicator)));
   }
@@ -61,13 +61,13 @@ class OrderRobot {
     await _settleList();
   }
 
-  /// The rows showing [bill]'s title and total. Several bills can share a
-  /// minute and a total, so the detail's header tells them apart.
+  /// The rows showing [bill]'s number and total. The number is the row's
+  /// title, so this is one row; the detail's header still confirms it.
   Finder _rows(Bill bill) => find.descendant(
       of: _list,
       matching: find.byWidgetPredicate((w) =>
           w is ListTile &&
-          (w.title as Text?)?.data == bill.rowTitle &&
+          (w.title as Text?)?.data == bill.code &&
           (w.trailing as Text?)?.data == bill.totalText));
 
   /// Whether a row with [bill]'s title and total is listed, scrolling the
@@ -76,7 +76,7 @@ class OrderRobot {
         tester,
         find.descendant(of: _list, matching: find.byType(Scrollable)),
         _rows(bill),
-        what: 'the bill row ${bill.rowTitle} ${bill.totalText}',
+        what: 'the bill row ${bill.code} ${bill.totalText}',
       );
 
   /// Opens the row of [bill] whose detail header shows its code; tries each
@@ -121,7 +121,7 @@ class OrderRobot {
 
   Future<void> _awaitDetail() async {
     await shell.expectScreenWithoutError(
-        find.descendant(of: _detail, matching: find.text('Total')));
+        find.descendant(of: _detail, matching: find.text('ยอดรวม')));
     // The header fills in once the bill has loaded; the admin icons once
     // the role has been read.
     await pumpUntilFound(
@@ -142,7 +142,7 @@ class OrderRobot {
   /// Waits until the list's rows and footer have stopped changing for
   /// [_settled] after a reload, then watches it for errors.
   Future<void> _settleList() async {
-    await pumpUntilFound(tester, find.text('Total').hitTestable());
+    await pumpUntilFound(tester, find.text('ยอดรวม').hitTestable());
     var last = _listTexts();
     final quiet = Stopwatch()..start();
     final clock = Stopwatch()..start();
@@ -157,7 +157,7 @@ class OrderRobot {
         quiet.reset();
       }
     }
-    await shell.expectScreenWithoutError(find.text('Total'));
+    await shell.expectScreenWithoutError(find.text('ยอดรวม'));
   }
 
   /// What the list shows: every row's texts and the footer.

@@ -1,6 +1,7 @@
-# Sells two of the run's product, paid with the exact amount, and finds that bill, by its number,
-# in the bills list: the cart line, the totals, the payment, what the server
-# recorded and what the bill's own page shows.
+# Sells two of the run's product, paid with the exact amount, and finds that
+# bill, by the number the row shows, in the bills list: the cart line, the
+# totals, the payment, what the server recorded and what the bill's own
+# page shows.
 appId: app.devper.pos
 ---
 - runFlow:
@@ -43,12 +44,13 @@ appId: app.devper.pos
     file: steps/open_screen.yaml
     env:
       SCREEN: "รายการขาย"
+# The row shows the bill's number as text (and is read as one node with it).
 - extendedWaitUntil:
-    visible: "\\d+ ${output.billCode}.*"
+    visible: "\\d+\n?${output.billCode}.*"
     timeout: 15000
-- tapOn: "\\d+ ${output.billCode}.*"
+- tapOn: "\\d+\n?${output.billCode}.*"
 - extendedWaitUntil:
     visible: "${output.billCode} .*"
     timeout: 10000
-- assertVisible: "(Total\n?)?฿ 50\\.00"
+- assertVisible: "(ยอดรวม\n?)?฿ 50\\.00"
 - takeScreenshot: bill

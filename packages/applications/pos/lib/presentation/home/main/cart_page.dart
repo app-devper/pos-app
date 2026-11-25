@@ -24,6 +24,7 @@ import 'package:pos/presentation/home/main/cart_widget.dart';
 import 'package:pos/presentation/home/main/customer_search.dart';
 import 'package:pos/presentation/home/main/payment_screen.dart';
 import 'package:pos/presentation/home/main/product_search.dart';
+import 'package:pos/presentation/home/main/sale_recorded_message.dart';
 import 'package:design_system/theme/app_colors.dart';
 import 'cart_view_model.dart';
 
@@ -74,7 +75,7 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
 
   void _onOrderPlaced(OrderResult result) {
     _snackBar.hideAll();
-    _snackBar.showSnackBar(text: "Order success");
+    _snackBar.showSnackBar(text: saleRecordedMessage(result.data.code));
     if (_alertKey.currentContext != null) {
       Navigator.of(context).pop();
     }
@@ -160,7 +161,7 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
             onSelected: (serialNumber) {
               _viewModel.addOrderItem(serialNumber);
             },
-            reloadOn: _viewModel.orderPlaced,
+            saleRecorded: _viewModel.orderPlaced,
           ),
         ),
         Container(width: 1, color: AppColors.of(context).border),
@@ -185,7 +186,7 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
             onSelected: (serialNumber) {
               _viewModel.addOrderItem(serialNumber);
             },
-            reloadOn: _viewModel.orderPlaced,
+            saleRecorded: _viewModel.orderPlaced,
           ),
         ),
         Container(width: 1, color: AppColors.of(context).border),
@@ -627,7 +628,7 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
               onSelected: (serialNumber) {
                 _viewModel.addOrderItem(serialNumber);
               },
-              reloadOn: _viewModel.orderPlaced,
+              saleRecorded: _viewModel.orderPlaced,
             ),
           ),
         ],

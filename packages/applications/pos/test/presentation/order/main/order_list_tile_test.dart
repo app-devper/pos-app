@@ -23,20 +23,34 @@ OrderSummary _order() => OrderSummary(
 Widget _host(Widget child) => MaterialApp(home: Scaffold(body: child));
 
 void main() {
-  testWidgets('a bill row names its bill number to assistive technology',
+  testWidgets('a bill row shows its bill number above its time',
+      (tester) async {
+    // Arrange / Act
+    await tester.pumpWidget(_host(OrderListTile(
+        index: 0, order: _order(), showCost: true, onTap: () {})));
+
+    // Assert
+    final code = find.text('OD_202611250007');
+    final time = find.text(_order().getCreatedDate());
+    expect(code, findsOneWidget);
+    expect(time, findsOneWidget);
+    expect(tester.getTopLeft(code).dy, lessThan(tester.getTopLeft(time).dy));
+    expect(find.text('50.00'), findsOneWidget);
+    expect(find.text('ต้นทุน: 20.00  กำไร: 30.00'), findsOneWidget);
+  });
+
+  testWidgets('a bill row is read out by its visible text, not a hidden label',
       (tester) async {
     // Arrange
     final semantics = tester.ensureSemantics();
 
     // Act
     await tester.pumpWidget(_host(OrderListTile(
-        index: 0, order: _order(), showCost: true, onTap: () {})));
+        index: 0, order: _order(), showCost: false, onTap: () {})));
 
-    // Assert: the row still shows its position, the label adds the number.
-    expect(find.text('1'), findsOneWidget);
-    expect(find.bySemanticsLabel(RegExp(r'^1 OD_202611250007')), findsOneWidget);
-    expect(find.text('50.00'), findsOneWidget);
-    expect(find.text('Cost: 20.00  Profit: 30.00'), findsOneWidget);
+    // Assert
+    expect(find.bySemanticsLabel(RegExp(r'^1 OD_202611250007')), findsNothing);
+    expect(find.bySemanticsLabel(RegExp('OD_202611250007')), findsOneWidget);
     semantics.dispose();
   });
 
@@ -47,8 +61,8 @@ void main() {
         index: 2, order: _order(), showCost: false, onTap: () {})));
 
     // Assert
-    expect(find.text('3'), findsOneWidget);
-    expect(find.textContaining('Cost:'), findsNothing);
+    expect(find.text('OD_202611250007'), findsOneWidget);
+    expect(find.textContaining('ต้นทุน'), findsNothing);
   });
 
   testWidgets('tapping a bill row opens that bill', (tester) async {

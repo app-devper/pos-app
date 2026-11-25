@@ -123,7 +123,7 @@ void main() {
       await cart.submitPayment();
 
       // Assert: the cart is empty, the bill is recorded
-      await cart.expectSold();
+      final soldMessage = await cart.expectSold();
       // The sale reloads the grid (was finding #4).
       await cart.filterGrid(_product, productName: _product);
       expect(cart.tileShows(_product, 'คงเหลือ 7 ชิ้น'), findsOneWidget,
@@ -131,6 +131,8 @@ void main() {
       await cart.clearGridFilter();
       _cashBill = await _bills.recordNew(before);
       expect(_cashBill.totalText, '75.00');
+      expect(soldMessage, 'ขายสำเร็จ เลขที่บิล ${_cashBill.code}',
+          reason: 'the sale names the bill the server recorded');
 
       // Assert: stock and the bill where a user sees them
       await _expectOnHand(shell, 7);

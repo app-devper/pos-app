@@ -64,7 +64,8 @@ class Bill {
   final String id;
   final String code;
 
-  /// The list row's title: `dd/MM/yyyy HH:mm`, then ` Name: <customer>`.
+  /// The list row's line under the bill number: `dd/MM/yyyy HH:mm`, then
+  /// ` Name: <customer>`.
   final String rowTitle;
 
   /// The detail's header: `<code> dd/MM/yyyy HH:mm`.

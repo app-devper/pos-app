@@ -97,7 +97,7 @@ void main() {
       addTearDown(sales.close);
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
-          body: ProductSearch(onSelected: (_) {}, reloadOn: sales.stream),
+          body: ProductSearch(onSelected: (_) {}, saleRecorded: sales.stream),
         ),
       ));
       await tester.pump();

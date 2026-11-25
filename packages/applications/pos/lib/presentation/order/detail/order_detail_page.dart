@@ -23,6 +23,7 @@ import 'package:pos/domain/model/sale/money.dart';
 import 'package:pos/domain/model/supplier/supplier.dart';
 import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/constants.dart';
+import 'package:pos/presentation/order/bill_summary.dart';
 import 'package:design_system/widgets/dialogs.dart';
 import 'package:pos/presentation/order/argument.dart';
 import 'package:pos/presentation/order/core/export_pdf.dart';
@@ -211,7 +212,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         children: <Widget>[
           _buildOrderHeader(),
           _buildOrderItem(context),
-          _buildSummaryTotal(),
+          BillSummary(
+              total: getTotalPrice(),
+              totalCost: getTotalCostPrice(),
+              showCost: isAdmin),
         ],
       ),
     );
@@ -254,8 +258,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             title: Text(content.product?.name ?? ""),
             trailing: Text(format.format(content.paid())),
             subtitle: isAdmin
-                ? Text(
-                    "Cost : ${format.format(content.costPrice)}  Profit : ${format.format(content.paid() - content.costPrice)}")
+                ? Text(costAndProfitText(
+                    cost: content.costPrice,
+                    profit: content.paid() - content.costPrice))
                 : null,
             onTap: () {
               if (isAdmin) {
@@ -317,69 +322,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           ));
     } else {
       return _buildQuantityColumn(content);
-    }
-  }
-
-  Widget _buildSummaryTotal() {
-    return Container(
-      padding: const EdgeInsets.all(defaultPagePadding),
-      child: Column(
-        children: <Widget>[
-          _buildPrice(),
-          _buildCostPrice(),
-          _buildProfit(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPrice() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: <Widget>[
-        const Text(
-          'Total',
-        ),
-        Text(
-          '฿ ${format.format(getTotalPrice())}',
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCostPrice() {
-    if (isAdmin) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          const Text(
-            'Total Cost',
-          ),
-          Text(
-            '฿ ${format.format(getTotalCostPrice())}',
-          ),
-        ],
-      );
-    } else {
-      return Container();
-    }
-  }
-
-  Widget _buildProfit() {
-    if (isAdmin) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          const Text(
-            'Total Profit',
-          ),
-          Text(
-            '฿ ${format.format(getTotalPrice() - getTotalCostPrice())}',
-          ),
-        ],
-      );
-    } else {
-      return Container();
     }
   }
 

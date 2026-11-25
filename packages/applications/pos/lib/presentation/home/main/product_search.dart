@@ -22,13 +22,13 @@ import 'package:pos/presentation/home/main/product_search_view_model.dart';
 class ProductSearch extends StatefulWidget {
   final Function(String) onSelected;
 
-  /// Each event reloads the products: a recorded sale has moved their stock.
-  final Stream<Object?>? reloadOn;
+  /// Each recorded sale reloads the products: it has moved their stock.
+  final Stream<Object?>? saleRecorded;
 
   const ProductSearch({
     super.key,
     required this.onSelected,
-    this.reloadOn,
+    this.saleRecorded,
   });
 
   @override
@@ -43,23 +43,27 @@ class _ProductSearchState extends State<ProductSearch> {
   final _serialNumberNode = FocusNode();
 
   late ProductSearchViewModel _viewModel;
-  StreamSubscription<Object?>? _reloads;
+  StreamSubscription<Object?>? _sales;
 
   @override
   void initState() {
     _viewModel = sl<ProductSearchViewModel>();
     _viewModel.prepareData();
-    _reloads = widget.reloadOn?.listen((_) => _viewModel.refresh());
+    _sales = widget.saleRecorded?.listen((_) => _onSaleRecorded());
     super.initState();
   }
 
   @override
   void dispose() {
-    _reloads?.cancel();
+    _sales?.cancel();
     _serialNumberEditingController.dispose();
     _serialNumberNode.dispose();
     _viewModel.dispose();
     super.dispose();
+  }
+
+  void _onSaleRecorded() {
+    _viewModel.refresh();
   }
 
   @override

@@ -20,7 +20,9 @@ import 'shell_robot.dart';
 
 const _searchHint = 'ค้นหาชื่อสินค้า หรือสแกนบาร์โค้ด';
 const _emptyCart = 'เลือกสินค้าเพื่อเริ่มขาย';
-const _sold = 'Order success';
+
+/// The success bar after a sale: `ขายสำเร็จ`, then `เลขที่บิล <code>`.
+final _sold = find.textContaining(RegExp(r'^ขายสำเร็จ'));
 
 final _grid = find.byType(ProductSearch);
 final _payment = find.byType(PaymentScreen);
@@ -213,27 +215,27 @@ class CartRobot {
         await pumpUntilGone(tester, _payment);
       });
 
-  /// "Order success" shows, the payment closes and the cart is empty. The
-  /// snackbar never closes on its own (a known finding), so it is cleared
-  /// the way a user would.
-  Future<void> expectSold() async {
+  /// The sale's success bar shows, the payment closes and the cart is
+  /// empty; returns the bar's text once it has closed by itself.
+  Future<String> expectSold() async {
+    var message = '';
     await onPaymentDialog(() async {
-      await pumpUntilFound(tester, find.text(_sold).hitTestable(),
+      await pumpUntilFound(tester, _sold.hitTestable(),
           timeout: const Duration(seconds: 30));
+      message = tester.widget<Text>(_sold.hitTestable().first).data ?? '';
       await pumpUntilGone(tester, _payment);
     });
     expect(isEmpty, isTrue, reason: 'a sold cart is emptied');
-    await tester.tap(find.text('Clear').hitTestable());
-    await tester.pump();
     await shell.waitForSnackbarToClose();
+    return message;
   }
 
   /// Opens the payment, takes [tendered] (or the exact amount) and waits
   /// for the sale.
-  Future<void> pay({bool promptPay = false, String? tendered}) async {
+  Future<String> pay({bool promptPay = false, String? tendered}) async {
     await openPayment(promptPay: promptPay, tendered: tendered);
     await submitPayment();
-    await expectSold();
+    return expectSold();
   }
 
   /// Types [text] into the grid's search field, which filters the grid (as
