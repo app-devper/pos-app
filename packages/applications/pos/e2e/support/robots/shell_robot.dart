@@ -10,15 +10,19 @@ import 'package:design_system/widgets/title_bar.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // Project imports:
+import '../env.dart';
 import '../error_check.dart';
 import '../pump.dart';
 
 /// Long enough for a screen's first load to answer and, if it fails, for the
-/// error snackbar or alert to show; the local server answers in well under it.
-const _errorWatch = Duration(seconds: 2);
+/// error snackbar or alert to show: the local server answers in well under
+/// 2 s; the hosted API, over the internet, gets 6 s. A slower answer can
+/// still show an error after the watch has ended.
+final _errorWatch = Duration(seconds: E2EEnv.isHosted ? 6 : 2);
 
-/// The role is read from the stored session after the shell first draws.
-const _roleWatch = Duration(seconds: 1);
+/// The role is read from the stored session after the shell first draws
+/// (a keep-alive call on the hosted target).
+final _roleWatch = Duration(seconds: E2EEnv.isHosted ? 3 : 1);
 const _step = Duration(milliseconds: 100);
 
 final _snackbar = find.byKey(const Key('snackbar'));
