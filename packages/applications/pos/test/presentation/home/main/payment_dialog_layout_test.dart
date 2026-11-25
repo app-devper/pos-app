@@ -12,13 +12,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pos/presentation/home/main/payment_screen.dart';
 import '../../../support/app_fonts.dart';
 
-Widget _host() => MaterialApp(
+Widget _host({void Function(double, String)? onCompleted}) => MaterialApp(
       theme: CustomTheme.mainTheme,
       home: Scaffold(
         body: Builder(
           builder: (context) => TextButton(
             onPressed: () => showPaymentDialog(context,
-                amount: 1234.5, onCompleted: (_, __) {}, onError: () {}),
+                amount: 1234.5,
+                onCompleted: onCompleted ?? (_, __) {},
+                onError: () {}),
             child: const Text('open'),
           ),
         ),
@@ -58,4 +60,49 @@ void main() {
           find.ancestor(of: due, matching: find.byType(Container)).first);
     });
   }
+
+  for (final size in [phoneSize, desktopSize]) {
+    testWidgets(
+        'the payment dialog fits its amounts at a larger system text size, '
+        '$size', (tester) async {
+      // Arrange
+      useViewSize(tester, size);
+      tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await tester.pumpWidget(_host());
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      // Act
+      for (final digit in ['2', '0', '0', '0']) {
+        await tester.tap(find.byKey(Key('btn_$digit')));
+        await tester.pump();
+      }
+
+      // Assert
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('on a phone the pay button can be scrolled to and pressed',
+      (tester) async {
+    // Arrange
+    useViewSize(tester, phoneSize);
+    final paid = <double>[];
+    await tester
+        .pumpWidget(_host(onCompleted: (amount, _) => paid.add(amount)));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    final pay = find.widgetWithText(ElevatedButton, 'รับชำระพอดี ไม่มีเงินทอน');
+
+    // Act
+    await tester.ensureVisible(pay);
+    await tester.pumpAndSettle();
+    await tester.tap(pay);
+    await tester.pump();
+
+    // Assert
+    expect(tester.takeException(), isNull);
+    expect(paid, [1234.5]);
+  });
 }

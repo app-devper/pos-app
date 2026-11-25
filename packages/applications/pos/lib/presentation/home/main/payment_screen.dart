@@ -265,9 +265,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
+  static const _amountBoxHeight = 80.0;
+
   Widget _buildAmountSection(String title, String amount) {
     return Container(
-      height: 80,
+      // At least 80 px, taller when a larger system text size needs it.
+      constraints: const BoxConstraints(minHeight: _amountBoxHeight),
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       decoration: BoxDecoration(
@@ -303,7 +306,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
 
     return Container(
-      height: 80,
+      // At least 80 px, taller when a larger system text size needs it.
+      constraints: const BoxConstraints(minHeight: _amountBoxHeight),
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       decoration: BoxDecoration(
