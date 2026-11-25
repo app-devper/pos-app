@@ -22,7 +22,7 @@ Widget _host(Widget child, {TestLanguages languages = thaiLanguages}) =>
 void main() {
   setUpAll(loadAppFonts);
 
-  testWidgets('a cart line says which product its quantity belongs to',
+  testWidgets('a cart line quantity button says which line it changes',
       (tester) async {
     // Arrange
     final semantics = tester.ensureSemantics();
@@ -42,9 +42,10 @@ void main() {
       onEditPrice: () {},
       onToggleOversell: () {},
     )));
-    // Assert: the visible text is unchanged, the label names the product.
+    // Assert: the visible text is unchanged, the label names the line (the
+    // line's own node reads the quantity: text_beside_controls_semantics_test)
     expect(find.text('2x'), findsOneWidget);
-    expect(find.bySemanticsLabel('2x Paracetamol 500'), findsOneWidget);
+    expect(find.bySemanticsLabel('แก้ไขจำนวน Paracetamol 500'), findsOneWidget);
     semantics.dispose();
   });
 

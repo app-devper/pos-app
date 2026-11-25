@@ -5,6 +5,8 @@ import 'package:design_system/theme/app_colors.dart';
 // Package imports:
 import 'package:common/core/ext/number_ext.dart';
 import 'package:pos/localizations/language/languages.dart';
+import 'package:pos/domain/model/customer/customer.dart';
+import 'package:pos/presentation/core/readable_tile.dart';
 
 class ProductItem extends StatelessWidget {
   final String name;
@@ -235,7 +237,8 @@ class CartOrderItem extends StatelessWidget {
 
     return Column(
       children: [
-        ListTile(
+        ReadableTile(
+          label: _label(),
           onTap: () {
             onEditPrice.call();
           },
@@ -325,9 +328,10 @@ class CartOrderItem extends StatelessWidget {
                     alignment: Alignment.center,
                     child: Text(
                       '${quantity}x',
-                      // Says which line the quantity belongs to: on the web the
-                      // line's title does not reach the semantics tree.
-                      semanticsLabel: '${quantity}x $title',
+                      // The line's own node reads the quantity; the button
+                      // says what it does, to which line.
+                      semanticsLabel:
+                          Languages.of(context).changeQuantity(title),
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       style: const TextStyle(
@@ -362,7 +366,8 @@ class CartOrderItem extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 4),
-                getPriceDiscount(),
+                // Read in the line's own node.
+                ExcludeSemantics(child: getPriceDiscount()),
               ],
             ),
           ),
@@ -372,6 +377,15 @@ class CartOrderItem extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  /// What the line reads: quantity, product, unit and amount to pay, then
+  /// the full amount when discounted, or else the price's kind.
+  String _label() {
+    final full = '฿${formatDouble(price * quantity)}';
+    if (discount <= 0) return '${quantity}x $title $unit $full $priceDetail';
+    final paid = '฿${formatDouble((price - discount) * quantity)}';
+    return '${quantity}x $title $unit $paid ลดจาก $full';
   }
 
   /// A round icon button of the line, named for a screen reader.
@@ -425,6 +439,44 @@ class CartCustomerRemoveButton extends StatelessWidget {
       onPressed: onPressed,
       color: Colors.red,
       icon: const Icon(Icons.close, size: 24),
+    );
+  }
+}
+
+/// The sale's customer: none yet (tap to choose one), or the chosen one's
+/// name and code with a button that takes them off the sale.
+class CartCustomerTile extends StatelessWidget {
+  final Customer? customer;
+  final VoidCallback onChoose;
+  final VoidCallback onRemove;
+
+  const CartCustomerTile({
+    super.key,
+    required this.customer,
+    required this.onChoose,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final chosen = customer;
+    final title = chosen == null ? 'ข้อมูลลูกค้า' : chosen.name;
+    final subtitle = chosen == null ? 'เลือกลูกค้า' : chosen.code;
+    return ReadableTile(
+      label: '$title\n$subtitle',
+      leading: const CircleAvatar(
+        radius: 20,
+        child: Icon(Icons.person),
+      ),
+      title: Text(title, style: const TextStyle(fontSize: 18)),
+      subtitle: Text(subtitle, style: const TextStyle(fontSize: 14)),
+      trailing: chosen == null
+          ? const Icon(Icons.arrow_forward_ios, size: 16)
+          : CartCustomerRemoveButton(
+              customerName: chosen.name,
+              onPressed: onRemove,
+            ),
+      onTap: onChoose,
     );
   }
 }

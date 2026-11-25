@@ -136,10 +136,14 @@ class CartRobot {
         (w) => w is TextField && w.decoration?.hintText == 'ค้นหา...');
     await tester.enterText(search.hitTestable(), name);
     await tester.pump();
+    // Only the picker's rows have plain Text titles: the cart's own rows
+    // (ReadableTile) title theirs with a semantics label.
     final row = find.byWidgetPredicate((w) =>
         w is ListTile &&
-        (w.title as Text?)?.data == name &&
-        (w.subtitle as Text?)?.data == code);
+        w.title is Text &&
+        (w.title as Text).data == name &&
+        w.subtitle is Text &&
+        (w.subtitle as Text).data == code);
     await pumpUntilFound(tester, row.hitTestable());
     await tester.tap(row.hitTestable());
     await tester.pump();

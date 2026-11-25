@@ -11,6 +11,7 @@ import 'package:pos/domain/model/order/order_item_detail.dart';
 import 'package:pos/presentation/order/bill_summary.dart';
 import 'package:pos/presentation/order/cancelled_mark.dart';
 import 'package:pos/localizations/language/languages.dart';
+import 'package:pos/presentation/core/readable_tile.dart';
 
 /// One line of a bill: its product, quantity (with its oversold and
 /// returned marks), what was paid, and for an admin its cost and profit and
@@ -39,15 +40,37 @@ class OrderLineTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
+    return ReadableTile(
+      label: _label(),
       leading: _buildListMenu(context),
       title: Text(line.product?.name ?? ""),
-      trailing: Text(_format.format(line.paid()),
-          style: amountStyle(cancelled: line.isCancelled)),
+      trailing: ExcludeSemantics(
+        child: Text(_format.format(line.paid()),
+            style: amountStyle(cancelled: line.isCancelled)),
+      ),
       subtitle: _buildSubtitle(),
       onTap: onTap,
     );
   }
+
+  /// What the line reads, in the order a sighted user reads it: quantity
+  /// and its marks, product, cancelled mark, cost and profit, amount.
+  String _label() => [
+        '${line.quantity}',
+        if (line.oversoldQty > 0) _oversold,
+        if (line.returnedQty > 0) _returned,
+        line.product?.name ?? '',
+        if (line.isCancelled) cancelledLabel,
+        if (isAdmin) _costAndProfit,
+        _format.format(line.paid()),
+      ].join(' ');
+
+  String get _oversold => 'เกิน ${line.oversoldQty}';
+
+  String get _returned => 'คืน ${line.returnedQty}';
+
+  String get _costAndProfit => costAndProfitText(
+      cost: line.costPrice, profit: line.paid() - line.costPrice);
 
   /// The cancelled mark sits here, not by the quantity, so that a line
   /// with its oversold or returned marks still fits its row.
@@ -58,15 +81,15 @@ class OrderLineTile extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (line.isCancelled) const CancelledBadge(),
-        if (isAdmin)
-          Text(costAndProfitText(
-              cost: line.costPrice, profit: line.paid() - line.costPrice)),
+        if (isAdmin) Text(_costAndProfit),
       ],
     );
   }
 
   Widget _buildListMenu(BuildContext context) {
-    if (!isAdmin || line.isCancelled) return _buildQuantityColumn(context);
+    if (!isAdmin || line.isCancelled) {
+      return ExcludeSemantics(child: _buildQuantityColumn(context));
+    }
     final names = Languages.of(context);
     final product = line.product?.name ?? '';
     return SizedBox(
@@ -80,7 +103,7 @@ class OrderLineTile extends StatelessWidget {
           if (line.quantity - line.returnedQty > 0)
             _action(
                 Icons.keyboard_return, names.returnBillLine(product), onReturn),
-          _buildQuantityColumn(context),
+          ExcludeSemantics(child: _buildQuantityColumn(context)),
         ],
       ),
     );
@@ -99,11 +122,10 @@ class OrderLineTile extends StatelessWidget {
       children: <Widget>[
         Text('${line.quantity}'),
         if (line.oversoldQty > 0)
-          StatusBadge(label: 'เกิน ${line.oversoldQty}', color: Colors.orange),
+          StatusBadge(label: _oversold, color: Colors.orange),
         if (line.returnedQty > 0)
           StatusBadge(
-              label: 'คืน ${line.returnedQty}',
-              color: AppColors.of(context).textSecondary),
+              label: _returned, color: AppColors.of(context).textSecondary),
       ],
     );
   }

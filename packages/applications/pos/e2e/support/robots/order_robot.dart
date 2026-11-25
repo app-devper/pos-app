@@ -20,6 +20,7 @@ import '../pump.dart';
 import 'form_driver.dart';
 import 'scroll.dart';
 import 'shell_robot.dart';
+import 'package:pos/presentation/order/detail/order_line_tile.dart';
 
 /// One drag of the list; a few rows.
 const _step = Duration(milliseconds: 100);
@@ -67,8 +68,10 @@ class OrderRobot {
       of: _list,
       matching: find.byWidgetPredicate((w) =>
           w is ListTile &&
-          (w.title as Text?)?.data == bill.code &&
-          (w.trailing as Text?)?.data == bill.totalText));
+          w.title is Text &&
+          (w.title as Text).data == bill.code &&
+          w.trailing is Text &&
+          (w.trailing as Text).data == bill.totalText));
 
   /// Whether a row with [bill]'s title and total is listed, scrolling the
   /// whole list (today's bills, in the server's order).
@@ -188,7 +191,7 @@ class OrderRobot {
       .descendant(
           of: _detail,
           matching: find.byWidgetPredicate(
-              (w) => w is ListTile && (w.title as Text?)?.data == productName))
+              (w) => w is OrderLineTile && w.line.product?.name == productName))
       .hitTestable();
 
   /// [text] (exactly) on [productName]'s row: its quantity, paid amount or

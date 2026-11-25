@@ -215,12 +215,18 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                'ตะกร้าสินค้า #${_viewModel.openCart + 1}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+              // A header node of its own: on the web a text merged into a
+              // node with children is not written into the page.
+              child: Semantics(
+                container: true,
+                header: true,
+                child: Text(
+                  'ตะกร้าสินค้า #${_viewModel.openCart + 1}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -272,30 +278,10 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
         const Divider(height: 1),
         _buildCartOrderItems(),
         const Divider(height: 1),
-        ListTile(
-          leading: const CircleAvatar(
-            radius: 20,
-            child: Icon(Icons.person),
-          ),
-          title: Text(
-            !showCustomer ? 'ข้อมูลลูกค้า' : _viewModel.customer?.name ?? "",
-            style: const TextStyle(fontSize: 18),
-          ),
-          subtitle: Text(
-            !showCustomer ? 'เลือกลูกค้า' : _viewModel.customer?.code ?? "",
-            style: const TextStyle(fontSize: 14),
-          ),
-          trailing: !showCustomer
-              ? const Icon(Icons.arrow_forward_ios, size: 16)
-              : CartCustomerRemoveButton(
-                  customerName: _viewModel.customer?.name ?? "",
-                  onPressed: () {
-                    _viewModel.setCustomer(null);
-                  },
-                ),
-          onTap: () {
-            _showCustomerDialog();
-          },
+        CartCustomerTile(
+          customer: showCustomer ? _viewModel.customer : null,
+          onChoose: _showCustomerDialog,
+          onRemove: () => _viewModel.setCustomer(null),
         ),
         const Divider(height: 1),
         ListTile(
