@@ -118,10 +118,13 @@ start_emulator() {
   done
 }
 
-artefact() { # artefact <apk|web> <path it would have>
+artefact() { # artefact <apk|web> <path it would have>; prints the artefact's path
+  local built
   if [ "${E2E_MAESTRO_REUSE_BUILD:-0}" = 1 ] && [ -e "$2" ]; then printf '%s\n' "$2"; return; fi
   log "building the $1 (a few minutes the first time)" >&2
-  "$SCRIPT_DIR/maestro-build.sh" "$1" | tail -1
+  built="$("$SCRIPT_DIR/maestro-build.sh" "$1" 2> "$OUT_ROOT/build-$1.log")" \
+    || { tail -30 "$OUT_ROOT/build-$1.log" >&2; die "the $1 build failed (log: $OUT_ROOT/build-$1.log)"; }
+  printf '%s\n' "$built" | tail -1
 }
 
 prepare_android() {
@@ -142,7 +145,7 @@ prepare_web() {
   dir="$(artefact web "$APP_DIR/build/web-maestro")"
   python3 -m http.server "$WEB_PORT" --bind 127.0.0.1 --directory "$dir" > "$OUT_ROOT/web-server.log" 2>&1 &
   server_pid=$!
-  until curl -fsS -o /dev/null "http://127.0.0.1:$WEB_PORT/"; do
+  until curl -fs -o /dev/null "http://127.0.0.1:$WEB_PORT/"; do
     [ "$waited" -lt 20 ] || die "the web server did not answer on $WEB_PORT"
     sleep 1; waited=$((waited + 1))
   done

@@ -1,0 +1,33 @@
+# Sign-in: a wrong password is refused with UM's code and the user stays on
+# sign-in; each of the three roles signs in to the selling screen and out again.
+appId: app.devper.pos
+---
+- runFlow:
+    file: steps/fill_sign_in.yaml
+    env:
+      USERNAME: ${MAESTRO_USERNAME}
+      PASSWORD: ${MAESTRO_PASSWORD + 'x'}
+- extendedWaitUntil:
+    visible: ".*\\[UM-401-004\\].*"
+    timeout: 15000
+- tapOn: "ตกลง"
+- assertVisible: "ยินดีต้อนรับ"
+- assertNotVisible: "ยอดรวมสุทธิ.*"
+- runFlow:
+    file: steps/sign_in.yaml
+    env:
+      USERNAME: ${MAESTRO_USERNAME}
+      PASSWORD: ${MAESTRO_PASSWORD}
+- runFlow: steps/sign_out.yaml
+- runFlow:
+    file: steps/sign_in.yaml
+    env:
+      USERNAME: ${MAESTRO_MANAGER_USERNAME}
+      PASSWORD: ${MAESTRO_MANAGER_PASSWORD}
+- runFlow: steps/sign_out.yaml
+- runFlow:
+    file: steps/sign_in.yaml
+    env:
+      USERNAME: ${MAESTRO_USER_USERNAME}
+      PASSWORD: ${MAESTRO_USER_PASSWORD}
+- runFlow: steps/sign_out.yaml

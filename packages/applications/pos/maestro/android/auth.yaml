@@ -1,0 +1,8 @@
+appId: app.devper.pos
+name: android - sign in and out, a wrong password, each role
+env:
+  LAYOUT: narrow
+---
+- launchApp:
+    clearState: true
+- runFlow: ../shared/auth.yaml
