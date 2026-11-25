@@ -1,0 +1,5 @@
+url: http://127.0.0.1:8090
+name: web - shared sell flow (spike)
+---
+- launchApp
+- runFlow: shared/sell-and-sign-out.yaml

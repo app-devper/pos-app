@@ -1,0 +1,6 @@
+appId: app.devper.pos
+name: android - shared sell flow (spike)
+---
+- launchApp:
+    clearState: true
+- runFlow: shared/sell-and-sign-out.yaml
