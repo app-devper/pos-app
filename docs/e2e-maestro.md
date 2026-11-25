@@ -13,8 +13,8 @@ check that the main paths work on a phone and on the web.
 | `auth` | a wrong password is refused with UM's code and the user stays on sign-in; admin, manager and user each sign in to the selling screen and out |
 | `navigation` | every main menu item opens its own screen (bills, products, the five manage tiles, profile) and selling is reachable again |
 | `sell_and_bill` | two of a product in the cart, the totals, a payment of the exact amount, on the web a scan typed straight after paying lands in the search field, a new bill on the server with that total, and that bill found by the number its row shows in the bills list |
-| `customer` | a customer added by the form is on the server, can be found and chosen for a sale, and is archived by its delete button (finding 7 pinned: it stays listed) |
-| `receive_stock` | a goods receipt for a supplier, one line of five, imported: the server holds 1005 on hand |
+| `customer` | a customer added by the form is on the server, can be found and chosen for a sale, is found by the list's search, and is archived by its delete button: it leaves the list (finding 7, fixed) |
+| `receive_stock` | a goods receipt for a supplier, one line of five of the product chosen through the product search, imported: the server holds 1005 on hand |
 | `product_edit` | a product renamed on its page: the server and the selling screen show the new name, stock untouched |
 
 Not covered: iOS; anything hosted (see "Local only"); stock counts, returns,
@@ -73,8 +73,7 @@ too old for the bundled driver the web run fails instead of fetching one.
 
 The flows use their own stack state (`${TMPDIR}/pos-e2e-maestro-stack`), not
 the Dart suite's. That one is crowded on purpose; Maestro cannot pick a
-product out of a plain dropdown of hundreds or find a row far down a list
-with no search. Both stacks use the same ports, so they cannot run at the same
+supplier out of a plain dropdown of dozens. Both stacks use the same ports, so they cannot run at the same
 time: the runner says so when the other one is up
 (`tools/e2e/local-stack.sh stop` stops the Dart suite's). Sales the flows make
 stay in that local database.
@@ -127,9 +126,9 @@ except a tooltip on hover or long-press:
 
 - On the web an open dropdown exposes no option text, so
   `choose_dropdown_option` presses Enter on the focused option; it is right
-  only because the flows' database holds exactly one supplier and one product
-  per run. The receipt line then names the product; the supplier's name is
-  not readable on the web, so there it is not asserted.
+  only because the flows' database holds exactly one supplier per run. The
+  supplier's name is not readable on the web, so there it is not asserted.
+  (The receipt line's product is chosen through the product search.)
 - Several texts never reach the web's semantics tree (page and cart titles,
   the lines of a bill); the flows anchor on something beside them.
 - A flow that fails leaves its run's data for `maestro-data.sh down <run id>`,
