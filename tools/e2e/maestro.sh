@@ -192,7 +192,7 @@ prepare_web() {
 run_flow() { # run_flow <name> <run id>; prints the PASS/FAIL line, returns maestro's status
   local name="$1" run_id="$2" out="$OUT_ROOT/$2-$1" started code=0
   mkdir -p "$out"
-  set -- test -e RUN_ID="$run_id" -e PRODUCT_NAME="MST-$run_id product" --test-output-dir "$out"
+  set -- test -e RUN_ID="$run_id" -e PRODUCT_NAME="MST-$run_id tea" --test-output-dir "$out"
   if [ "$platform" = android ]; then
     [ -z "$device" ] || set -- --device "$device" "$@"
   elif [ "$headless" -eq 1 ]; then

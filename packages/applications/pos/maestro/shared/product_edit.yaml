@@ -18,6 +18,9 @@ env:
     timeout: 15000
 - tapOn: "${PRODUCT_NAME}.*"
 - tapOn: "แก้ไข"
+# The tap lands in the middle of the field and the cursor goes to the nearest
+# character: the seeded name is kept short (see maestro-data.sh) so that this
+# is its end, and erasing leaves nothing behind.
 - tapOn: "ชื่อสินค้า"
 - eraseText: 40
 - inputText: ${RENAMED}

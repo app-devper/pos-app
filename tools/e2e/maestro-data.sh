@@ -3,7 +3,10 @@
 # with mongosh, the way seed-catalogue.sh does. Local only by construction:
 # it talks to the local stack's MongoDB port and nothing else.
 #
-#   maestro-data.sh up <run-id>    one sellable product "MST-<run-id> product":
+#   maestro-data.sh up <run-id>    one sellable product "MST-<run-id> tea":
+#                                  (a short name on purpose: a flow that edits
+#                                  it taps the middle of the name field, which
+#                                  must be past the text's end on a phone);
 #                                  barcode 93<run-id>0001, price 25, cost 10,
 #                                  1000 on hand in the active branch; and one
 #                                  supplier "MST-<run-id> supplier"
@@ -36,7 +39,7 @@ if (mode === "down") {
   print(`maestro-data: removed ${old.length} product(s), ${customers} customer(s), ${suppliers} supplier(s) of ${prefix}`);
   quit(0);
 }
-const name = prefix + " product", barcode = "93" + runId + "0001";
+const name = prefix + " tea", barcode = "93" + runId + "0001";
 const now = new Date(), by = "maestro";
 const id = new ObjectId(), unitId = new ObjectId();
 const branch = db.branches.findOne({status: "ACTIVE"})._id;
