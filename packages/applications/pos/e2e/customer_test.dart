@@ -30,7 +30,6 @@ import 'support/run_data.dart';
 const _phone = '0800000000';
 final _changedPhone = runPhone(E2EEnv.runId);
 
-const _general = 'ลูกค้าทั่วไป';
 const _wholesale = 'ลูกค้าขายส่ง';
 const _typeRow = 'ประเภทลูกค้า';
 
@@ -38,8 +37,7 @@ const _addressRow = 'ที่อยู่';
 
 const _removalLocalOnly = 'E2E: customer removal is checked on the local '
     'target only (a removed customer stays on the server, archived); the kept '
-    'customer is reused instead, its phone changed each run, and the edit '
-    'also resets its type to ลูกค้าทั่วไป (FINDING, customer_edit_page.dart:59)';
+    'customer is reused instead, its phone changed each run';
 
 void main() {
   initE2E();
@@ -109,7 +107,8 @@ void main() {
         customers.detailRow(_addressRow, keptCustomerMarker), findsOneWidget);
   }, skip: E2EEnv.isHosted, timeout: e2eTestTimeout);
 
-  testWidgets('editing a wholesale customer\'s phone resets its type',
+  testWidgets(
+      'editing a wholesale customer\'s phone (made by the API) keeps its type',
       (tester) async {
     // Arrange: a wholesale customer, made through the API (local only)
     final customers = await _openCustomers(tester);
@@ -125,13 +124,9 @@ void main() {
     await customers.edit(phone: _changedPhone);
 
     // Assert
-    // FINDING: the edit form starts on the first type and never loads the
-    // customer's (customer_edit_page.dart:59, 117-122), so saving a phone
-    // change also turns the customer general. A skipped test below says what
-    // a user expects.
     expect(customers.detailRow('โทรศัพท์', _changedPhone), findsOneWidget);
-    expect(customers.detailRow(_typeRow, _general), findsOneWidget,
-        reason: 'the app currently resets the type on any edit');
+    expect(customers.detailRow(_typeRow, _wholesale), findsOneWidget,
+        reason: 'an edit keeps the customer type');
   }, skip: E2EEnv.isHosted, timeout: e2eTestTimeout);
 
   // Was a finding (#13): on a wide screen the list stays on screen while the
@@ -174,7 +169,8 @@ void main() {
     }, timeout: e2eTestTimeout);
   });
 
-  // FINDING (Task 7): see the running type test above.
+  // Was a finding (#3): the edit form started on the first type, so any
+  // edit turned the customer general; this one makes it through the form.
   group('customer type on edit', () {
     testWidgets('editing only the phone keeps the customer type',
         (tester) async {
@@ -192,9 +188,7 @@ void main() {
       // Assert
       expect(customers.detailRow(_typeRow, _wholesale), findsOneWidget);
     }, timeout: e2eTestTimeout);
-  },
-      skip: 'FINDING: editing a customer resets its type to ลูกค้าทั่วไป '
-          '(customer_edit_page.dart:59)');
+  });
 
   testWidgets('saving without a name asks for one', (tester) async {
     // Arrange
