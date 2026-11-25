@@ -17,6 +17,7 @@ import 'package:pos/domain/model/supplier/supplier.dart';
 import 'package:pos/domain/model/supplier/param.dart';
 import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/constants.dart';
+import 'package:pos/presentation/supplier/info/supplier_info_state.dart';
 import 'package:pos/presentation/supplier/info/supplier_info_view_model.dart';
 
 class SupplierInfoPage extends StatefulWidget {
@@ -120,6 +121,7 @@ class _SupplierInfoPageState extends State<SupplierInfoPage> {
         padding: const EdgeInsets.all(defaultPagePadding),
         child: Column(
           children: <Widget>[
+            _buildHint(),
             _buildForm(context),
             const Padding(
               padding: EdgeInsets.only(top: defaultPagePadding),
@@ -128,6 +130,21 @@ class _SupplierInfoPageState extends State<SupplierInfoPage> {
           ],
         ),
       ),
+    );
+  }
+
+  /// Says why the form is empty when the shop has no profile yet.
+  Widget _buildHint() {
+    return ValueListenableBuilder<SupplierInfoState>(
+      valueListenable: _viewModel.state,
+      builder: (context, state, _) {
+        final hint = state.hint;
+        if (hint == null) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: Text(hint, textAlign: TextAlign.center),
+        );
+      },
     );
   }
 

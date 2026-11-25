@@ -101,23 +101,30 @@ void main() {
   }, timeout: e2eTestTimeout);
 }
 
-/// FINDING (Task 7): with no shop profile yet, 'ร้านของฉัน' shows the red
-/// snackbar "Error: ไม่พบข้อมูลที่ต้องการ [SY-404-002]" over an empty form,
-/// although this is the screen that creates the profile (order detail sends
-/// the user here on exactly that 404). Only that code is let through, and
-/// the screen is watched again once it has closed, so the stop passes on an
-/// empty and on a populated database and still catches any other error.
-const _noShopProfileYet = '[SY-404-002]';
+/// With no shop profile yet the form is empty and says so
+/// (`ยังไม่มีข้อมูลร้านค้า กรอกแล้วกดบันทึก`); it used to show a red
+/// "Error: ไม่พบข้อมูลที่ต้องการ [SY-404-002]" (was finding #14). No error is
+/// tolerated any more, on an empty or a populated database.
+const _noShopProfileHint = 'ยังไม่มีข้อมูลร้านค้า กรอกแล้วกดบันทึก';
 
 /// Opened and read only: the profile may be the shop's real one, so its
 /// Update button is checked for and never pressed.
 Future<void> _shopProfileOpensUntouched(ShellRobot shell) async {
   await shell.openManageTile('ร้านค้าของฉัน');
-  await shell.expectScreenWithoutError(
-    shell.appBarTitle('ร้านของฉัน'),
-    tolerated: _noShopProfileYet,
-  );
+  await shell.expectScreenWithoutError(shell.appBarTitle('ร้านของฉัน'));
   expect(find.byKey(const Key('update')).hitTestable(), findsOneWidget);
+  // Once loaded, the form holds the profile or, with none yet, says so.
+  final hint = find.text(_noShopProfileHint);
+  String name() => shell.tester
+      .widget<TextField>(find
+          .byWidgetPredicate(
+              (w) => w is TextField && w.decoration?.labelText == 'Name*')
+          .first)
+      .controller!
+      .text;
+  await pumpUntil(shell.tester,
+      () => hint.evaluate().isNotEmpty || name().isNotEmpty, 'the profile');
+  expect(hint, name().isEmpty ? findsOneWidget : findsNothing);
   await shell.pageBack();
   await pumpUntilFound(shell.tester, find.text('ร้านค้าของฉัน').hitTestable());
 }

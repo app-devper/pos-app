@@ -15,18 +15,24 @@ class SupplierInfoState {
   final bool saving;
   final Supplier? supplier;
 
+  /// Shown above the empty form when the shop has no profile yet.
+  final String? hint;
+
   const SupplierInfoState({
     this.saving = false,
     this.supplier,
+    this.hint,
   });
 
   SupplierInfoState copyWith({
     bool? saving,
     Supplier? supplier,
+    String? hint,
   }) {
     return SupplierInfoState(
       saving: saving ?? this.saving,
       supplier: supplier ?? this.supplier,
+      hint: hint ?? this.hint,
     );
   }
 }

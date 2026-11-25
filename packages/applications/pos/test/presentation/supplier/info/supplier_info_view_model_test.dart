@@ -103,6 +103,35 @@ void main() {
     expect(errors, hasLength(1));
   });
 
+  test('no shop profile yet is not an error: the form is empty, with a hint',
+      () async {
+    // Arrange: pos-api answers 404 until the profile is first saved
+    final vm = buildViewModel(
+      FakeSupplierRepository(
+          throws: const NotFoundException(
+              message: 'ไม่พบข้อมูลที่ต้องการ', code: 'SY-404-002')),
+    );
+    final errors = <String>[];
+    vm.errors.listen(errors.add);
+
+    // Act
+    await vm.getSupplierInfo();
+    await Future<void>.delayed(Duration.zero);
+
+    // Assert
+    expect(errors, isEmpty);
+    expect(vm.state.value.supplier, isNull);
+    expect(vm.state.value.hint, 'ยังไม่มีข้อมูลร้านค้า กรอกแล้วกดบันทึก');
+  });
+
+  test('a profile that loads shows no hint', () async {
+    final vm = buildViewModel(FakeSupplierRepository(info: buildSupplier('5')));
+
+    await vm.getSupplierInfo();
+
+    expect(vm.state.value.hint, isNull);
+  });
+
   test('a save emits the updated record once', () async {
     final repo = FakeSupplierRepository();
     final vm = buildViewModel(repo);
