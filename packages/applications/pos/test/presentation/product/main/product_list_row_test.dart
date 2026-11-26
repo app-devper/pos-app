@@ -1,6 +1,7 @@
 // The สินค้า list's row: under the product's name, its price and what is on
-// hand, from the catalogue the list already holds. Low or no stock is said in
-// words beside the colour.
+// hand in each of its units, from the catalogue the list already holds. Low
+// or no stock (of the product as a whole, as the list's sort counts it) is
+// said in words, in the text colour, after a coloured icon.
 
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -16,9 +17,9 @@ import 'package:pos/presentation/product/main/products_widget.dart';
 import '../../../support/app_languages.dart';
 import '../product_navigation_test.dart' as products;
 
-ProductStock _stock(int quantity) => ProductStock(
-      id: 's1',
-      unitId: 'u-1',
+ProductStock _stock(int quantity, {String unitId = 'u-1'}) => ProductStock(
+      id: 's-$unitId',
+      unitId: unitId,
       productId: 'p-1',
       receiveCode: '',
       sequence: 1,
@@ -48,6 +49,36 @@ Product _paracetamol({required int onHand, int minStock = 0}) {
   );
 }
 
+/// Paracetamol sold as a เม็ด ([tablets] on hand) and as a แผง ([strips] on
+/// hand), with a minimum of [minStock].
+Product _twoUnits(
+    {required int tablets, required int strips, int minStock = 0}) {
+  final product = products.paracetamol();
+  return Product(
+    id: product.id,
+    name: product.name,
+    status: product.status,
+    category: product.category,
+    createdDate: product.createdDate,
+    minStock: minStock,
+    units: [
+      ...product.units,
+      ProductUnit(
+        id: 'u-2',
+        productId: product.id,
+        costPrice: 40,
+        unit: 'แผง',
+        size: 10,
+        barcode: '222',
+        volume: 0,
+        volumeUnit: '',
+      ),
+    ],
+    prices: product.prices,
+    stocks: [_stock(tablets), _stock(strips, unitId: 'u-2')],
+  );
+}
+
 Future<void> _showList(WidgetTester tester, Product product) async {
   sl.registerFactory(
       () => ProductsViewModel(productRepo: products.Catalogue([product])));
@@ -60,7 +91,10 @@ Future<void> _showList(WidgetTester tester, Product product) async {
   await tester.pumpAndSettle();
 }
 
-Finder _rich(String text) => find.text(text, findRichText: true);
+/// The rich text that reads [text], its icons left out.
+Finder _rich(String text) => find.byWidgetPredicate((widget) =>
+    widget is RichText &&
+    widget.text.toPlainText(includePlaceholders: false) == text);
 
 void main() {
   tearDown(() async => sl.reset());
@@ -111,5 +145,51 @@ void main() {
 
     // Assert
     expect(_rich('฿50.00'), findsOneWidget);
+  });
+
+  group('a product in two units', () {
+    testWidgets('shows what is on hand in each, and no หมด while one has some',
+        (tester) async {
+      // Arrange, Act
+      await _showList(tester, _twoUnits(tablets: 0, strips: 20));
+
+      // Assert
+      expect(_rich('฿10.00 · คงเหลือ 0 เม็ด · 20 แผง'), findsOneWidget);
+    });
+
+    testWidgets('says หมด when every unit is empty', (tester) async {
+      // Arrange, Act
+      await _showList(tester, _twoUnits(tablets: 0, strips: 0));
+
+      // Assert
+      expect(_rich('฿10.00 · คงเหลือ 0 เม็ด · 0 แผง · หมด'), findsOneWidget);
+    });
+
+    testWidgets('says ใกล้หมด when the total is at its minimum',
+        (tester) async {
+      // Arrange, Act
+      await _showList(tester, _twoUnits(tablets: 2, strips: 3, minStock: 5));
+
+      // Assert
+      expect(
+          _rich('฿10.00 · คงเหลือ 2 เม็ด · 3 แผง · ใกล้หมด'), findsOneWidget);
+    });
+
+    testWidgets('says nothing of a minimum the shop has not set',
+        (tester) async {
+      // Arrange, Act
+      await _showList(tester, _twoUnits(tablets: 1, strips: 0));
+
+      // Assert
+      expect(_rich('฿10.00 · คงเหลือ 1 เม็ด · 0 แผง'), findsOneWidget);
+    });
+  });
+
+  testWidgets('a negative on hand shows its figure and หมด', (tester) async {
+    // Arrange, Act
+    await _showList(tester, _paracetamol(onHand: -2));
+
+    // Assert
+    expect(_rich('฿10.00 · คงเหลือ -2 เม็ด · หมด'), findsOneWidget);
   });
 }

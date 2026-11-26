@@ -22,9 +22,11 @@ StockLevel stockLevelOf(int onHand, int minStock) {
   return StockLevel.inStock;
 }
 
-/// A row of the สินค้า list: the product's name, and under it its price and
-/// what is on hand in its first unit, as the selling grid's card shows them.
-/// A product with no unit has no stock to show: its price only.
+/// A row of the สินค้า list: the product's name, and under it its first
+/// unit's price, as the selling grid's card shows it, and what is on hand in
+/// each of its units (`คงเหลือ 0 ชิ้น · 20 แผง`). Whether stock is low or out
+/// is the product's as a whole, the total the list sorts by. A product with
+/// no unit has no stock to show: its price only.
 class ProductListRow extends StatelessWidget {
   final Product product;
   final VoidCallback onTap;
@@ -54,32 +56,45 @@ class ProductListRow extends StatelessWidget {
   }
 
   TextSpan _summary(BuildContext context) {
-    final item = product.toProductItems().firstOrNull;
-    if (item == null) {
+    final items = product.toProductItems();
+    if (items.isEmpty) {
       return TextSpan(
           text: '฿${formatDouble(product.price)}', style: AppText.money(null));
     }
-    final price = item.getPrice(priceTypeStock).price;
+    final price = items.first.getPrice(priceTypeStock).price;
     return TextSpan(children: [
       TextSpan(text: '฿${formatDouble(price)} · ', style: AppText.money(null)),
-      _stock(context, item.getQuantity(), item.unit.unit),
+      TextSpan(text: _onHand(Languages.of(context), items)),
+      ..._cue(context),
     ]);
   }
 
-  TextSpan _stock(BuildContext context, int onHand, String unit) {
+  /// What is on hand in each unit, the first one as `คงเหลือ <n> <unit>`.
+  static String _onHand(Languages languages, List<ProductUnitItem> items) {
+    final first = items.first;
+    return [
+      languages.productOnHand('${first.getQuantity()}', first.unit.unit),
+      for (final item in items.skip(1))
+        '${item.getQuantity()} ${item.unit.unit}',
+    ].join(' · ');
+  }
+
+  /// หมด or ใกล้หมด after the stock, from the product's total on hand.
+  List<InlineSpan> _cue(BuildContext context) {
     final languages = Languages.of(context);
-    final onHandText = languages.productOnHand('$onHand', unit);
-    return switch (stockLevelOf(onHand, product.minStock)) {
-      StockLevel.inStock => TextSpan(text: onHandText),
-      StockLevel.low => _flagged(
-          '$onHandText · ${languages.lowStock}', AppColors.of(context).warning),
-      StockLevel.out => _flagged('$onHandText · ${languages.outOfStock}',
-          Theme.of(context).colorScheme.error),
+    return switch (stockLevelOf(product.getQuantity(), product.minStock)) {
+      StockLevel.inStock => const [],
+      StockLevel.low =>
+        _flagged(languages.lowStock, AppColors.of(context).warning),
+      StockLevel.out =>
+        _flagged(languages.outOfStock, Theme.of(context).colorScheme.error),
     };
   }
 
-  TextSpan _flagged(String text, Color color) => TextSpan(
-        text: text,
-        style: TextStyle(color: color, fontWeight: FontWeight.w600),
-      );
+  List<InlineSpan> _flagged(String text, Color color) => [
+        TextSpan(
+          text: ' · $text',
+          style: TextStyle(color: color, fontWeight: FontWeight.w600),
+        ),
+      ];
 }
