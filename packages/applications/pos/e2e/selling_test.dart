@@ -211,7 +211,7 @@ void main() {
       // Assert
       await cart.expectSold();
       _promptPayBill = await _bills.recordNew(before);
-      expect(_promptPayBill.rowTitle, endsWith(' Name: ${customer.name}'));
+      expect(_promptPayBill.rowTitle, endsWith(' ลูกค้า: ${customer.name}'));
       await _expectOnHand(shell, 5);
       final orders = OrderRobot(shell);
       await orders.openList();

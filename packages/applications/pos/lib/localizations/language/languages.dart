@@ -305,4 +305,21 @@ abstract class Languages {
   String get cash;
 
   String get promptPay;
+
+  /// A bill row's customer: `ลูกค้า: <name>`.
+  String customerNamed(String name);
+
+  /// What a receipt's or the expired stock's items cost in all.
+  String get totalCost;
+
+  /// The จัดการ menu's titles.
+  String get manageStore;
+
+  String get manageCustomers;
+
+  String get manageUsers;
+
+  String get manageReceipts;
+
+  String get manageStockCounts;
 }

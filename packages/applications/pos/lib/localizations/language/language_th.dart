@@ -425,4 +425,25 @@ class LanguageTh extends Languages {
 
   @override
   String get promptPay => "พร้อมเพย์";
+
+  @override
+  String customerNamed(String name) => "ลูกค้า: $name";
+
+  @override
+  String get totalCost => "ต้นทุนรวม";
+
+  @override
+  String get manageStore => "ร้านค้าของฉัน";
+
+  @override
+  String get manageCustomers => "จัดการลูกค้า";
+
+  @override
+  String get manageUsers => "จัดการผู้ใช้งาน";
+
+  @override
+  String get manageReceipts => "ใบรับสินค้า";
+
+  @override
+  String get manageStockCounts => "นับสต็อก";
 }

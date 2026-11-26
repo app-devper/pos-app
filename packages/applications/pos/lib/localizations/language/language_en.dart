@@ -409,4 +409,25 @@ class LanguageEn extends Languages {
 
   @override
   String get promptPay => "PromptPay";
+
+  @override
+  String customerNamed(String name) => "Customer: $name";
+
+  @override
+  String get totalCost => "Total cost";
+
+  @override
+  String get manageStore => "My store";
+
+  @override
+  String get manageCustomers => "Customers";
+
+  @override
+  String get manageUsers => "Users";
+
+  @override
+  String get manageReceipts => "Goods receipts";
+
+  @override
+  String get manageStockCounts => "Stock counts";
 }

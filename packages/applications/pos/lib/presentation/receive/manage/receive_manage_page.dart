@@ -265,9 +265,7 @@ class _ReceiveManagePageState extends State<ReceiveManagePage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: <Widget>[
-        const Text(
-          'Total Cost',
-        ),
+        Text(Languages.of(context).totalCost),
         Expanded(
           child: Text(
             '฿ ${_format.format(_totalCost)}',

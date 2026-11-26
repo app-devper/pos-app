@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:um/presentation/constants.dart';
 
 // Project imports:
+import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/constants.dart';
 
 /// The "จัดการ" landing page. Each tile pushes its page on top of this one,
@@ -14,39 +15,40 @@ class HomeDatabasePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = Languages.of(context);
     return Column(
       children: [
         _buildMenuItem(
           icon: Icons.store,
-          title: 'ร้านค้าของฉัน',
+          title: strings.manageStore,
           onTap: () {
             _nextToStoreInfo(context);
           },
         ),
         _buildMenuItem(
           icon: Icons.person,
-          title: 'จัดการลูกค้า',
+          title: strings.manageCustomers,
           onTap: () {
             Navigator.pushNamed(context, customersRoute);
           },
         ),
         _buildMenuItem(
           icon: Icons.account_box,
-          title: 'จัดการผู้ใช้งาน',
+          title: strings.manageUsers,
           onTap: () {
             _nextToUserManagement(context);
           },
         ),
         _buildMenuItem(
           icon: Icons.receipt_long,
-          title: 'ใบรับสินค้า',
+          title: strings.manageReceipts,
           onTap: () {
             Navigator.pushNamed(context, receivesRoute);
           },
         ),
         _buildMenuItem(
           icon: Icons.fact_check,
-          title: 'นับสต็อก',
+          title: strings.manageStockCounts,
           onTap: () {
             _nextToStockCounts(context);
           },

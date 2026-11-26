@@ -197,9 +197,7 @@ class _ProductsExpiredPageState extends State<ProductsExpiredPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          const Text(
-            'Total Cost',
-          ),
+          Text(Languages.of(context).totalCost),
           ValueListenableBuilder<ProductsExpiredState>(
             valueListenable: _viewModel.state,
             builder: (BuildContext context, ProductsExpiredState state, _) {

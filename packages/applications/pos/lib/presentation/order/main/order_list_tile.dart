@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 // Project imports:
 import 'package:pos/domain/model/order/order_summary.dart';
+import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/order/bill_summary.dart';
 import 'package:pos/presentation/order/cancelled_mark.dart';
 
@@ -41,8 +42,11 @@ class OrderListTile extends StatelessWidget {
     final theme = Theme.of(context);
     final secondary = theme.textTheme.bodySmall
         ?.copyWith(color: AppColors.of(context).textSecondary);
+    final customer = order.customerName;
     final time = order.getCreatedDate() +
-        (order.customerName.isNotEmpty ? " Name: ${order.customerName}" : "");
+        (customer.isNotEmpty
+            ? " ${Languages.of(context).customerNamed(customer)}"
+            : "");
     return ListTile(
       leading: Text("${index + 1}",
           style: secondary?.copyWith(fontSize: _minLabelSize)),

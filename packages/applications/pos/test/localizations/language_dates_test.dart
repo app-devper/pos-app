@@ -46,4 +46,43 @@ void main() {
     expect(_thai.rangeToday, 'วันนี้');
     expect(_english.rangeToday, 'Today');
   });
+
+  test('a bill row names its customer in Thai, with English kept', () {
+    expect(_thai.customerNamed('สมชาย'), 'ลูกค้า: สมชาย');
+    expect(_english.customerNamed('Somchai'), 'Customer: Somchai');
+  });
+
+  test('a total cost is Thai, with English kept', () {
+    expect(_thai.totalCost, 'ต้นทุนรวม');
+    expect(_english.totalCost, 'Total cost');
+  });
+
+  test('the จัดการ menu keeps its Thai titles and has English ones', () {
+    expect([
+      _thai.manageStore,
+      _thai.manageCustomers,
+      _thai.manageUsers,
+      _thai.manageReceipts,
+      _thai.manageStockCounts,
+    ], [
+      'ร้านค้าของฉัน',
+      'จัดการลูกค้า',
+      'จัดการผู้ใช้งาน',
+      'ใบรับสินค้า',
+      'นับสต็อก',
+    ]);
+    expect([
+      _english.manageStore,
+      _english.manageCustomers,
+      _english.manageUsers,
+      _english.manageReceipts,
+      _english.manageStockCounts,
+    ], [
+      'My store',
+      'Customers',
+      'Users',
+      'Goods receipts',
+      'Stock counts',
+    ]);
+  });
 }

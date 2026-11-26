@@ -56,7 +56,7 @@ class Bill {
         code = detail.code,
         rowTitle = detail.getCreatedDate() +
             (detail.customerName.isNotEmpty
-                ? ' Name: ${detail.customerName}'
+                ? ' ลูกค้า: ${detail.customerName}'
                 : ''),
         header = '${detail.code} ${detail.getCreatedDate()}',
         totalText = _money.format(detail.total);
@@ -65,7 +65,7 @@ class Bill {
   final String code;
 
   /// The list row's line under the bill number: `dd/MM/yyyy HH:mm`, then
-  /// ` Name: <customer>`.
+  /// ` ลูกค้า: <customer>`.
   final String rowTitle;
 
   /// The detail's header: `<code> dd/MM/yyyy HH:mm`.

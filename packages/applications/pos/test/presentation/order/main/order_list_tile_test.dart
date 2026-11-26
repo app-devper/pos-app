@@ -12,12 +12,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pos/domain/model/order/order_summary.dart';
 import 'package:pos/presentation/order/main/order_list_tile.dart';
 import '../../../support/app_fonts.dart';
+import '../../../support/app_languages.dart';
 
-OrderSummary _order({String status = 'CONFIRMED'}) => OrderSummary(
+OrderSummary _order({String status = 'CONFIRMED', String customerName = ''}) =>
+    OrderSummary(
       id: 'o1',
       code: 'OD_202611250007',
       customerCode: '',
-      customerName: '',
+      customerName: customerName,
       createdDate: '2026-11-25T10:00:00Z',
       total: 50,
       totalCost: 20,
@@ -26,13 +28,45 @@ OrderSummary _order({String status = 'CONFIRMED'}) => OrderSummary(
       status: status,
     );
 
-Widget _host(Widget child) => MaterialApp(home: Scaffold(body: child));
+Widget _host(Widget child, {bool thai = true}) => MaterialApp(
+    localizationsDelegates: [thai ? thaiLanguages : englishLanguages],
+    home: Scaffold(body: child));
 
 /// In the app's theme and fonts, so sizes and colours are the user's.
-Widget _appHost(Widget child) =>
-    MaterialApp(theme: CustomTheme.mainTheme, home: Scaffold(body: child));
+Widget _appHost(Widget child) => MaterialApp(
+    theme: CustomTheme.mainTheme,
+    localizationsDelegates: const [thaiLanguages],
+    home: Scaffold(body: child));
 
 void main() {
+  testWidgets('a bill row names its customer in Thai', (tester) async {
+    // Arrange
+    final order = _order(customerName: 'สมชาย');
+
+    // Act
+    await tester.pumpWidget(_host(
+        OrderListTile(index: 0, order: order, showCost: false, onTap: () {})));
+
+    // Assert
+    expect(
+        find.text('${order.getCreatedDate()} ลูกค้า: สมชาย'), findsOneWidget);
+    expect(find.textContaining('Name:'), findsNothing);
+  });
+
+  testWidgets('a bill row names its customer in English', (tester) async {
+    // Arrange
+    final order = _order(customerName: 'Somchai');
+
+    // Act
+    await tester.pumpWidget(_host(
+        OrderListTile(index: 0, order: order, showCost: false, onTap: () {}),
+        thai: false));
+
+    // Assert
+    expect(find.text('${order.getCreatedDate()} Customer: Somchai'),
+        findsOneWidget);
+  });
+
   testWidgets('a bill row shows its bill number above its time',
       (tester) async {
     // Arrange / Act
