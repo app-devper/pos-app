@@ -3,6 +3,17 @@
 # ${NOTE}, confirmed. Returns once the dialog is gone.
 appId: app.devper.pos
 ---
+# On a phone the lot's row scrolls sideways and its adjust button starts
+# past the right edge: the row is swiped by its cost heading (on screen
+# before and after a swipe) until the button shows.
+- repeat:
+    times: 4
+    while:
+      notVisible: "ปรับสต็อก ล็อต L${RUN_ID}"
+    commands:
+      - swipe:
+          from: "ต้นทุน"
+          direction: LEFT
 - tapOn: "ปรับสต็อก ล็อต L${RUN_ID}"
 - extendedWaitUntil:
     visible: "ปรับสต็อกสินค้า"

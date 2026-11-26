@@ -23,7 +23,7 @@ env:
       NAME: ${PRODUCT_NAME}
       TAB: "สต็อก"
 - extendedWaitUntil:
-    visible: "ปรับสต็อก ล็อต L${RUN_ID}"
+    visible: "L${RUN_ID}"
     timeout: 15000
 - runFlow:
     file: steps/adjust_stock.yaml
