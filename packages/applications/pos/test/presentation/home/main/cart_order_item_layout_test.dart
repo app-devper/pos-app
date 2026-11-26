@@ -121,7 +121,7 @@ void main() {
       for (final label in [
         '12x $_name แผง ฿14,814.00 ราคาหน้าร้าน',
         'ลดจำนวน $_name แผง',
-        'แก้ไขจำนวน $_name แผง',
+        '12x แก้ไขจำนวน $_name แผง',
         'เพิ่มจำนวน $_name แผง',
       ]) {
         expect(find.bySemanticsLabel(label), findsOneWidget, reason: label);
@@ -140,7 +140,7 @@ void main() {
       // Act
       for (final label in [
         'ลดจำนวน $_name แผง',
-        'แก้ไขจำนวน $_name แผง',
+        '12x แก้ไขจำนวน $_name แผง',
         'เพิ่มจำนวน $_name แผง',
       ]) {
         await tester.tap(find.bySemanticsLabel(label));

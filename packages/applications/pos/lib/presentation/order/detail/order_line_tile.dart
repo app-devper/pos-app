@@ -56,14 +56,14 @@ class OrderLineTile extends StatelessWidget {
   /// What the line reads, in the order a sighted user reads it: quantity
   /// and its marks, product, cancelled mark, cost and profit, amount.
   String _label() => [
-        '${line.quantity}',
+        '${line.quantity}x',
         if (line.oversoldQty > 0) _oversold,
         if (line.returnedQty > 0) _returned,
         line.product?.name ?? '',
         if (line.isCancelled) cancelledLabel,
         if (isAdmin) _costAndProfit,
-        _format.format(line.paid()),
-      ].join(' ');
+        '฿${_format.format(line.paid())}',
+      ].join(' ').replaceAll(RegExp(r' {2,}'), ' ');
 
   String get _oversold => 'เกิน ${line.oversoldQty}';
 

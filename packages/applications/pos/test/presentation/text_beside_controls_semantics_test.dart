@@ -126,7 +126,7 @@ void main() {
     expect(find.text('2x'), findsOneWidget);
     _expectRowNode(tester, '2x $_product ชิ้น ฿50.00 ราคาหน้าร้าน', [
       'ลดจำนวน $_product ชิ้น',
-      'แก้ไขจำนวน $_product ชิ้น',
+      '2x แก้ไขจำนวน $_product ชิ้น',
       'เพิ่มจำนวน $_product ชิ้น',
     ]);
     semantics.dispose();
@@ -146,7 +146,7 @@ void main() {
       '2x $_product ชิ้น ฿50.00 ราคาหน้าร้าน',
       'อนุญาตขายเกินสต็อก $_product ชิ้น',
       'ลดจำนวน $_product ชิ้น',
-      'แก้ไขจำนวน $_product ชิ้น',
+      '2x แก้ไขจำนวน $_product ชิ้น',
       'เพิ่มจำนวน $_product ชิ้น',
     ]);
     semantics.dispose();
@@ -194,7 +194,7 @@ void main() {
     )));
 
     // Assert
-    _expectRowNode(tester, '2 $_product ต้นทุน: 16.00  กำไร: 24.00 40.00', [
+    _expectRowNode(tester, '2x $_product ต้นทุน: 16.00 กำไร: 24.00 ฿40.00', [
       'ลบรายการ 2x $_product ฿40.00',
       'ประวัติการขาย 2x $_product ฿40.00',
       'คืนสินค้า 2x $_product ฿40.00',

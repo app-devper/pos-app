@@ -68,5 +68,5 @@ appId: app.devper.pos
 - assertVisible: "(ยอดรวม\n?)?฿ 50\\.00"
 # The bill's line reads as one node: quantity, product, (for an admin) cost
 # and profit, amount.
-- assertVisible: "2 ${PRODUCT_NAME} .*50\\.00"
+- assertVisible: "2x ${PRODUCT_NAME} .*฿50\\.00"
 - takeScreenshot: bill

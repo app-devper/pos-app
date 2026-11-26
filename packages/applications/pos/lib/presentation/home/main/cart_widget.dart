@@ -410,9 +410,10 @@ class CartOrderItem extends StatelessWidget {
             alignment: Alignment.center,
             child: Text(
               '${quantity}x',
-              // The line's own node reads the quantity; the button
-              // says what it does, to which line.
-              semanticsLabel: Languages.of(context).changeQuantity(_line),
+              // Starts with the visible "2x", then says what the button
+              // does, to which line.
+              semanticsLabel:
+                  '${quantity}x ${Languages.of(context).changeQuantity(_line)}',
               textAlign: TextAlign.center,
               maxLines: 1,
               style: const TextStyle(
