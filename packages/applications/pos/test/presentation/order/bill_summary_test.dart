@@ -134,4 +134,40 @@ void main() {
       }
     });
   });
+
+  group('as a page\'s bottom bar', () {
+    setUpAll(loadAppFonts);
+
+    for (final showCost in [true, false]) {
+      testWidgets(
+          'the foot keeps clear of the gesture bar\'s inset, '
+          'showCost=$showCost', (tester) async {
+        // Arrange: a phone with a 34 px bottom inset
+        useViewSize(tester, phoneSize);
+        tester.view.padding = const FakeViewPadding(bottom: 34);
+        addTearDown(tester.view.resetPadding);
+
+        // Act
+        await tester.pumpWidget(MaterialApp(
+          theme: CustomTheme.mainTheme,
+          home: Scaffold(
+            body: ListView(),
+            bottomNavigationBar:
+                BillSummary(total: 75, totalCost: 30, showCost: showCost),
+          ),
+        ));
+
+        // Assert
+        final insetTop = phoneSize.height - 34;
+        for (final text in ['ยอดรวม', if (showCost) 'กำไร']) {
+          expect(tester.getRect(find.text(text)).bottom,
+              lessThanOrEqualTo(insetTop),
+              reason: '$text above the inset');
+        }
+        expect(
+            tester.getRect(find.byType(BillSummary)).bottom, phoneSize.height,
+            reason: 'its surface still reaches the screen\'s edge');
+      });
+    }
+  });
 }

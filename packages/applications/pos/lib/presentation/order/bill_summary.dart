@@ -44,17 +44,22 @@ class BillSummary extends StatelessWidget {
               color: Color(0x1F000000), blurRadius: 8, offset: Offset(0, -2)),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(defaultPagePadding),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            _row('ยอดรวม', total, emphasised),
-            if (showCost) ...[
-              _row('ต้นทุน', totalCost, body),
-              _row('กำไร', roundMoney(total - totalCost), body),
+      // The surface reaches the screen's edge; its rows keep clear of the
+      // bottom inset (a phone's gesture bar) when it is a page's bottom bar.
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.all(defaultPagePadding),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              _row('ยอดรวม', total, emphasised),
+              if (showCost) ...[
+                _row('ต้นทุน', totalCost, body),
+                _row('กำไร', roundMoney(total - totalCost), body),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
