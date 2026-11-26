@@ -297,8 +297,9 @@ class _OrderPageState extends State<OrderPage> {
         final orders = state.orders;
         if (orders != null) {
           return Expanded(
-            child: ListView.builder(
+            child: ListView.separated(
               itemCount: orders.length,
+              separatorBuilder: (_, __) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final item = orders[index];
                 return OrderListTile(

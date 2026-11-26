@@ -62,8 +62,9 @@ class OrderRobot {
     await _settleList();
   }
 
-  /// The rows showing [bill]'s number and total. The number is the row's
-  /// title, so this is one row; the detail's header still confirms it.
+  /// The rows showing [bill]'s number and total (`฿` before it). The
+  /// number is the row's title, so this is one row; the detail's header
+  /// still confirms it.
   Finder _rows(Bill bill) => find.descendant(
       of: _list,
       matching: find.byWidgetPredicate((w) =>
@@ -71,7 +72,7 @@ class OrderRobot {
           w.title is Text &&
           (w.title as Text).data == bill.code &&
           w.trailing is Text &&
-          (w.trailing as Text).data == bill.totalText));
+          (w.trailing as Text).data == '฿${bill.totalText}'));
 
   /// Whether a row with [bill]'s title and total is listed, scrolling the
   /// whole list (today's bills, in the server's order).
