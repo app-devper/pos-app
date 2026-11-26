@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:design_system/theme/app_colors.dart';
+import 'package:design_system/theme/text_styles.dart';
 import 'package:intl/intl.dart';
 
 // Project imports:
@@ -78,9 +79,7 @@ class BillSummary extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
           Text(label, style: style),
-          Text(figure,
-              style: style?.copyWith(
-                  fontFeatures: const [FontFeature.tabularFigures()])),
+          Text(figure, style: AppText.money(style)),
         ],
       ),
     );

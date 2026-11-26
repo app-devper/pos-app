@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 // Package imports:
+import 'package:design_system/theme/text_styles.dart';
 import 'package:design_system/theme/app_colors.dart';
 import 'package:design_system/theme/theme.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -124,6 +125,8 @@ void main() {
       final style = tester.widget<Text>(find.text('฿50.00')).style!;
       expect(style.fontWeight, FontWeight.bold);
       expect(style.fontFeatures, contains(const FontFeature.tabularFigures()));
+      expect(style.fontFeatures, AppText.money(null).fontFeatures,
+          reason: 'the one money style of design_system');
     });
 
     testWidgets('the row number is a muted label of at least 12 sp',

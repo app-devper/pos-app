@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:design_system/theme/app_colors.dart';
+import 'package:design_system/theme/text_styles.dart';
 import 'package:design_system/widgets/status_badge.dart';
 import 'package:intl/intl.dart';
 
@@ -95,10 +96,11 @@ class OrderLineTile extends StatelessWidget {
   }
 
   Text _buildAmount(BuildContext context) => Text(_format.format(line.paid()),
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.bold,
-        fontFeatures: const [FontFeature.tabularFigures()],
-      ).merge(amountStyle(cancelled: _cancelled)));
+      style: AppText.money(Theme.of(context)
+          .textTheme
+          .titleMedium
+          ?.copyWith(fontWeight: FontWeight.bold)
+          .merge(amountStyle(cancelled: _cancelled))));
 
   /// What a row [width] wide leaves the name with [amount] in the trailing.
   double _nameRoom(BuildContext context, Text amount, double width) {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 // Package imports:
+import 'package:design_system/theme/text_styles.dart';
 import 'package:design_system/theme/theme.dart';
 import 'package:design_system/widgets/snack_bar.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -28,6 +29,21 @@ void main() {
     expect(find.text('กำไร'), findsOneWidget);
     expect(find.text('฿ 45.00'), findsOneWidget);
     expect(find.textContaining('Total'), findsNothing);
+  });
+
+  testWidgets(
+      'the foot\'s figures are money: their figures in even columns, '
+      'from design_system\'s one money style', (tester) async {
+    // Arrange / Act
+    await tester.pumpWidget(
+        _host(const BillSummary(total: 75, totalCost: 30, showCost: true)));
+
+    // Assert
+    for (final figure in ['฿ 75.00', '฿ 30.00', '฿ 45.00']) {
+      final style = tester.widget<Text>(find.text(figure)).style!;
+      expect(style.fontFeatures, AppText.money(null).fontFeatures,
+          reason: figure);
+    }
   });
 
   testWidgets('anyone else reads only the total', (tester) async {

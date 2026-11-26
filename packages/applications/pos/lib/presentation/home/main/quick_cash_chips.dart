@@ -2,6 +2,9 @@
 import 'package:flutter/material.dart';
 
 // Package imports:
+import 'package:design_system/theme/text_styles.dart';
+
+// Package imports:
 import 'package:common/core/ext/number_ext.dart';
 
 // Project imports:
@@ -57,11 +60,8 @@ class QuickCashChips extends StatelessWidget {
         excludeSemantics: true,
         child: Text(
           label,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            fontFeatures: [FontFeature.tabularFigures()],
-          ),
+          style: AppText.money(
+              const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         ),
       ),
     );

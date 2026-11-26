@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:common/core/ext/number_ext.dart';
 import 'package:design_system/theme/app_colors.dart';
+import 'package:design_system/theme/text_styles.dart';
 
 // Project imports:
 import 'package:pos/domain/model/core/core.dart';
@@ -55,11 +56,12 @@ class ProductListRow extends StatelessWidget {
   TextSpan _summary(BuildContext context) {
     final item = product.toProductItems().firstOrNull;
     if (item == null) {
-      return TextSpan(text: '฿${formatDouble(product.price)}');
+      return TextSpan(
+          text: '฿${formatDouble(product.price)}', style: AppText.money(null));
     }
     final price = item.getPrice(priceTypeStock).price;
     return TextSpan(children: [
-      TextSpan(text: '฿${formatDouble(price)} · '),
+      TextSpan(text: '฿${formatDouble(price)} · ', style: AppText.money(null)),
       _stock(context, item.getQuantity(), item.unit.unit),
     ]);
   }

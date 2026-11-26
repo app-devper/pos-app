@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:design_system/theme/app_colors.dart';
+import 'package:design_system/theme/text_styles.dart';
 import 'package:intl/intl.dart';
 
 // Project imports:
@@ -71,8 +72,7 @@ class OrderListTile extends StatelessWidget {
 
   /// The row's most prominent text: bold, its figures in even columns.
   TextStyle? _amountStyle(ThemeData theme) =>
-      theme.textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.bold,
-        fontFeatures: const [FontFeature.tabularFigures()],
-      ).merge(amountStyle(cancelled: order.isCancelled));
+      AppText.money(theme.textTheme.titleMedium
+          ?.copyWith(fontWeight: FontWeight.bold)
+          .merge(amountStyle(cancelled: order.isCancelled)));
 }

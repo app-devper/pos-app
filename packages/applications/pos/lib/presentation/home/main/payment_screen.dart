@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:common/core/ext/number_ext.dart';
 import 'package:design_system/widgets/dialogs.dart';
+import 'package:design_system/theme/text_styles.dart';
 import 'package:design_system/widgets/input_number.dart';
 import 'package:design_system/widgets/responsive.dart';
 import 'package:design_system/widgets/title_bar.dart';
@@ -287,8 +288,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     if (_isPromptPay) {
       return _oneLine(Text(
           strings.payByPromptPay("฿${formatDouble(widget.amount)}"),
-          style: _payLabelStyle
-              .copyWith(fontFeatures: const [FontFeature.tabularFigures()])));
+          style: AppText.money(_payLabelStyle)));
     }
     if (_change == 0) {
       return Semantics(
@@ -308,8 +308,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       return _oneLine(Text(strings.enterAmountReceived, style: _payLabelStyle));
     }
     return _oneLine(Text(strings.payWithChange("฿${formatDouble(_change)}"),
-        style: _payLabelStyle
-            .copyWith(fontFeatures: const [FontFeature.tabularFigures()])));
+        style: AppText.money(_payLabelStyle)));
   }
 
   static Widget _oneLine(Text text) => FittedBox(
@@ -339,17 +338,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
     getAmount() {
       if (!_isInput && amount.isEmpty) {
         return Text("฿${formatDouble(widget.amount)}",
-            style: TextStyle(
+            style: AppText.money(TextStyle(
                 fontSize: 24,
                 color: AppColors.of(context).textSecondary,
-                fontWeight: FontWeight.bold,
-                fontFeatures: const [FontFeature.tabularFigures()]));
+                fontWeight: FontWeight.bold)));
       }
       return Text("฿$amount",
-          style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              fontFeatures: [FontFeature.tabularFigures()]));
+          style: AppText.money(
+              const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)));
     }
 
     return Container(
@@ -394,11 +390,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(amount,
-                style: TextStyle(
+                style: AppText.money(TextStyle(
                     fontSize: 24,
                     color: AppColors.of(context).textPrimary,
-                    fontWeight: FontWeight.bold,
-                    fontFeatures: const [FontFeature.tabularFigures()])),
+                    fontWeight: FontWeight.bold))),
           ),
         ],
       ),
@@ -431,11 +426,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(getChange(),
-                style: TextStyle(
+                style: AppText.money(TextStyle(
                     fontSize: 24,
                     color: AppColors.of(context).textPrimary,
-                    fontWeight: FontWeight.bold,
-                    fontFeatures: const [FontFeature.tabularFigures()])),
+                    fontWeight: FontWeight.bold))),
           ),
         ],
       ),
