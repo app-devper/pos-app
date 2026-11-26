@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('presentation state is published through ViewState, never a bare '
+  test(
+      'presentation state is published through ViewState, never a bare '
       'ValueNotifier', () {
     final sources = Directory('lib/presentation')
         .listSync(recursive: true)

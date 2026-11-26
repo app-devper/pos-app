@@ -159,31 +159,33 @@ class _ProductStockWidgetState extends State<ProductStockWidget> {
             if (_formKey.currentState!.validate()) {
               if (widget.stock != null) {
                 _viewModel.run(() => _productRepo.updateProductStockById(
-                  widget.stock!.id,
-                  ProductStockParam(
-                    quantity: int.tryParse(_importController.text) ?? 0,
-                    importDate: _importDateController.text.toServerDate(),
-                    price: double.tryParse(_priceController.text) ?? 0,
-                    costPrice: double.tryParse(_costPriceController.text) ?? 0,
-                    lotNumber: _lotNumberController.text,
-                    expireDate: _expireDateController.text.toServerDate(),
-                    productId: widget.unit.productId,
-                    unitId: widget.unit.id,
-                  ),
-                ));
+                      widget.stock!.id,
+                      ProductStockParam(
+                        quantity: int.tryParse(_importController.text) ?? 0,
+                        importDate: _importDateController.text.toServerDate(),
+                        price: double.tryParse(_priceController.text) ?? 0,
+                        costPrice:
+                            double.tryParse(_costPriceController.text) ?? 0,
+                        lotNumber: _lotNumberController.text,
+                        expireDate: _expireDateController.text.toServerDate(),
+                        productId: widget.unit.productId,
+                        unitId: widget.unit.id,
+                      ),
+                    ));
               } else {
                 _viewModel.run(() => _productRepo.addProductStock(
-                  ProductStockParam(
-                    quantity: int.tryParse(_importController.text) ?? 0,
-                    importDate: _importDateController.text.toServerDate(),
-                    price: double.tryParse(_priceController.text) ?? 0,
-                    costPrice: double.tryParse(_costPriceController.text) ?? 0,
-                    lotNumber: _lotNumberController.text,
-                    expireDate: _expireDateController.text.toServerDate(),
-                    productId: widget.unit.productId,
-                    unitId: widget.unit.id,
-                  ),
-                ));
+                      ProductStockParam(
+                        quantity: int.tryParse(_importController.text) ?? 0,
+                        importDate: _importDateController.text.toServerDate(),
+                        price: double.tryParse(_priceController.text) ?? 0,
+                        costPrice:
+                            double.tryParse(_costPriceController.text) ?? 0,
+                        lotNumber: _lotNumberController.text,
+                        expireDate: _expireDateController.text.toServerDate(),
+                        productId: widget.unit.productId,
+                        unitId: widget.unit.id,
+                      ),
+                    ));
               }
             }
           },

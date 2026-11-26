@@ -173,7 +173,9 @@ class _ProductAddPageState extends State<ProductAddPage> {
                         'โปรดระบุข้อมูลสินค้า',
                         style: TextStyle(
                           fontSize: 16,
-                          color: AppColors.of(context).textPrimary.withValues(alpha: 0.6),
+                          color: AppColors.of(context)
+                              .textPrimary
+                              .withValues(alpha: 0.6),
                         ),
                       ),
                       const SizedBox(height: 32),

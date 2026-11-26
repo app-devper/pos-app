@@ -171,7 +171,8 @@ class _CategoryAddPageState extends State<CategoryAddPage> {
               _requireCustomerOrder = newValue;
             });
           },
-          controlAffinity: ListTileControlAffinity.leading, //  <-- leading Checkbox
+          controlAffinity:
+              ListTileControlAffinity.leading, //  <-- leading Checkbox
         )
       ],
     );

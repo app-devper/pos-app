@@ -17,15 +17,24 @@ void main() {
     final repo = ProductRepositoryImpl(
         cache: cache,
         posService: PosService(
-      networkConfig: FakeNetworkConfig(),
-      client: CustomClient(inner: MockClient((_) async {
-        calls++;
-        return http.Response(jsonEncode([{
-          'id': 'p1', 'name': 'Product', 'quantity': quantity,
-          'status': 'ACTIVE', 'category': '', 'createdDate': '', 'units': [],
-        }]), 200);
-      })),
-    ));
+          networkConfig: FakeNetworkConfig(),
+          client: CustomClient(inner: MockClient((_) async {
+            calls++;
+            return http.Response(
+                jsonEncode([
+                  {
+                    'id': 'p1',
+                    'name': 'Product',
+                    'quantity': quantity,
+                    'status': 'ACTIVE',
+                    'category': '',
+                    'createdDate': '',
+                    'units': [],
+                  }
+                ]),
+                200);
+          })),
+        ));
     expect((await repo.getLocalProducts()).single.quantity, 10);
     quantity = 11;
     cache.invalidate();

@@ -120,13 +120,13 @@ void main() {
       // Assert
       for (final label in [
         '12x $_name แผง ฿14,814.00 ราคาหน้าร้าน',
-        'ลดจำนวน $_name',
-        'แก้ไขจำนวน $_name',
-        'เพิ่มจำนวน $_name',
+        'ลดจำนวน $_name แผง',
+        'แก้ไขจำนวน $_name แผง',
+        'เพิ่มจำนวน $_name แผง',
       ]) {
         expect(find.bySemanticsLabel(label), findsOneWidget, reason: label);
       }
-      expect(find.byTooltip('อนุญาตขายเกินสต็อก $_name'), findsOneWidget);
+      expect(find.byTooltip('อนุญาตขายเกินสต็อก $_name แผง'), findsOneWidget);
       semantics.dispose();
     }, variant: _densities);
 
@@ -139,13 +139,13 @@ void main() {
 
       // Act
       for (final label in [
-        'ลดจำนวน $_name',
-        'แก้ไขจำนวน $_name',
-        'เพิ่มจำนวน $_name',
+        'ลดจำนวน $_name แผง',
+        'แก้ไขจำนวน $_name แผง',
+        'เพิ่มจำนวน $_name แผง',
       ]) {
         await tester.tap(find.bySemanticsLabel(label));
       }
-      await tester.tap(find.byTooltip('อนุญาตขายเกินสต็อก $_name'));
+      await tester.tap(find.byTooltip('อนุญาตขายเกินสต็อก $_name แผง'));
 
       // Assert
       expect(taps, ['remove', 'edit', 'add', 'oversell']);
@@ -163,7 +163,7 @@ void main() {
     // Assert
     expect(tester.takeException(), isNull);
     final name = tester.getRect(find.text(_name));
-    final add = tester.getRect(find.bySemanticsLabel('เพิ่มจำนวน $_name'));
+    final add = tester.getRect(find.bySemanticsLabel('เพิ่มจำนวน $_name แผง'));
     expect(add.center.dy, closeTo(name.center.dy, 12),
         reason: 'the buttons are on the name\'s row');
   }, variant: _densities);

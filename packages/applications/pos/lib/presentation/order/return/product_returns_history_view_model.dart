@@ -16,8 +16,8 @@ class ProductReturnsHistoryViewModel {
     required this.productReturnRepo,
   });
 
-  final _state = ViewState<ProductReturnsHistoryState>(
-      const ProductReturnsHistoryState());
+  final _state =
+      ViewState<ProductReturnsHistoryState>(const ProductReturnsHistoryState());
 
   ValueListenable<ProductReturnsHistoryState> get state => _state;
 

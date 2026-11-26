@@ -24,8 +24,7 @@ class ProductReturnRepositoryImpl implements ProductReturnRepository {
   });
 
   @override
-  Future<ProductReturn> createProductReturn(
-      CreateProductReturnParam param) {
+  Future<ProductReturn> createProductReturn(CreateProductReturnParam param) {
     return productCache.staleAfter(() async {
       final response =
           await posService.createProductReturn(param.toProductReturnRequest());

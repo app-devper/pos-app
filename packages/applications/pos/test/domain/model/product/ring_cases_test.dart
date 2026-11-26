@@ -9,9 +9,9 @@ import 'package:pos/domain/model/product/product.dart';
 /// which Stock sells first; the till previews it. Both read the same cases:
 /// this file is a copy of pos-api's app/domain/sale/testdata/ring_cases.json.
 void main() {
-  final cases = (jsonDecode(
-          File('test/fixtures/ring_cases.json').readAsStringSync())
-      as Map<String, dynamic>)['cases'] as List;
+  final cases =
+      (jsonDecode(File('test/fixtures/ring_cases.json').readAsStringSync())
+          as Map<String, dynamic>)['cases'] as List;
 
   for (final c in cases.cast<Map<String, dynamic>>()) {
     test(c['name'], () {
@@ -59,8 +59,8 @@ void main() {
         stocks: stocks.toList(),
       );
       final listed = product.stocks.map((s) => s.id).toList();
-      final chosen = product
-          .getProductStockById(c['stockId'] == '' ? null : c['stockId']);
+      final chosen =
+          product.getProductStockById(c['stockId'] == '' ? null : c['stockId']);
       final first = chosen ?? product.getFirstSequenceStock();
       final priced = product.priceFrom(c['priceType'], first);
       final want = c['want'] as Map<String, dynamic>;

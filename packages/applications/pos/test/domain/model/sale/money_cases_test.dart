@@ -9,9 +9,9 @@ import 'package:pos/domain/model/sale/money.dart';
 /// app/domain/sale/testdata/money_cases.json, so a rule changed on one side
 /// fails here until the other side matches.
 void main() {
-  final cases = jsonDecode(
-          File('test/fixtures/sale_money_cases.json').readAsStringSync())
-      as Map<String, dynamic>;
+  final cases =
+      jsonDecode(File('test/fixtures/sale_money_cases.json').readAsStringSync())
+          as Map<String, dynamic>;
 
   double n(Object? v) => (v as num).toDouble();
 
@@ -19,8 +19,8 @@ void main() {
     for (final c in (cases['lines'] as List).cast<Map<String, dynamic>>()) {
       test(c['name'], () {
         final want = c['want'] as Map<String, dynamic>;
-        final got =
-            Charge.of(n(c['unitPrice']), c['quantity'] as int, n(c['discount']));
+        final got = Charge.of(
+            n(c['unitPrice']), c['quantity'] as int, n(c['discount']));
 
         expect(got.amount, n(want['Amount']), reason: 'amount');
         expect(got.discount, n(want['Discount']), reason: 'discount');
@@ -32,10 +32,10 @@ void main() {
   group('a Sale totals what pos-api records', () {
     for (final c in (cases['sales'] as List).cast<Map<String, dynamic>>()) {
       test(c['name'], () {
-        final paid = (c['lines'] as List)
-            .cast<Map<String, dynamic>>()
-            .map((l) => Charge.of(
-                n(l['unitPrice']), l['quantity'] as int, n(l['discount'])).paid);
+        final paid = (c['lines'] as List).cast<Map<String, dynamic>>().map(
+            (l) => Charge.of(
+                    n(l['unitPrice']), l['quantity'] as int, n(l['discount']))
+                .paid);
 
         expect(saleTotal(paid), n(c['wantTotal']));
       });

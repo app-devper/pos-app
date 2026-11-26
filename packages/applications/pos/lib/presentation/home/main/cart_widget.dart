@@ -350,8 +350,8 @@ class CartOrderItem extends StatelessWidget {
           height: 36,
           child: Tooltip(
             message: allowOversell
-                ? Languages.of(context).oversellAllowed(title)
-                : Languages.of(context).allowOversell(title),
+                ? Languages.of(context).oversellAllowed(_line)
+                : Languages.of(context).allowOversell(_line),
             child: InkResponse(
               onTap: () {
                 onToggleOversell.call();
@@ -381,7 +381,7 @@ class CartOrderItem extends StatelessWidget {
           width: 36,
           height: 36,
           child: _named(
-            Languages.of(context).oneLess(title),
+            Languages.of(context).oneLess(_line),
             InkResponse(
               onTap: () {
                 onRemove.call();
@@ -412,7 +412,7 @@ class CartOrderItem extends StatelessWidget {
               '${quantity}x',
               // The line's own node reads the quantity; the button
               // says what it does, to which line.
-              semanticsLabel: Languages.of(context).changeQuantity(title),
+              semanticsLabel: Languages.of(context).changeQuantity(_line),
               textAlign: TextAlign.center,
               maxLines: 1,
               style: const TextStyle(
@@ -427,7 +427,7 @@ class CartOrderItem extends StatelessWidget {
           width: 36,
           height: 36,
           child: _named(
-            Languages.of(context).oneMore(title),
+            Languages.of(context).oneMore(_line),
             InkResponse(
               onTap: () {
                 onAdd.call();
@@ -447,6 +447,9 @@ class CartOrderItem extends StatelessWidget {
           ),
         ),
       ];
+
+  /// Which line a button acts on: the cart has a line per product and unit.
+  String get _line => '$title $unit';
 
   /// What the line reads: quantity, product, unit and amount to pay, then
   /// the full amount when discounted, or else the price's kind.

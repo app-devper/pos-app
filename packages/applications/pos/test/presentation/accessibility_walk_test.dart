@@ -52,11 +52,11 @@ Product _product(String id, String name) => Product(
       stocks: const [],
     );
 
-CartOrderItem _cartLine(String name) => CartOrderItem(
+CartOrderItem _cartLine(String name, {String unit = 'ชิ้น'}) => CartOrderItem(
       title: name,
       quantity: 2,
       price: 25,
-      unit: 'ชิ้น',
+      unit: unit,
       discount: 0,
       priceDetail: 'ราคาหน้าร้าน',
       allowOversell: false,
@@ -67,10 +67,11 @@ CartOrderItem _cartLine(String name) => CartOrderItem(
       onToggleOversell: () {},
     );
 
-OrderItemDetail _billLine(String id, String name) => OrderItemDetail(
+OrderItemDetail _billLine(String id, String name, {int quantity = 2}) =>
+    OrderItemDetail(
       id: id,
       product: _product('p-$id', name),
-      quantity: 2,
+      quantity: quantity,
       price: 25,
       costPrice: 10,
       discount: 0,
@@ -78,10 +79,11 @@ OrderItemDetail _billLine(String id, String name) => OrderItemDetail(
       order: null,
     );
 
-OrderDetail _bill() => OrderDetail(
+OrderDetail _bill({List<OrderItemDetail>? items}) => OrderDetail(
       id: 'order-1',
       createdDate: '2026-11-26T10:00:00Z',
-      items: [_billLine('i1', 'พาราเซตามอล'), _billLine('i2', 'ยาแก้ไอ')],
+      items:
+          items ?? [_billLine('i1', 'พาราเซตามอล'), _billLine('i2', 'ยาแก้ไอ')],
       total: 100,
       totalCost: 40,
       discount: 0,
@@ -119,6 +121,19 @@ final _unit = ProductUnit(
 
 const _customer = 'สมชาย ใจดี';
 
+/// The bill detail of [detail], as an admin sees it.
+Widget _billDetail(OrderDetail detail) {
+  sl.registerFactory(() => OrderDetailViewModel(
+        getRoleUseCase: GetRoleUseCase(bill.FakeLoginRepository(role: 'ADMIN')),
+        orderRepo: bill.FakeOrderRepository(orderDetail: detail),
+        supplierRepo: bill.FakeSupplierRepository(
+            supplier: Supplier(
+                id: 's1', name: 'ร้าน', address: '', phone: '', taxId: '')),
+        customerRepo: bill.FakeCustomerRepository(),
+      ));
+  return const OrderDetailPage(orderId: 'order-1');
+}
+
 /// Puts the sale fakes' product in the cart and chooses a customer.
 Future<void> _fillCart(WidgetTester tester) async {
   final sale = sl<CartViewModel>();
@@ -154,19 +169,25 @@ final _morePages = <String, _Walked>{
         ),
     then: null,
   ),
+  // One product sold in two units: a line per unit, each named apart.
+  'one product in two units in the cart': (
+    build: () => Scaffold(
+          body: Column(children: [
+            _cartLine('พาราเซตามอล'),
+            _cartLine('พาราเซตามอล', unit: 'แผง'),
+          ]),
+        ),
+    then: null,
+  ),
+  'a bill with one product on two lines, for an admin': (
+    build: () => _billDetail(_bill(items: [
+          _billLine('i1', 'พาราเซตามอล'),
+          _billLine('i2', 'พาราเซตามอล', quantity: 1),
+        ])),
+    then: null,
+  ),
   'the bill detail, for an admin': (
-    build: () {
-      sl.registerFactory(() => OrderDetailViewModel(
-            getRoleUseCase:
-                GetRoleUseCase(bill.FakeLoginRepository(role: 'ADMIN')),
-            orderRepo: bill.FakeOrderRepository(orderDetail: _bill()),
-            supplierRepo: bill.FakeSupplierRepository(
-                supplier: Supplier(
-                    id: 's1', name: 'ร้าน', address: '', phone: '', taxId: '')),
-            customerRepo: bill.FakeCustomerRepository(),
-          ));
-      return const OrderDetailPage(orderId: 'order-1');
-    },
+    build: () => _billDetail(_bill()),
     then: null,
   ),
   'the receipt list': (

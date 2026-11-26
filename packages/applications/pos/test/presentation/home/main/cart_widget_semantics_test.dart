@@ -45,7 +45,8 @@ void main() {
     // Assert: the visible text is unchanged, the label names the line (the
     // line's own node reads the quantity: text_beside_controls_semantics_test)
     expect(find.text('2x'), findsOneWidget);
-    expect(find.bySemanticsLabel('แก้ไขจำนวน Paracetamol 500'), findsOneWidget);
+    expect(find.bySemanticsLabel('แก้ไขจำนวน Paracetamol 500 ชิ้น'),
+        findsOneWidget);
     semantics.dispose();
   });
 

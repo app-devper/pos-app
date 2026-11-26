@@ -449,6 +449,5 @@ void main() {
 
       expect(sale.lines.single.priceType.stock?.id, 'old');
     });
-
   });
 }

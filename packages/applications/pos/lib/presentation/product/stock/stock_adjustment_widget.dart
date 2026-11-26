@@ -170,7 +170,9 @@ class _StockAdjustmentWidgetState extends State<StockAdjustmentWidget> {
                       hintText: 'โปรดระบุจำนวนที่ต้องการปรับ',
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty || int.tryParse(value) == 0) {
+                      if (value == null ||
+                          value.isEmpty ||
+                          int.tryParse(value) == 0) {
                         return 'โปรดระบุจำนวนที่ต้องการปรับ';
                       }
                       return null;
@@ -209,13 +211,13 @@ class _StockAdjustmentWidgetState extends State<StockAdjustmentWidget> {
     final magnitude = int.tryParse(_deltaController.text) ?? 0;
     final delta = _isIncrease ? magnitude : -magnitude;
     _viewModel.run(() => _adjustments.createStockAdjustment(
-      CreateStockAdjustmentParam(
-        productId: widget.stock.productId,
-        stockId: widget.stock.id,
-        reason: _reason!,
-        note: _noteController.text,
-        delta: delta,
-      ),
-    ));
+          CreateStockAdjustmentParam(
+            productId: widget.stock.productId,
+            stockId: widget.stock.id,
+            reason: _reason!,
+            note: _noteController.text,
+            delta: delta,
+          ),
+        ));
   }
 }

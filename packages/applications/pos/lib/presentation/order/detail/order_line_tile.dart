@@ -91,7 +91,10 @@ class OrderLineTile extends StatelessWidget {
       return ExcludeSemantics(child: _buildQuantityColumn(context));
     }
     final names = Languages.of(context);
-    final product = line.product?.name ?? '';
+    // The bill carries no unit name, so a line is told apart from another
+    // of the same product by its quantity and amount.
+    final product = '${line.quantity}x ${line.product?.name ?? ''} '
+        '฿${_format.format(line.paid())}';
     return SizedBox(
       width: 130,
       height: 50,

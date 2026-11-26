@@ -30,7 +30,8 @@ InputDecoration buildInputDecoration({
 
 class DateFormatter extends TextInputFormatter {
   @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
     int selectionIndex;
 
     String date;
@@ -75,7 +76,8 @@ class DateFormatter extends TextInputFormatter {
       /// the first digit of the Month. But, it
       // Can only be 0 or 1
       /// (and, not  '/' either)
-      if (int.parse(cText.substring(3, 4)) > 1 || cText.substring(3, 4) == "/") {
+      if (int.parse(cText.substring(3, 4)) > 1 ||
+          cText.substring(3, 4) == "/") {
         // Remove char
         cText = cText.substring(0, 3);
       }
@@ -89,7 +91,8 @@ class DateFormatter extends TextInputFormatter {
       if ((mm == 0 || mm > 12 || cText.substring(3, 5) == "/") ||
 
           /// If the date is 31, the month cannot be Apr, Jun, Sept or Nov
-          (dd == 31 && (mm == 02 || mm == 04 || mm == 06 || mm == 09 || mm == 11)) ||
+          (dd == 31 &&
+              (mm == 02 || mm == 04 || mm == 06 || mm == 09 || mm == 11)) ||
 
           /// If the date is greater than 29, the month cannot be Feb
           /// (Leap years will be dealt with, when user enters the Year)
@@ -110,7 +113,8 @@ class DateFormatter extends TextInputFormatter {
         cText = '${cText.substring(0, 2)}/';
       } else {
         // Insert / char
-        cText = '${cText.substring(0, pLen)}/${cText.substring(pLen, pLen + 1)}';
+        cText =
+            '${cText.substring(0, pLen)}/${cText.substring(pLen, pLen + 1)}';
       }
 
       /// ENTERING THE YEAR
@@ -159,7 +163,8 @@ class DateFormatter extends TextInputFormatter {
       date = cText.substring(0, 2);
       month = cText.substring(3, 5);
       year = int.parse(cText.substring(6, 10));
-      bool isNotLeapYear = !((year % 4 == 0) && (year % 100 != 0) || (year % 400 == 0));
+      bool isNotLeapYear =
+          !((year % 4 == 0) && (year % 100 != 0) || (year % 400 == 0));
       if (isNotLeapYear && month == "02" && date == "29") {
         cText = "01/03/$year";
       }

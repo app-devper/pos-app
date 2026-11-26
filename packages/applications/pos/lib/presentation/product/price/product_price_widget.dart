@@ -79,7 +79,8 @@ class _ProductPriceWidgetState extends State<ProductPriceWidget> {
     if (widget.price != null) {
       _priceController.text = widget.price!.price.toString();
       setState(() {
-        customerType = customerTypes.firstWhere((element) => element.type == widget.price!.customerType);
+        customerType = customerTypes.firstWhere(
+            (element) => element.type == widget.price!.customerType);
       });
     }
     super.initState();
@@ -101,9 +102,14 @@ class _ProductPriceWidgetState extends State<ProductPriceWidget> {
   Widget build(BuildContext context) {
     List<ItemType> customers = [];
     if (widget.price != null) {
-      customers = customerTypes.where((customer) => customer.type == widget.price!.customerType).toList();
+      customers = customerTypes
+          .where((customer) => customer.type == widget.price!.customerType)
+          .toList();
     } else {
-      customers = customerTypes.where((customer) => !widget.prices.any((element) => element.customerType == customer.type)).toList();
+      customers = customerTypes
+          .where((customer) => !widget.prices
+              .any((element) => element.customerType == customer.type))
+          .toList();
       if (customers.isNotEmpty) {
         setState(() {
           customerType = customers.first;
@@ -119,7 +125,9 @@ class _ProductPriceWidgetState extends State<ProductPriceWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         TitleBar(
-          title: widget.price == null ? "เพิ่มราคาขายใหม่" : "แก้ไขราคาขาย ${widget.price!.getCustomerTypeDisplay()}",
+          title: widget.price == null
+              ? "เพิ่มราคาขายใหม่"
+              : "แก้ไขราคาขาย ${widget.price!.getCustomerTypeDisplay()}",
           onBack: () {
             Navigator.of(context).pop();
           },
@@ -128,21 +136,22 @@ class _ProductPriceWidgetState extends State<ProductPriceWidget> {
             if (_formKey.currentState!.validate()) {
               if (widget.price != null) {
                 _viewModel.run(() => _productRepo.updateProductPriceById(
-                  widget.price!.id,
-                  ProductPriceParam(
-                    productId: unit.productId,
-                    unitId: unit.id,
-                    price: double.parse(_priceController.text),
-                    customerType: customerType!.type,
-                  ),
-                ));
+                      widget.price!.id,
+                      ProductPriceParam(
+                        productId: unit.productId,
+                        unitId: unit.id,
+                        price: double.parse(_priceController.text),
+                        customerType: customerType!.type,
+                      ),
+                    ));
               } else {
-                _viewModel.run(() => _productRepo.addProductPrice(ProductPriceParam(
-                  productId: unit.productId,
-                  unitId: unit.id,
-                  price: double.parse(_priceController.text),
-                  customerType: customerType!.type,
-                )));
+                _viewModel
+                    .run(() => _productRepo.addProductPrice(ProductPriceParam(
+                          productId: unit.productId,
+                          unitId: unit.id,
+                          price: double.parse(_priceController.text),
+                          customerType: customerType!.type,
+                        )));
               }
             }
           },
@@ -168,7 +177,9 @@ class _ProductPriceWidgetState extends State<ProductPriceWidget> {
                   'โปรดระบุข้อมูลราคาขาย "${unit.unit}"',
                   style: TextStyle(
                     fontSize: 16,
-                    color: AppColors.of(context).textPrimary.withValues(alpha: 0.6),
+                    color: AppColors.of(context)
+                        .textPrimary
+                        .withValues(alpha: 0.6),
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -187,7 +198,8 @@ class _ProductPriceWidgetState extends State<ProductPriceWidget> {
                             }
                             return null;
                           },
-                          padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 0, vertical: 0),
                           decoration: buildInputDecoration(
                             context: context,
                             labelText: 'ผูกกับประเภทลูกค้า',
@@ -196,7 +208,8 @@ class _ProductPriceWidgetState extends State<ProductPriceWidget> {
                           focusColor: Colors.transparent,
                           initialValue: customerType,
                           autovalidateMode: AutovalidateMode.onUserInteraction,
-                          items: customers.map<DropdownMenuItem<ItemType>>((ItemType value) {
+                          items: customers.map<DropdownMenuItem<ItemType>>(
+                              (ItemType value) {
                             return DropdownMenuItem<ItemType>(
                               value: value,
                               child: Text(value.name),
@@ -246,7 +259,8 @@ class _ProductPriceWidgetState extends State<ProductPriceWidget> {
                             context,
                             'ยืนยันการลบราคาขาย ${widget.price!.getCustomerTypeDisplay()}',
                             () {
-                              _viewModel.run(() => _productRepo.removeProductPriceById(widget.price!.id));
+                              _viewModel.run(() => _productRepo
+                                  .removeProductPriceById(widget.price!.id));
                             },
                           );
                         },
