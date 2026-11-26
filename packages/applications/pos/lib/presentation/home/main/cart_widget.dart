@@ -235,6 +235,72 @@ class CartOrderItem extends StatelessWidget {
       );
     }
 
+    return LayoutBuilder(builder: (context, constraints) {
+      if (constraints.maxWidth < _wideMinWidth) {
+        return _buildNarrow(context, getPriceDiscount());
+      }
+      return _buildWide(context, getPriceDiscount());
+    });
+  }
+
+  /// A cart wide enough for the controls and the price beside the name.
+  Widget _buildWide(BuildContext context, Widget price) {
+    final tile = ReadableTile(
+      label: _label(),
+      onTap: () {
+        onEditPrice.call();
+      },
+      dense: true,
+      visualDensity: const VisualDensity(vertical: -3),
+      title: Text(
+        title,
+        maxLines: 1,
+        style: const TextStyle(
+          fontSize: 16,
+        ),
+      ),
+      subtitle: Text(
+        unit,
+        style: TextStyle(
+          color: AppColors.of(context).textSecondary,
+          fontSize: 14,
+        ),
+      ),
+      trailing: SizedBox(
+        width: _controlsWidth,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            ..._controls(context),
+            const SizedBox(width: 4),
+            // Read in the line's own node.
+            ExcludeSemantics(child: price),
+          ],
+        ),
+      ),
+    );
+
+    return Column(
+      children: [
+        tile,
+        const Divider(
+          height: 1,
+        ),
+      ],
+    );
+  }
+
+  /// The width of the quantity controls and the price, side by side.
+  static const _controlsWidth = 288.0;
+
+  /// The narrowest line that keeps the controls beside the name: the
+  /// controls, the tile's 40 px of padding and 160 px for the name.
+  static const _wideMinWidth = _controlsWidth + 40 + 160;
+
+  /// A narrow cart (a phone's, a tablet's or the desktop's panel): the
+  /// name, unit and price on the first row, the quantity controls on a row
+  /// of their own under them.
+  Widget _buildNarrow(BuildContext context, Widget price) {
     return Column(
       children: [
         ReadableTile(
@@ -246,7 +312,8 @@ class CartOrderItem extends StatelessWidget {
           visualDensity: const VisualDensity(vertical: -3),
           title: Text(
             title,
-            maxLines: 1,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontSize: 16,
             ),
@@ -258,118 +325,14 @@ class CartOrderItem extends StatelessWidget {
               fontSize: 14,
             ),
           ),
-          trailing: SizedBox(
-            width: 288,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: Tooltip(
-                    message: allowOversell
-                        ? Languages.of(context).oversellAllowed(title)
-                        : Languages.of(context).allowOversell(title),
-                    child: InkResponse(
-                      onTap: () {
-                        onToggleOversell.call();
-                      },
-                      child: Ink(
-                        decoration: ShapeDecoration(
-                          color: allowOversell
-                              ? Colors.orange[50]
-                              : AppColors.of(context).surfaceSunken,
-                          shape: CircleBorder(),
-                        ),
-                        child: Icon(
-                          allowOversell
-                              ? Icons.check_box
-                              : Icons.check_box_outline_blank,
-                          color: allowOversell
-                              ? Colors.orange
-                              : AppColors.of(context).textSecondary,
-                          size: 18,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: _named(
-                    Languages.of(context).oneLess(title),
-                    InkResponse(
-                      onTap: () {
-                        onRemove.call();
-                      },
-                      child: Ink(
-                        decoration: ShapeDecoration(
-                          color: Colors.red[50],
-                          shape: const CircleBorder(),
-                        ),
-                        child: const Icon(
-                          Icons.remove,
-                          color: Colors.red,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                InkWell(
-                  onTap: () {
-                    onEdit.call();
-                  },
-                  child: Container(
-                    width: 50,
-                    height: 36,
-                    alignment: Alignment.center,
-                    child: Text(
-                      '${quantity}x',
-                      // The line's own node reads the quantity; the button
-                      // says what it does, to which line.
-                      semanticsLabel:
-                          Languages.of(context).changeQuantity(title),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        decoration: TextDecoration.underline,
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: _named(
-                    Languages.of(context).oneMore(title),
-                    InkResponse(
-                      onTap: () {
-                        onAdd.call();
-                      },
-                      child: Ink(
-                        decoration: ShapeDecoration(
-                          color: AppColors.of(context).surfaceSunken,
-                          shape: const CircleBorder(),
-                        ),
-                        child: Icon(
-                          Icons.add,
-                          color: AppColors.of(context).textPrimary,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                // Read in the line's own node.
-                ExcludeSemantics(child: getPriceDiscount()),
-              ],
-            ),
+          // Read in the line's own node.
+          trailing: ExcludeSemantics(child: price),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: _controls(context),
           ),
         ),
         const Divider(
@@ -378,6 +341,111 @@ class CartOrderItem extends StatelessWidget {
       ],
     );
   }
+
+  /// The line's oversell switch, one less, its quantity and one more.
+  List<Widget> _controls(BuildContext context) => [
+        SizedBox(
+          width: 36,
+          height: 36,
+          child: Tooltip(
+            message: allowOversell
+                ? Languages.of(context).oversellAllowed(title)
+                : Languages.of(context).allowOversell(title),
+            child: InkResponse(
+              onTap: () {
+                onToggleOversell.call();
+              },
+              child: Ink(
+                decoration: ShapeDecoration(
+                  color: allowOversell
+                      ? Colors.orange[50]
+                      : AppColors.of(context).surfaceSunken,
+                  shape: CircleBorder(),
+                ),
+                child: Icon(
+                  allowOversell
+                      ? Icons.check_box
+                      : Icons.check_box_outline_blank,
+                  color: allowOversell
+                      ? Colors.orange
+                      : AppColors.of(context).textSecondary,
+                  size: 18,
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 4),
+        SizedBox(
+          width: 36,
+          height: 36,
+          child: _named(
+            Languages.of(context).oneLess(title),
+            InkResponse(
+              onTap: () {
+                onRemove.call();
+              },
+              child: Ink(
+                decoration: ShapeDecoration(
+                  color: Colors.red[50],
+                  shape: const CircleBorder(),
+                ),
+                child: const Icon(
+                  Icons.remove,
+                  color: Colors.red,
+                  size: 20,
+                ),
+              ),
+            ),
+          ),
+        ),
+        InkWell(
+          onTap: () {
+            onEdit.call();
+          },
+          child: Container(
+            width: 50,
+            height: 36,
+            alignment: Alignment.center,
+            child: Text(
+              '${quantity}x',
+              // The line's own node reads the quantity; the button
+              // says what it does, to which line.
+              semanticsLabel: Languages.of(context).changeQuantity(title),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
+        ),
+        SizedBox(
+          width: 36,
+          height: 36,
+          child: _named(
+            Languages.of(context).oneMore(title),
+            InkResponse(
+              onTap: () {
+                onAdd.call();
+              },
+              child: Ink(
+                decoration: ShapeDecoration(
+                  color: AppColors.of(context).surfaceSunken,
+                  shape: const CircleBorder(),
+                ),
+                child: Icon(
+                  Icons.add,
+                  color: AppColors.of(context).textPrimary,
+                  size: 20,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ];
 
   /// What the line reads: quantity, product, unit and amount to pay, then
   /// the full amount when discounted, or else the price's kind.

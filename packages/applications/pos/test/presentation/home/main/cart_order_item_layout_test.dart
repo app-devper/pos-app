@@ -4,6 +4,7 @@
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 // Package imports:
 import 'package:design_system/theme/theme.dart';
@@ -14,6 +15,8 @@ import 'package:pos/presentation/home/main/cart_widget.dart';
 import '../../../support/app_fonts.dart';
 import '../../../support/app_languages.dart';
 
+const _name = 'พาราเซตามอล 500 มก. แผงละ 10 เม็ด';
+
 Widget _host(double width, {required double discount}) => MaterialApp(
       theme: CustomTheme.mainTheme,
       localizationsDelegates: const [thaiLanguages],
@@ -23,7 +26,7 @@ Widget _host(double width, {required double discount}) => MaterialApp(
           child: SizedBox(
             width: width,
             child: CartOrderItem(
-              title: 'พาราเซตามอล 500 มก. แผงละ 10 เม็ด',
+              title: _name,
               quantity: 12,
               price: 1234.5,
               unit: 'แผง',
@@ -40,8 +43,6 @@ Widget _host(double width, {required double discount}) => MaterialApp(
         ),
       ),
     );
-
-const _finding29 = true;
 
 /// A phone's touch density and the desktop's compact one.
 final _densities =
@@ -69,9 +70,11 @@ void main() {
     }
   }
 
-  // Found by the accessibility walk: on a 360 px phone the cart is the screen
-  // less its 51 px cart slots, 309 px, and the line's 288 px of buttons and
-  // price leave its 40 px of padding and the product name no room.
+  // Finding 29, found by the accessibility walk: on a 360 px phone the cart
+  // is the screen less its 51 px cart slots, 309 px, and the line's 288 px
+  // of buttons and price left its 40 px of padding and the product name no
+  // room. A cart that narrow puts the quantity controls on a row of their
+  // own, under the name, unit and price.
   testWidgets('a cart line fits the 309 px cart of a 360 px phone',
       (tester) async {
     // Arrange
@@ -82,10 +85,46 @@ void main() {
 
     // Assert
     expect(tester.takeException(), isNull);
-    expect(tester.getSize(find.text('พาราเซตามอล 500 มก. แผงละ 10 เม็ด')).width,
-        greaterThan(0));
-  },
-      // FINDING 29: the line needs a narrow layout; see e2e-findings.md.
-      skip: _finding29,
-      variant: _densities);
+    expect(tester.getSize(find.text(_name)).width, greaterThan(0));
+  }, variant: _densities);
+
+  for (final width in [phoneSize.width - 51, 400.0]) {
+    testWidgets('a $width px cart line lays out the whole product name',
+        (tester) async {
+      // Arrange
+      useViewSize(tester, phoneSize);
+
+      // Act
+      await tester.pumpWidget(_host(width, discount: 0));
+
+      // Assert
+      expect(tester.takeException(), isNull);
+      final name = tester.renderObject<RenderParagraph>(find.text(_name));
+      expect(name.didExceedMaxLines, isFalse,
+          reason: 'the name is cut short in ${name.size}');
+      expectInside(tester, find.text(_name), find.byType(CartOrderItem));
+    }, variant: _densities);
+
+    testWidgets('every control of a $width px cart line keeps its name',
+        (tester) async {
+      // Arrange
+      final semantics = tester.ensureSemantics();
+      useViewSize(tester, phoneSize);
+
+      // Act
+      await tester.pumpWidget(_host(width, discount: 0));
+
+      // Assert
+      for (final label in [
+        '12x $_name แผง ฿14,814.00 ราคาหน้าร้าน',
+        'ลดจำนวน $_name',
+        'แก้ไขจำนวน $_name',
+        'เพิ่มจำนวน $_name',
+      ]) {
+        expect(find.bySemanticsLabel(label), findsOneWidget, reason: label);
+      }
+      expect(find.byTooltip('อนุญาตขายเกินสต็อก $_name'), findsOneWidget);
+      semantics.dispose();
+    }, variant: _densities);
+  }
 }

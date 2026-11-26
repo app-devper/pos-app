@@ -229,12 +229,6 @@ final _screens = <String, (_Walked, bool)>{
   for (final MapEntry(:key, :value) in _morePages.entries) key: (value, false),
 };
 
-/// A cart line does not fit a 360 px phone's cart (finding 29, pinned in
-/// `cart_order_item_layout_test.dart`): the screen with a line is walked on
-/// the emulator's phone size instead.
-const _linePhoneSize = Size(411, 891);
-const _needsLinePhone = {'the selling screen with a line and a customer'};
-
 bool _isTappable(Widget widget) =>
     (widget is InkResponse && widget.onTap != null) ||
     (widget is GestureDetector && widget.onTap != null);
@@ -337,11 +331,7 @@ void main() {
           (tester) async {
         // Arrange
         final semantics = tester.ensureSemantics();
-        useViewSize(
-            tester,
-            size == phoneSize && _needsLinePhone.contains(name)
-                ? _linePhoneSize
-                : size);
+        useViewSize(tester, size);
         await showScreen(tester, screen.build(),
             isDialog: isDialog, languages: thaiLanguages);
         await screen.then?.call(tester);
