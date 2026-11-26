@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:design_system/theme/text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
