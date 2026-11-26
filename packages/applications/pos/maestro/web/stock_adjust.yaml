@@ -1,0 +1,7 @@
+url: http://127.0.0.1:8090
+name: web - adjust a lot up and down with a reason
+env:
+  LAYOUT: wide
+---
+- launchApp
+- runFlow: ../shared/stock_adjust.yaml

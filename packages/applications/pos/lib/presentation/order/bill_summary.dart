@@ -44,13 +44,22 @@ class BillSummary extends StatelessWidget {
     );
   }
 
-  Row _row(String label, double amount) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: <Widget>[
-        Text(label),
-        Text('฿ ${_money.format(amount)}'),
-      ],
+  /// A row of the foot, read as one node of its own (`ยอดรวม ฿ 75.00`): on
+  /// the web a text merged into a node with children is not written into
+  /// the page.
+  Widget _row(String label, double amount) {
+    final figure = '฿ ${_money.format(amount)}';
+    return Semantics(
+      container: true,
+      label: '$label $figure',
+      excludeSemantics: true,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Text(label),
+          Text(figure),
+        ],
+      ),
     );
   }
 }

@@ -44,4 +44,24 @@ void main() {
     // Assert
     expect(text, 'ต้นทุน: 20.00  กำไร: 30.00');
   });
+
+  // On the web a text merged into a node with children is written as an
+  // aria-label only, which Maestro cannot read: each row of the foot is a
+  // leaf node of its own (the bills list merged its foot into the page).
+  testWidgets('each row of the foot is one node of its own', (tester) async {
+    // Arrange
+    final semantics = tester.ensureSemantics();
+
+    // Act
+    await tester.pumpWidget(_host(Semantics(
+        container: true,
+        child: const BillSummary(total: 950, totalCost: 380, showCost: true))));
+
+    // Assert
+    for (final row in ['ยอดรวม ฿ 950.00', 'ต้นทุน ฿ 380.00', 'กำไร ฿ 570.00']) {
+      final node = tester.getSemantics(find.bySemanticsLabel(row));
+      expect(node.childrenCount, 0, reason: row);
+    }
+    semantics.dispose();
+  });
 }

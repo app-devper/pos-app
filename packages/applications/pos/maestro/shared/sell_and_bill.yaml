@@ -65,7 +65,7 @@ appId: app.devper.pos
 - extendedWaitUntil:
     visible: "${output.billCode} .*"
     timeout: 10000
-- assertVisible: "(ยอดรวม\n?)?฿ 50\\.00"
+- assertVisible: "ยอดรวม ฿ 50\\.00"
 # The bill's line reads as one node: quantity, product, (for an admin) cost
 # and profit, amount.
 - assertVisible: "2x ${PRODUCT_NAME} .*฿50\\.00"

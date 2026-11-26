@@ -1,0 +1,8 @@
+appId: app.devper.pos
+name: android - return one of a bill, then cancel the bill
+env:
+  LAYOUT: narrow
+---
+- launchApp:
+    clearState: true
+- runFlow: ../shared/bill_cancel_return.yaml

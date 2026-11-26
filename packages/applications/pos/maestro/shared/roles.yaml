@@ -1,0 +1,55 @@
+# What each role is shown (as navigation_test.dart checks it): an admin has
+# selling, bills, products and จัดการ in the menu, and the bills' store
+# filter (All) and cost; a manager and a user have selling and bills only,
+# and neither the filter nor the cost. The admin's run comes first, so the
+# same moment on the same screen shows what the others must not see.
+appId: app.devper.pos
+---
+- runFlow:
+    file: steps/sign_in.yaml
+    env:
+      USERNAME: ${MAESTRO_USERNAME}
+      PASSWORD: ${MAESTRO_PASSWORD}
+- runFlow:
+    file: steps/open_screen.yaml
+    env:
+      SCREEN: "รายการขาย"
+- extendedWaitUntil:
+    visible: "All"
+    timeout: 15000
+- assertVisible: "ต้นทุน.*"
+- runFlow:
+    when:
+      true: ${LAYOUT == 'narrow'}
+    commands:
+      - tapOn: "เมนู"
+- assertVisible: "สินค้า"
+- assertVisible: "จัดการ"
+- runFlow:
+    when:
+      true: ${LAYOUT == 'narrow'}
+    commands:
+      - tapOn: "รายการขาย"
+- runFlow: steps/sign_out.yaml
+- runFlow:
+    file: steps/sign_in.yaml
+    env:
+      USERNAME: ${MAESTRO_MANAGER_USERNAME}
+      PASSWORD: ${MAESTRO_MANAGER_PASSWORD}
+- runFlow:
+    file: steps/open_screen.yaml
+    env:
+      SCREEN: "รายการขาย"
+- runFlow: steps/expect_staff_menu.yaml
+- runFlow: steps/sign_out.yaml
+- runFlow:
+    file: steps/sign_in.yaml
+    env:
+      USERNAME: ${MAESTRO_USER_USERNAME}
+      PASSWORD: ${MAESTRO_USER_PASSWORD}
+- runFlow:
+    file: steps/open_screen.yaml
+    env:
+      SCREEN: "รายการขาย"
+- runFlow: steps/expect_staff_menu.yaml
+- runFlow: steps/sign_out.yaml

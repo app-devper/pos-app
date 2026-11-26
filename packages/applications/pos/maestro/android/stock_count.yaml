@@ -1,0 +1,8 @@
+appId: app.devper.pos
+name: android - count a lot and the stock becomes the count
+env:
+  LAYOUT: narrow
+---
+- launchApp:
+    clearState: true
+- runFlow: ../shared/stock_count.yaml
