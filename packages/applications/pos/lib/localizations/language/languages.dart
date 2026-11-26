@@ -88,15 +88,13 @@ abstract class Languages {
 
   String get sortByName;
 
-  String get productMenu;
-
   String get addSupplier;
 
   String get chooseProduct;
 
   String removeCustomer(String name);
 
-  String get receiveMenu;
+  String get moreCommands;
 
   String get deleteReceive;
 

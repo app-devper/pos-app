@@ -127,9 +127,6 @@ class LanguageTh extends Languages {
   String get sortByName => "เรียงตามชื่อ";
 
   @override
-  String get productMenu => "เมนูสินค้า";
-
-  @override
   String get addSupplier => "เพิ่มร้านขายสินค้า";
 
   @override
@@ -139,7 +136,7 @@ class LanguageTh extends Languages {
   String removeCustomer(String name) => "นำลูกค้า $name ออก";
 
   @override
-  String get receiveMenu => "เมนูใบรับสินค้า";
+  String get moreCommands => "คำสั่งเพิ่มเติม";
 
   @override
   String get deleteReceive => "ลบใบรับสินค้า";

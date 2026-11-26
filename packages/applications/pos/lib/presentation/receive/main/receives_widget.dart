@@ -11,7 +11,7 @@ import 'package:pos/domain/model/receive/receive.dart';
 import 'package:pos/presentation/receive/main/receive_state.dart';
 import 'package:pos/presentation/receive/main/receives_view_model.dart';
 import 'package:design_system/theme/app_colors.dart';
-import 'package:pos/presentation/receive/main/receive_menu_button.dart';
+import 'package:pos/presentation/core/more_commands_button.dart';
 import 'package:pos/localizations/language/languages.dart';
 
 class ReceivesWidget extends StatefulWidget {
@@ -99,7 +99,7 @@ class _ReceivesWidgetState extends State<ReceivesWidget> {
               ),
             ),
             if (isMobile) ...[
-              ReceiveMenuButton(onPressed: () => widget.onMenu()),
+              MoreCommandsButton(onPressed: () => widget.onMenu()),
               const SizedBox(width: 8),
             ]
           ],

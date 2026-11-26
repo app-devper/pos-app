@@ -25,7 +25,7 @@ env:
     when:
       true: ${LAYOUT == 'narrow'}
     commands:
-      - tapOn: "เมนูสินค้า"
+      - tapOn: "คำสั่งเพิ่มเติม"
 - tapOn: "เพิ่มสินค้า"
 # The form fills in its category once the categories have loaded, and
 # what was typed before that is lost: wait for it.

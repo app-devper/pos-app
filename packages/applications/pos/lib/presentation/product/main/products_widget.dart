@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:design_system/widgets/responsive.dart';
 
 // Project imports:
+import 'package:pos/presentation/core/more_commands_button.dart';
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:design_system/theme/app_colors.dart';
@@ -115,15 +116,7 @@ class _ProductsWidgetState extends State<ProductsWidget> {
             ),
             const SizedBox(width: 8),
             if (isMobile) ...[
-              IconButton(
-                tooltip: Languages.of(context).productMenu,
-                splashRadius: 20,
-                onPressed: () {
-                  widget.onMenu();
-                },
-                icon: const Icon(Icons.menu),
-                color: Theme.of(context).colorScheme.primary,
-              ),
+              MoreCommandsButton(onPressed: () => widget.onMenu()),
               const SizedBox(width: 8),
             ]
           ],

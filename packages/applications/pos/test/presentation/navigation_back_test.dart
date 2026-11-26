@@ -231,7 +231,7 @@ void main() {
     await _openSection(tester, 'จัดการ');
     await tester.tap(find.text('ใบรับสินค้า / Goods Receipt'));
     await _settle(tester);
-    await tester.tap(find.byTooltip('เมนูใบรับสินค้า'));
+    await tester.tap(find.byTooltip('คำสั่งเพิ่มเติม'));
     await _settle(tester);
     expect(find.text('เพิ่มใบรับสินค้า').hitTestable(), findsOneWidget);
 
@@ -365,4 +365,31 @@ void main() {
     expect(_sellingScreen.hitTestable(), findsOneWidget);
     expect(find.text('RC-1'), findsNothing);
   });
+
+  for (final (section, tile) in [
+    ('สินค้า', null),
+    ('จัดการ', 'ใบรับสินค้า / Goods Receipt'),
+  ]) {
+    testWidgets(
+        'the ${tile ?? section} list on a phone shows one menu at most: '
+        'its commands sit behind คำสั่งเพิ่มเติม', (tester) async {
+      // Arrange
+      await _openApp(tester);
+      await _openSection(tester, section);
+      if (tile != null) {
+        await tester.tap(find.text(tile));
+        await _settle(tester);
+      }
+
+      expect(find.byIcon(Icons.menu).evaluate().length, lessThanOrEqualTo(1));
+      expect(find.byIcon(Icons.more_vert).hitTestable(), findsOneWidget);
+
+      // Act
+      await tester.tap(find.byTooltip('คำสั่งเพิ่มเติม').hitTestable());
+      await _settle(tester);
+
+      // Assert
+      expect(find.textContaining('เพิ่ม').hitTestable(), findsWidgets);
+    });
+  }
 }

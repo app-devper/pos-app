@@ -26,7 +26,7 @@ appId: app.devper.pos
     when:
       true: ${LAYOUT == 'narrow'}
     commands:
-      - tapOn: "เมนูใบรับสินค้า"
+      - tapOn: "คำสั่งเพิ่มเติม"
 - tapOn: "เพิ่มใบรับสินค้า"
 - extendedWaitUntil:
     visible: "สร้างใบรับสินค้า"

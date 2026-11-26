@@ -120,9 +120,6 @@ class LanguageEn extends Languages {
   String get sortByName => "Sort by name";
 
   @override
-  String get productMenu => "Product menu";
-
-  @override
   String get addSupplier => "Add supplier";
 
   @override
@@ -132,7 +129,7 @@ class LanguageEn extends Languages {
   String removeCustomer(String name) => "Remove customer $name";
 
   @override
-  String get receiveMenu => "Receipt menu";
+  String get moreCommands => "More commands";
 
   @override
   String get deleteReceive => "Delete receipt";

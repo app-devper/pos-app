@@ -170,8 +170,9 @@ button labels, the stock row's scrollbar, among others).
   Thai and English), and no two on a screen share one
   (`test/presentation/accessibility_walk_test.dart` walks the screens the
   widget tests can build). The ones the flows use: `เลือกสินค้า` (the phone's
-  product picker), `นำลูกค้า <name> ออก`, `เพิ่มลูกค้า`, `เมนูใบรับสินค้า`,
-  `เมนูสินค้า`, `ปรับสต็อก ล็อต <lot>`, `เพิ่มการนับสต็อก`,
+  product picker), `นำลูกค้า <name> ออก`, `เพิ่มลูกค้า`, `คำสั่งเพิ่มเติม`
+  (a list's commands on a phone), `ย้อนกลับ` (a pushed page's back arrow),
+  `ปรับสต็อก ล็อต <lot>`, `เพิ่มการนับสต็อก`,
   `บันทึกการนับสต็อก`, `ลบบิล`. A row's buttons name their row:
   `ลดจำนวน <product> <unit>`, `เพิ่มจำนวน <product> <unit>`,
   `2x แก้ไขจำนวน <product> <unit>` on a cart line, `คืนสินค้า 2x <product>
