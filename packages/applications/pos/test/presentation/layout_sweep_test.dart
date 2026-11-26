@@ -55,4 +55,24 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  // The product detail, each tab opened by its name.
+  for (final size in [phoneSize, desktopSize]) {
+    for (final tab in productDetailTabs) {
+      testWidgets(
+          'the product detail\'s $tab tab lays out without overflow '
+          'at $size', (tester) async {
+        // Arrange
+        useViewSize(tester, size);
+        await showScreen(tester, productDetail(), isDialog: false);
+
+        // Act
+        await tester.tap(find.bySemanticsIdentifier(tab));
+        await tester.pumpAndSettle();
+
+        // Assert
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
 }

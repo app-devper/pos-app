@@ -566,6 +566,29 @@ void main() {
   });
 
   for (final size in [phoneSize, desktopSize]) {
+    for (final tab in productDetailTabs) {
+      testWidgets(
+          'every control on the product detail\'s $tab tab has its '
+          'own name at $size', (tester) async {
+        // Arrange
+        final semantics = tester.ensureSemantics();
+        useViewSize(tester, size);
+        await showScreen(tester, productDetail(),
+            isDialog: false, languages: thaiLanguages);
+        await tester.tap(find.bySemanticsIdentifier(tab));
+        await tester.pumpAndSettle();
+
+        // Act
+        final faults = _faults(tester);
+
+        // Assert
+        expect(faults, isEmpty, reason: faults.join('\n'));
+        semantics.dispose();
+      });
+    }
+  }
+
+  for (final size in [phoneSize, desktopSize]) {
     for (final MapEntry(key: name, value: (screen, isDialog))
         in _screens.entries) {
       testWidgets('every control on $name has its own name at $size',

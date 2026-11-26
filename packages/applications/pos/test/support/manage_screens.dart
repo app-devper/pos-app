@@ -15,7 +15,9 @@ import 'package:pos/presentation/category/main/category_page.dart';
 import 'package:pos/presentation/category/main/category_view_model.dart';
 import 'package:pos/presentation/order/history/order_history_page.dart';
 import 'package:pos/presentation/order/history/order_history_view_model.dart';
+import 'package:pos/presentation/product/main/product_detail_widget.dart';
 import 'package:pos/presentation/product/stock/product_stock_widget.dart';
+import 'package:pos/presentation/product/stock/stock_adjustment_history_view_model.dart';
 import 'package:pos/presentation/stock_count/main/stock_counts_page.dart';
 import 'package:pos/presentation/stock_count/main/stock_counts_view_model.dart';
 import 'package:pos/presentation/stock_count/manage/stock_count_manage_page.dart';
@@ -31,6 +33,8 @@ import '../presentation/category/main/category_view_model_test.dart'
     as categories;
 import '../presentation/inventory/product_return_widget_test.dart'
     as product_return;
+import '../presentation/inventory_history_view_models_test.dart'
+    as history_tabs;
 import '../presentation/order/history/order_history_view_model_test.dart'
     as history;
 import '../presentation/product/product_navigation_test.dart' as products;
@@ -121,3 +125,27 @@ final manageScreens = <String, Screen>{
     );
   },
 };
+
+/// The product detail's tabs the widget tests can open: ประวัติ needs a
+/// product history repository no test fakes yet.
+const productDetailTabs = [
+  'ข้อมูลทั่วไป',
+  'หน่วยนับ',
+  'ราคา',
+  'สต็อก',
+  'ปรับสต็อก'
+];
+
+/// A product's detail, on its first tab; open the others by their names.
+Widget productDetail() {
+  sl.registerFactory(() => StockAdjustmentHistoryViewModel(
+      stockAdjustmentRepo: history_tabs.FakeStockAdjustmentRepository()));
+  return Scaffold(
+    body: ProductDetailWidget(
+      product: products.paracetamol(),
+      onBack: () {},
+      onEdit: () {},
+      onClickEdit: () {},
+    ),
+  );
+}
