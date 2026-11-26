@@ -5,7 +5,8 @@
          draws its first frame. -->
     <style name="LaunchTheme" parent="@android:style/Theme.Black.NoTitleBar">
         <item name="android:windowBackground">@drawable/launch_background</item>
-        <!-- Android 12 and later draw their own splash on this colour. -->
+        <!-- The window colour; Android 12 and later take their splash colour
+             from values-v31. -->
         <item name="android:colorBackground">@color/launch_surface</item>
     </style>
 </resources>

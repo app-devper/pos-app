@@ -58,6 +58,27 @@ cat > "$RES/values/ic_launcher_background.xml" <<XML
 </resources>
 XML
 
+# The launch screen's mark on its brand disc, 108 dp across, drawn on the
+# launch surface of each mode (values[-night]/launch_colors.xml): QuickLook
+# paints what an SVG leaves transparent white, so the image carries its own
+# surround instead of relying on transparency. Apps without a launch
+# surface (sm) have no launch mark.
+launch_surface() { # launch_surface <values dir>
+  sed -nE 's/.*<color name="launch_surface">(#[0-9A-Fa-f]{6})<.*/\1/p' "$RES/$1/launch_colors.xml"
+}
+if [ -f "$RES/values/launch_colors.xml" ]; then
+  for mode in values:drawable values-night:drawable-night; do
+    IFS=: read -r values drawable <<<"$mode"
+    SURFACE="$(launch_surface "$values")"
+    [ -n "$SURFACE" ] || { echo "make-icons: no launch_surface in $values" >&2; exit 1; }
+    svg "launch-$values" "<rect width=\"96\" height=\"96\" fill=\"$SURFACE\"/><circle cx=\"48\" cy=\"48\" r=\"48\" fill=\"$BRAND\"/><g transform=\"translate(48 48) scale(0.58) translate(-48 -52.5)\">$MARK</g>"
+    for spec in mdpi:108 hdpi:162 xhdpi:216 xxhdpi:324 xxxhdpi:432; do
+      IFS=: read -r density px <<<"$spec"
+      png "launch-$values" "$px" "$RES/$drawable-$density/launch_mark.png"
+    done
+  done
+fi
+
 png rounded  192 "$APP/web/icons/Icon-192.png"
 png rounded  512 "$APP/web/icons/Icon-512.png"
 png maskable 192 "$APP/web/icons/Icon-maskable-192.png"

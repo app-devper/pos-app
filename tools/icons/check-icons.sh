@@ -25,6 +25,14 @@ for spec in mdpi:48:108 hdpi:72:162 xhdpi:96:216 xxhdpi:144:324 xxxhdpi:192:432;
   expect_px "$RES/mipmap-$density/ic_launcher_foreground.png" "$adaptive"
 done
 expect_px "$APP/web/favicon.png" 32
+# the launch screen's mark, light and dark, where the app has a launch surface
+if [ -f "$RES/values/launch_colors.xml" ]; then
+  for spec in mdpi:108 hdpi:162 xhdpi:216 xxhdpi:324 xxxhdpi:432; do
+    IFS=: read -r density px <<<"$spec"
+    expect_px "$RES/drawable-$density/launch_mark.png" "$px"
+    expect_px "$RES/drawable-night-$density/launch_mark.png" "$px"
+  done
+fi
 
 # every icon the web manifest names exists at the size it declares
 while IFS=' ' read -r src size; do

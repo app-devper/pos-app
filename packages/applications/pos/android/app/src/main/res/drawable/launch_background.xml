@@ -1,21 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The launch screen: the app's surface (light or dark, launch_colors.xml)
-     with the launcher's mark centred on its brand disc. The mark and the
-     colour are tools/icons/make-icons.sh's: ic_launcher_foreground is the
-     adaptive icon's 108 dp layer, ic_launcher_background its colour. -->
+<!-- The launch screen before Android 12: the app's surface (light or dark,
+     launch_colors.xml) with the mark on its brand disc centred.
+     launch_mark.png is tools/icons/make-icons.sh's, drawn on the same
+     surface for each mode (drawable-*dpi and drawable-night-*dpi): the
+     mipmap foreground cannot serve here, as it has no transparency. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/launch_surface" />
-    <item
-        android:width="108dp"
-        android:height="108dp"
-        android:gravity="center">
-        <shape android:shape="oval">
-            <solid android:color="@color/ic_launcher_background" />
-        </shape>
+    <item>
+        <bitmap
+            android:gravity="center"
+            android:src="@drawable/launch_mark" />
     </item>
-    <item
-        android:width="108dp"
-        android:height="108dp"
-        android:drawable="@mipmap/ic_launcher_foreground"
-        android:gravity="center" />
 </layer-list>
