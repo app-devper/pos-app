@@ -1,0 +1,115 @@
+# A stock count (as stock_count_test.dart drives it): the run's lot, which
+# holds 1000, is counted as 0. The count is on the server with one line and
+# its note, the server then holds 0 on hand, and the count's detail names
+# the product, what the system held, what was counted and the difference.
+# Why 0 (the Dart suite counts 8 of 10): the count field starts with the
+# lot's 1000, centred, and a tap puts the cursor somewhere in its middle;
+# Maestro cannot select all, and a double tap does not select on the web.
+# Erasing what is left of the cursor leaves only zeros, so typing 0 gives 0
+# wherever the cursor lands.
+# A count cannot be deleted: it stays in the flows' own local database.
+appId: app.devper.pos
+env:
+  NOTE: MST-${RUN_ID} count
+---
+- runScript:
+    file: ../scripts/api.js
+    env:
+      ACTION: productOnHand
+      NAME: ${PRODUCT_NAME}
+- assertTrue: ${output.onHand == '1000'}
+- runFlow:
+    file: steps/sign_in.yaml
+    env:
+      USERNAME: ${MAESTRO_USERNAME}
+      PASSWORD: ${MAESTRO_PASSWORD}
+- runFlow:
+    file: steps/open_screen.yaml
+    env:
+      SCREEN: "จัดการ"
+- tapOn: "นับสต็อก"
+- extendedWaitUntil:
+    visible: "เพิ่มการนับสต็อก"
+    timeout: 15000
+- tapOn: "เพิ่มการนับสต็อก"
+- extendedWaitUntil:
+    visible: "นับสต็อกใหม่"
+    timeout: 15000
+- tapOn: "หมายเหตุ"
+- inputText: ${NOTE}
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
+- tapOn: "เพิ่มสินค้า"
+# The app's product picker and its search, as the receipt flow uses it.
+- extendedWaitUntil:
+    visible: "ค้นหาสินค้า\\.\\.\\."
+    timeout: 10000
+- tapOn: "ค้นหาสินค้า\\.\\.\\."
+- inputText: MST-${RUN_ID}
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
+- extendedWaitUntil:
+    visible: "${PRODUCT_NAME}\n?.*ล็อต"
+    timeout: 15000
+- tapOn: "${PRODUCT_NAME}\n?.*ล็อต"
+- extendedWaitUntil:
+    visible: "ล็อต L${RUN_ID}\n?คงเหลือในระบบ: 1000"
+    timeout: 10000
+- tapOn: "ล็อต L${RUN_ID}\n?คงเหลือในระบบ: 1000"
+- extendedWaitUntil:
+    visible: "${PRODUCT_NAME}\n?ล็อต L${RUN_ID}, ในระบบ 1000"
+    timeout: 10000
+- tapOn: "นับได้.*"
+- eraseText: 10
+- inputText: "0"
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
+- assertVisible: "(นับได้\n?)?0+"
+- tapOn: "บันทึกการนับสต็อก"
+# Saved: the form closes back to the list.
+- extendedWaitUntil:
+    visible: "เพิ่มการนับสต็อก"
+    timeout: 15000
+- evalScript: ${output.countNo = ''}
+- repeat:
+    times: 15
+    while:
+      true: ${output.countNo == ''}
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 1000
+      - runScript:
+          file: ../scripts/api.js
+          env:
+            ACTION: stockCount
+            NOTE: ${NOTE}
+- assertTrue: ${output.countNo != ''}
+- assertTrue: ${output.countLines == '1'}
+- runScript:
+    file: ../scripts/api.js
+    env:
+      ACTION: productOnHand
+      NAME: ${PRODUCT_NAME}
+- assertTrue: ${output.onHand == '0'}
+- extendedWaitUntil:
+    visible: "${output.countNo}.*"
+    timeout: 15000
+- tapOn: "${output.countNo}.*"
+- extendedWaitUntil:
+    visible: "รายละเอียดการนับสต็อก"
+    timeout: 15000
+- assertVisible: ${NOTE}
+# The line is titled with the product's name (was finding 9).
+- extendedWaitUntil:
+    visible: "${PRODUCT_NAME}\n?ในระบบ 1000 / นับได้ 0\n?-1000"
+    timeout: 15000
+- takeScreenshot: stock-count
