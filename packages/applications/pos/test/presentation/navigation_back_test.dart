@@ -493,6 +493,28 @@ void main() {
     }
   }
 
+  /// The side menu's entry [label], drawn and reachable.
+  Finder sideMenuEntry(String label) => find
+      .byWidgetPredicate((w) => w is AppSidebarAction && w.label == label)
+      .hitTestable();
+
+  testWidgets(
+      'on a wide screen a form opened from จัดการ shows no side menu, '
+      'only its back arrow', (tester) async {
+    // Arrange
+    await _openApp(tester, size: desktopSize);
+    await _openSection(tester, 'จัดการ');
+
+    // Act
+    await tester.tap(find.text('ร้านค้าของฉัน'));
+    await _settle(tester);
+
+    // Assert
+    expect(_managePage.hitTestable(), findsNothing);
+    expect(find.byTooltip('ย้อนกลับ').hitTestable(), findsOneWidget);
+    expect(sideMenuEntry('ขายสินค้า'), findsNothing);
+  });
+
   testWidgets('home asked for จัดการ by a non-admin opens selling instead',
       (tester) async {
     // Arrange / Act
@@ -503,8 +525,7 @@ void main() {
     expect(_sellingScreen.hitTestable(), findsOneWidget);
   });
 
-  testWidgets('home asked for จัดการ by an admin opens จัดการ',
-      (tester) async {
+  testWidgets('home asked for จัดการ by an admin opens จัดการ', (tester) async {
     // Arrange / Act
     await _openApp(tester, section: 'database');
 
