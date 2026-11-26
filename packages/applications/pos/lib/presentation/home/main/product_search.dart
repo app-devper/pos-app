@@ -12,6 +12,7 @@ import 'package:design_system/widgets/search_decoration.dart';
 import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
 
 // Project imports:
+import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/core/core.dart';
 import 'package:pos/domain/model/product/product.dart';
@@ -94,7 +95,7 @@ class _ProductSearchState extends State<ProductSearch> {
                   suffixIcon: kIsWeb
                       ? null
                       : IconButton(
-                          tooltip: 'สแกนบาร์โค้ด',
+                          tooltip: Languages.of(context).scanBarcode,
                           icon: const Icon(Icons.qr_code_scanner),
                           onPressed: () => _scanBarcode(context),
                         ),

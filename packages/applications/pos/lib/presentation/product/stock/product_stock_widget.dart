@@ -13,6 +13,7 @@ import 'package:design_system/widgets/title_bar.dart';
 import 'package:intl/intl.dart';
 
 // Project imports:
+import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/product/param.dart';
 import 'package:pos/domain/model/product/product.dart';
@@ -274,6 +275,7 @@ class _ProductStockWidgetState extends State<ProductStockWidget> {
                                 labelText: 'วันที่นำเข้า',
                                 hintText: 'โปรดระบุวันที่นำเข้า',
                                 suffix: IconButton(
+                                  tooltip: Languages.of(context).pickImportDate,
                                   icon: const Icon(Icons.calendar_today),
                                   splashRadius: 20,
                                   color: Theme.of(context).colorScheme.primary,
@@ -409,6 +411,7 @@ class _ProductStockWidgetState extends State<ProductStockWidget> {
                                 labelText: 'วันหมดอายุ',
                                 hintText: 'โปรดระบุวันหมดอายุ',
                                 suffix: IconButton(
+                                  tooltip: Languages.of(context).pickExpiryDate,
                                   splashRadius: 20,
                                   color: Theme.of(context).colorScheme.primary,
                                   icon: const Icon(Icons.calendar_today),

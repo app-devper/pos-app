@@ -187,4 +187,40 @@ class LanguageEn extends Languages {
 
   @override
   String adjustLot(String lot) => "Adjust stock of lot $lot";
+
+  @override
+  String get saveStockCount => "Save stock count";
+
+  @override
+  String removeCountLine(String name) => "Remove count line $name";
+
+  @override
+  String get newStockCount => "New stock count";
+
+  @override
+  String get toggleFlash => "Turn the flash on or off";
+
+  @override
+  String get switchCamera => "Switch camera";
+
+  @override
+  String get addCategory => "Add category";
+
+  @override
+  String get deleteCategory => "Delete category";
+
+  @override
+  String get deleteSupplier => "Delete supplier";
+
+  @override
+  String get downloadSalesCsv => "Download sales history CSV";
+
+  @override
+  String get pickImportDate => "Pick the import date";
+
+  @override
+  String get pickExpiryDate => "Pick the expiry date";
+
+  @override
+  String get scanBarcode => "Scan barcode";
 }

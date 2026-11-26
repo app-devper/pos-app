@@ -33,6 +33,7 @@ import 'package:pos/presentation/receive/manage/receive_manage_view_model.dart';
 import '../support/app_fonts.dart';
 import '../support/app_languages.dart';
 import '../support/main_screens.dart';
+import '../support/manage_screens.dart';
 import 'home/main/cart_page_sale_test.dart' as cart;
 import 'order/detail/order_detail_view_model_test.dart' as bill;
 import 'receive/main/receives_view_model_test.dart' as receipts;
@@ -248,6 +249,8 @@ final _screens = <String, (_Walked, bool)>{
   for (final MapEntry(:key, :value) in mainDialogs.entries)
     key: ((build: value, then: null), true),
   for (final MapEntry(:key, :value) in _morePages.entries) key: (value, false),
+  for (final MapEntry(:key, :value) in manageScreens.entries)
+    key: ((build: value, then: null), false),
 };
 
 bool _isTappable(Widget widget) =>

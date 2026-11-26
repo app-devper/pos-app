@@ -127,6 +127,7 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
   List<Widget> _buildAction(BuildContext context) {
     return [
       IconButton(
+        tooltip: Languages.of(context).deleteCategory,
         splashRadius: 20,
         onPressed: () {
           _showRemoveCategoryConfirm(context, widget.category);

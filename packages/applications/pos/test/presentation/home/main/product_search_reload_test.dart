@@ -9,6 +9,7 @@ import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/domain/repositories/product_repository.dart';
 import 'package:pos/presentation/home/main/product_search.dart';
 import 'package:pos/presentation/home/main/product_search_view_model.dart';
+import '../../../support/app_languages.dart';
 
 /// Hands out the stock the server holds now: [onHand] is set by the test
 /// between loads, the way a sale moves it.
@@ -211,6 +212,7 @@ void main() {
       final sales = StreamController<Object?>.broadcast();
       addTearDown(sales.close);
       await tester.pumpWidget(MaterialApp(
+        localizationsDelegates: const [thaiLanguages],
         home: Scaffold(
           body: ProductSearch(onSelected: (_) {}, saleRecorded: sales.stream),
         ),

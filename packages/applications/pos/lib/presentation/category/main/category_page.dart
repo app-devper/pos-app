@@ -68,6 +68,7 @@ class _CategoryPageState extends State<CategoryPage> {
   List<Widget> _buildAction(BuildContext context) {
     return [
       IconButton(
+        tooltip: Languages.of(context).addCategory,
         splashRadius: 20,
         onPressed: () {
           _nextToCategoryAdd(context);

@@ -86,12 +86,14 @@ class _ScannerPageState extends State<ScannerPage> {
         Languages.of(context).productFindTitle,
         actions: [
           IconButton(
+            tooltip: Languages.of(context).toggleFlash,
             onPressed: () {
               controller?.toggleFlash();
             },
             icon: const Icon(Icons.flash_on),
           ),
           IconButton(
+            tooltip: Languages.of(context).switchCamera,
             onPressed: () {
               controller?.flipCamera();
             },

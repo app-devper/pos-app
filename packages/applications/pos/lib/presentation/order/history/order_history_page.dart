@@ -130,6 +130,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
   List<Widget> _buildAction(BuildContext context) {
     return <Widget>[
       IconButton(
+        tooltip: Languages.of(context).downloadSalesCsv,
         splashRadius: 20,
         onPressed: () {
           ExportCsv.downloadOrderItems(widget.product, orderItems);

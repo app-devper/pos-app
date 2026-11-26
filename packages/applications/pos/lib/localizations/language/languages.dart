@@ -133,4 +133,28 @@ abstract class Languages {
   String lotOnHand(String lot);
 
   String adjustLot(String lot);
+
+  String get saveStockCount;
+
+  String removeCountLine(String name);
+
+  String get newStockCount;
+
+  String get toggleFlash;
+
+  String get switchCamera;
+
+  String get addCategory;
+
+  String get deleteCategory;
+
+  String get deleteSupplier;
+
+  String get downloadSalesCsv;
+
+  String get pickImportDate;
+
+  String get pickExpiryDate;
+
+  String get scanBarcode;
 }

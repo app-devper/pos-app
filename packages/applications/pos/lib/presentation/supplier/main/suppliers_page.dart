@@ -68,6 +68,7 @@ class _SuppliersPageState extends State<SuppliersPage> {
   List<Widget> _buildAction(BuildContext context) {
     return [
       IconButton(
+        tooltip: Languages.of(context).addSupplier,
         splashRadius: 20,
         onPressed: () {
           _nextToSupplierAdd(context);

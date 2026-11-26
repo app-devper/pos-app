@@ -194,4 +194,40 @@ class LanguageTh extends Languages {
 
   @override
   String adjustLot(String lot) => "ปรับสต็อก ล็อต $lot";
+
+  @override
+  String get saveStockCount => "บันทึกการนับสต็อก";
+
+  @override
+  String removeCountLine(String name) => "ลบรายการนับ $name";
+
+  @override
+  String get newStockCount => "เพิ่มการนับสต็อก";
+
+  @override
+  String get toggleFlash => "เปิดหรือปิดไฟแฟลช";
+
+  @override
+  String get switchCamera => "สลับกล้อง";
+
+  @override
+  String get addCategory => "เพิ่มหมวดหมู่";
+
+  @override
+  String get deleteCategory => "ลบหมวดหมู่";
+
+  @override
+  String get deleteSupplier => "ลบร้านขายสินค้า";
+
+  @override
+  String get downloadSalesCsv => "ดาวน์โหลดประวัติการขาย CSV";
+
+  @override
+  String get pickImportDate => "เลือกวันที่นำเข้า";
+
+  @override
+  String get pickExpiryDate => "เลือกวันหมดอายุ";
+
+  @override
+  String get scanBarcode => "สแกนบาร์โค้ด";
 }

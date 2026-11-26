@@ -80,6 +80,7 @@ class _StockCountManagePageState extends State<StockCountManagePage> {
             ? null
             : [
                 IconButton(
+                  tooltip: Languages.of(context).saveStockCount,
                   splashRadius: 20,
                   onPressed: _submit,
                   icon: const Icon(Icons.check),
@@ -187,6 +188,8 @@ class _StockCountManagePageState extends State<StockCountManagePage> {
                                   ),
                                 ),
                                 IconButton(
+                                  tooltip: Languages.of(context).removeCountLine(
+                                      '${item.productName} ${item.lotNumber}'),
                                   splashRadius: 20,
                                   icon: const Icon(Icons.delete,
                                       color: Colors.red),
