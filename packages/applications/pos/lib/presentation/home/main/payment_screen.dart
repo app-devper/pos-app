@@ -16,16 +16,19 @@ import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/home/main/quick_cash_chips.dart';
 
 /// The most the payment dialog grows to fit its content (it is never above
-/// 90% of the screen; below that its content scrolls).
-const paymentDialogMaxHeight = 720.0;
+/// 90% of the screen; below that its content scrolls): room for the phone
+/// layout at its roomy sizes under the title bar.
+const paymentDialogMaxHeight = 768.0;
 
-/// The height the phone layout needs at its roomy sizes. With less (most
-/// phones) it tightens — closer gaps, lower boxes, the keypad as tall as what
-/// is left — so the keypad's last row is not under the pay button.
+/// The height the phone layout needs at its roomy sizes: a tall phone or a
+/// tablet held upright has it. With less (most phones) it tightens — closer
+/// gaps, lower boxes, the keypad as tall as what is left — so the keypad's
+/// last row is not under the pay button.
 const _roomyPhoneHeight = 712.0;
 
 /// What the tightened phone layout takes besides its keypad: the method row,
-/// the amounts, one row of quick-cash chips and the pay button.
+/// the amounts, one row of quick-cash chips and the pay button — measured at
+/// the standard text size; at a larger one the content scrolls.
 const _tightRestHeight = 314.0;
 
 /// The keypad's height: four rows of at least a finger's target, at most the

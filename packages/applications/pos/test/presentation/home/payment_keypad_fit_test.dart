@@ -76,6 +76,39 @@ void main() {
     });
   }
 
+  for (final screen in [const Size(412, 915), const Size(768, 1024)]) {
+    testWidgets(
+        'a tall screen ($screen) gets the roomy layout, whole, with nothing '
+        'to scroll', (tester) async {
+      // Arrange / Act
+      await _openPayment(tester, screen);
+
+      // Assert
+      final pay = tester.getRect(find.byType(ElevatedButton));
+      expect(pay.height, 64, reason: 'the roomy pay button');
+      final first = tester.getRect(find.byKey(const Key('btn_1')));
+      final last = tester.getRect(find.byKey(const Key('btn_0')));
+      expect(last.bottom - first.top, greaterThanOrEqualTo(240));
+      expect(last.bottom, lessThanOrEqualTo(pay.top));
+      final scroll = tester.state<ScrollableState>(find
+          .descendant(
+              of: find.byType(PaymentScreen), matching: find.byType(Scrollable))
+          .first);
+      expect(scroll.position.maxScrollExtent, 0);
+    });
+  }
+
+  testWidgets('at twice the text size the phone layout overflows nothing',
+      (tester) async {
+    // Arrange / Act
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await _openPayment(tester, const Size(360, 640));
+
+    // Assert
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('on a tall phone the keypad keeps its full height',
       (tester) async {
     // Arrange / Act
