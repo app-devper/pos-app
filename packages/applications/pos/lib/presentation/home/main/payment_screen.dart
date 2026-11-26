@@ -80,117 +80,117 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Sized by its content; where the dialog is lower than that (a small
-    // phone) it scrolls rather than squeezing the amounts out of their boxes.
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildInputSection('ยอดรับเงินรวม', _getNumberFormat(_number)),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildAmountSection(
-                    'ยอดที่ต้องชำระ', "฿${formatDouble(widget.amount)}"),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildAmountChange("เงินทอน", _change),
-              ),
-            ],
+    // The pay button stays at the foot; above it the amounts, chips and
+    // keypad are sized by their content and, where the dialog is lower than
+    // that (a small phone, a phone held sideways), they scroll rather than
+    // squeezing the amounts out of their boxes.
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: _buildBody(),
           ),
-          if (_typeMode == "Cash") ...[
-            const SizedBox(height: 16),
-            QuickCashChips(total: widget.amount, onSelected: _receiveQuickCash),
-          ],
-          const SizedBox(height: 16),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Flexible(
-                flex: 1,
-                child: Column(
-                  children: [
-                    _buildPaymentOption(
-                      "เงินสด",
-                      iconData: Icons.money,
-                      isSelected: _typeMode == "Cash",
-                      onTap: () {
-                        setState(() {
-                          _typeMode = "Cash";
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    _buildPaymentOption(
-                      "พร้อมเพย์",
-                      iconData: Icons.qr_code_2,
-                      isSelected: _typeMode == "PromptPay",
-                      onTap: () {
-                        setState(() {
-                          _typeMode = "PromptPay";
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              Flexible(
-                flex: 2,
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: 250,
-                      child: InputNumber(
-                        key: ValueKey(_keypadGeneration),
-                        onDone: (value) {
-                          if (!_isInput) {
-                            widget.onCompleted(widget.amount, _typeMode);
-                          } else if (_isInput && _change >= 0) {
-                            widget.onCompleted(
-                                double.parse(_number), _typeMode);
-                          } else {
-                            widget.onError();
-                          }
-                        },
-                        onChange: (value) {
-                          _calculate(value);
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        if (!_isInput) {
-                          widget.onCompleted(widget.amount, _typeMode);
-                        } else if (_isInput && _change >= 0) {
-                          widget.onCompleted(double.parse(_number), _typeMode);
-                        } else {
-                          widget.onError();
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        foregroundColor:
-                            Theme.of(context).colorScheme.onPrimary,
-                        minimumSize: const Size(double.infinity, 64),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: _payButtonLabel(),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: _buildPayButton(),
+        ),
+      ],
     );
+  }
+
+  Widget _buildBody() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildInputSection('ยอดรับเงินรวม', _getNumberFormat(_number)),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildAmountSection(
+                  'ยอดที่ต้องชำระ', "฿${formatDouble(widget.amount)}"),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildAmountChange("เงินทอน", _change),
+            ),
+          ],
+        ),
+        if (_typeMode == "Cash") ...[
+          const SizedBox(height: 16),
+          QuickCashChips(total: widget.amount, onSelected: _receiveQuickCash),
+        ],
+        const SizedBox(height: 16),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Flexible(flex: 1, child: _buildPaymentOptions()),
+            const SizedBox(width: 16),
+            Flexible(
+              flex: 2,
+              child: SizedBox(
+                height: 250,
+                child: InputNumber(
+                  key: ValueKey(_keypadGeneration),
+                  onDone: (_) => _pay(),
+                  onChange: _calculate,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPaymentOptions() {
+    return Column(
+      children: [
+        _buildPaymentOption(
+          "เงินสด",
+          iconData: Icons.money,
+          isSelected: _typeMode == "Cash",
+          onTap: () => setState(() => _typeMode = "Cash"),
+        ),
+        const SizedBox(height: 16),
+        _buildPaymentOption(
+          "พร้อมเพย์",
+          iconData: Icons.qr_code_2,
+          isSelected: _typeMode == "PromptPay",
+          onTap: () => setState(() => _typeMode = "PromptPay"),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPayButton() {
+    return ElevatedButton(
+      onPressed: _pay,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        minimumSize: const Size(double.infinity, 64),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+      ),
+      child: _payButtonLabel(),
+    );
+  }
+
+  /// Pays the amount due when nothing was entered, else the amount entered
+  /// when it covers the amount due; anything short is refused.
+  void _pay() {
+    if (!_isInput) {
+      widget.onCompleted(widget.amount, _typeMode);
+    } else if (_change >= 0) {
+      widget.onCompleted(double.parse(_number), _typeMode);
+    } else {
+      widget.onError();
+    }
   }
 
   /// A quick-cash chip: receives [amount], a whole number of baht.

@@ -152,6 +152,8 @@ void main() {
       await open(tester);
 
       // Act
+      await tester.ensureVisible(find.text('พร้อมเพย์'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('พร้อมเพย์'));
       await tester.pumpAndSettle();
 
@@ -282,6 +284,46 @@ void main() {
         expect((lineRect.center.dx - buttonRect.center.dx).abs(), lessThan(1),
             reason: 'centred');
       });
+    }
+  });
+
+  group('the pay button', () {
+    for (final size in [phoneSize, landscapePhoneSize]) {
+      for (final scale in [1.0, 1.3]) {
+        testWidgets(
+            'is in view without scrolling, the body scrolls above it, '
+            '$size at ${scale}x', (tester) async {
+          // Arrange
+          useViewSize(tester, size);
+          tester.platformDispatcher.textScaleFactorTestValue = scale;
+          addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+          final paid = <double>[];
+          await tester.pumpWidget(
+              _host(amount: 50, onCompleted: (amount, _) => paid.add(amount)));
+          await tester.tap(find.text('open'));
+          await tester.pumpAndSettle();
+          final pay = find.byType(ElevatedButton);
+
+          // Act: tapped where it is, with no scrolling
+          final rect = tester.getRect(pay);
+          await tester.tap(pay.hitTestable());
+          await tester.pump();
+
+          // Assert
+          expect(tester.takeException(), isNull);
+          expect(
+              Offset.zero & size,
+              predicate<Rect>((s) =>
+                  s.contains(rect.topLeft) &&
+                  s.contains(rect.bottomRight - const Offset(0.01, 0.01))));
+          expect(paid, [50]);
+          await tester.drag(
+              find.byType(SingleChildScrollView), const Offset(0, -2000));
+          await tester.pumpAndSettle();
+          expect(tester.getRect(pay), rect,
+              reason: 'the button stays put while the body scrolls');
+        });
+      }
     }
   });
 }
