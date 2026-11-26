@@ -50,6 +50,21 @@ class FakeOrderRepository implements OrderRepository {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
+/// Answers each list request only when the test completes it, in any order.
+class ScriptedOrderRepository implements OrderRepository {
+  final pending = <Completer<List<OrderSummary>>>[];
+
+  @override
+  Future<List<OrderSummary>> getOrderRange(GetOrderRangeParam param) {
+    final load = Completer<List<OrderSummary>>();
+    pending.add(load);
+    return load.future;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
 /// Answers the role only when the test completes [pending].
 class PendingRoleRepository extends FakeLoginRepository {
   final pending = Completer<String>();
@@ -115,7 +130,7 @@ class FakeLoginRepository implements LoginRepository {
 }
 
 OrderViewModel buildViewModel({
-  FakeOrderRepository? orders,
+  OrderRepository? orders,
   FakeLoginRepository? login,
 }) {
   return OrderViewModel(
@@ -202,6 +217,51 @@ void main() {
     expect(state.totalCost, 20);
     // The profit the bills screen shows (BillSummary: total - cost).
     expect(state.total - state.totalCost, 30);
+  });
+
+  test('an older list that answers last does not replace the newer one',
+      () async {
+    // Arrange: "Yesterday" asked, then "Today"; Today answers first
+    final repo = ScriptedOrderRepository();
+    final viewModel = buildViewModel(orders: repo);
+    final yesterday = viewModel.getOrderItem('All', anyRange());
+    final today = viewModel.getOrderItem('All', anyRange());
+
+    // Act
+    repo.pending[1].complete([order('today', 'Cash', total: 30, cost: 10)]);
+    await today;
+    repo.pending[0]
+        .complete([order('yesterday', 'Cash', total: 999, cost: 500)]);
+    await yesterday;
+
+    // Assert
+    final state = viewModel.state.value;
+    expect(state.orders!.map((e) => e.id), ['today']);
+    expect(state.total, 30);
+    expect(state.totalCost, 10);
+  });
+
+  test('an older load that fails after a newer list is shown says nothing',
+      () async {
+    // Arrange
+    final repo = ScriptedOrderRepository();
+    final viewModel = buildViewModel(orders: repo);
+    final errors = <String>[];
+    viewModel.errors.listen(errors.add);
+    final older = viewModel.getOrderItem('All', anyRange());
+    final newer = viewModel.getOrderItem('All', anyRange());
+
+    // Act
+    repo.pending[1].complete([order('today', 'Cash')]);
+    await newer;
+    repo.pending[0].completeError(
+        const NetworkException(message: 'down', code: 'NETWORK_ERROR'));
+    await older;
+    await Future<void>.delayed(Duration.zero);
+
+    // Assert
+    expect(errors, isEmpty);
+    expect(viewModel.state.value.orders!.map((e) => e.id), ['today']);
   });
 
   test('a failed refresh reports the error and keeps what is on screen',

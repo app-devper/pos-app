@@ -38,9 +38,20 @@ class OrderViewModel {
 
   Stream<String> get errors => _errors.stream;
 
+  /// Counts the loads started, and names the newest one whose answer is on
+  /// screen (as the selling screen's product search does). An answer, or a
+  /// failure, is shown only when it is newer than what is shown: picking
+  /// Yesterday then Today on a slow link cannot leave yesterday's bills and
+  /// total under Today, and an older failure cannot flash over a newer list.
+  int _startedId = 0;
+  int _appliedId = 0;
+
   Future<void> getOrderItem(String type, GetOrderRangeParam param) async {
+    final id = ++_startedId;
     try {
       final result = await orderRepo.getOrderRange(param);
+      if (id <= _appliedId) return;
+      _appliedId = id;
       final orders = _filterOrders(type, result);
       double total = 0;
       double totalCost = 0;
@@ -53,6 +64,7 @@ class OrderViewModel {
           total: roundMoney(total),
           totalCost: roundMoney(totalCost));
     } on Exception catch (e) {
+      if (id <= _appliedId) return;
       _errors.emit(toFailure(e).getMessage());
     }
   }
