@@ -7,14 +7,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 // Package imports:
+import 'package:common/config/app_config.dart';
 import 'package:common/localizations/localizations_delegate.dart';
 import 'package:design_system/theme/theme.dart';
 import 'package:design_system/widgets/app_shell.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:um/domain/entities/auth/login.dart';
+import 'package:um/domain/entities/auth/system.dart';
 import 'package:um/domain/usecase/auth_use_cases.dart';
 
 // Project imports:
 import 'package:pos/container.dart';
+import 'package:pos/presentation/constants.dart';
 import 'package:pos/presentation/customer/add/customer_add_view_model.dart';
 import 'package:pos/presentation/customer/main/customer_view_model.dart';
 import 'package:pos/presentation/customer/main/customers_view_model.dart';
@@ -28,7 +32,6 @@ import 'package:pos/presentation/product/edit/product_edit_view_model.dart';
 import 'package:pos/presentation/product/main/product_view_model.dart';
 import 'package:pos/presentation/product/main/products_view_model.dart';
 import 'package:pos/presentation/stock_count/main/stock_counts_view_model.dart';
-import 'package:pos/presentation/supplier/info/supplier_info_view_model.dart';
 import 'package:pos/presentation/receive/main/receives_view_model.dart';
 import 'package:pos/presentation/router.dart';
 import '../support/app_fonts.dart';
@@ -102,6 +105,36 @@ void _registerBills(home.FakeLoginRepository login) {
         customerRepo: bill.FakeCustomerRepository(),
         productRepo: products.Catalogue(const []),
       ));
+}
+
+/// A stored session that is still alive, for the POS system.
+class _LiveSession extends home.FakeLoginRepository {
+  _LiveSession() : super(role: 'ADMIN');
+
+  @override
+  Future<Login> keepAlive() async => Login(accessToken: 'token');
+
+  @override
+  Future<System> getSystem() async => System(
+      id: 's', clientId: 'c', systemName: 'POS', systemCode: 'POS', host: '');
+}
+
+/// The app reloaded in the browser at [address], with a live session: the
+/// splash page checks the session first, as at every start.
+Future<void> _reloadAt(WidgetTester tester, String address) async {
+  useViewSize(tester, phoneSize);
+  _registerApp();
+  sl.registerLazySingleton(() => AppConfig(
+      apiUrl: '', logo: '', name: 'POS', system: 'POS', home: homeRoute));
+  sl.registerFactory(() => RestoreSessionUseCase(_LiveSession()));
+  await tester.pumpWidget(MaterialApp(
+    theme: CustomTheme.mainTheme,
+    localizationsDelegates: [CommonLocalizationsDelegate(), thaiLanguages],
+    onGenerateRoute: RouterApp.generateRoute,
+    onGenerateInitialRoutes: RouterApp.generateInitialRoutes,
+    initialRoute: address,
+  ));
+  await _settle(tester);
 }
 
 /// Lets loads and route transitions run without waiting on spinners, which
@@ -437,4 +470,28 @@ void main() {
       expect(addresses.last, isNot(address));
     });
   }
+
+  testWidgets('a reload at the receipts address shows the receipts again',
+      (tester) async {
+    // Arrange / Act
+    await _reloadAt(tester, receivesRoute);
+
+    // Assert
+    expect(find.text('RC-1').hitTestable(), findsOneWidget);
+
+    // Act
+    await _systemBack(tester);
+
+    // Assert
+    expect(_managePage.hitTestable(), findsOneWidget);
+  });
+
+  testWidgets('a start at the splash address ends on the selling screen',
+      (tester) async {
+    // Arrange / Act
+    await _reloadAt(tester, '/um-splash');
+
+    // Assert
+    expect(_sellingScreen.hitTestable(), findsOneWidget);
+  });
 }

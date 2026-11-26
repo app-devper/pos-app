@@ -13,7 +13,12 @@ import 'package:um/presentation/constants.dart';
 import 'package:um/presentation/splash/launch_ticket.dart';
 
 class SplashPage extends HookWidget {
-  const SplashPage({super.key});
+  /// Given when the app was opened at one of its pages (a reload in the
+  /// browser): the home route is built with them under that page, which
+  /// stays, instead of replacing everything.
+  final Object? homeArguments;
+
+  const SplashPage({super.key, this.homeArguments});
 
   @override
   Widget build(BuildContext context) {
@@ -21,10 +26,10 @@ class SplashPage extends HookWidget {
     final config = useAppConfig();
 
     nextHome(System system) {
-      if (system.systemCode == config.system) {
-        Navigator.pushNamedAndRemoveUntil(context, config.home, (r) => false);
-      } else {
+      if (system.systemCode != config.system) {
         Navigator.pushNamedAndRemoveUntil(context, routeError, (r) => false);
+      } else if (!_putHomeUnderPage(context, config.home)) {
+        Navigator.pushNamedAndRemoveUntil(context, config.home, (r) => false);
       }
     }
 
@@ -48,7 +53,8 @@ class SplashPage extends HookWidget {
     useEffect(() {
       var active = true;
       // Opened from UM: the ticket starts the session instead of a stored one.
-      final start = ticket != null ? continueFromUm(ticket, config.system) : keepAlive();
+      final start =
+          ticket != null ? continueFromUm(ticket, config.system) : keepAlive();
       start.then((system) {
         if (active && context.mounted) nextHome(system);
       }, onError: (Object error, StackTrace stack) {
@@ -63,5 +69,22 @@ class SplashPage extends HookWidget {
         body: buildBody(),
       ),
     );
+  }
+
+  /// When the app was opened at one of its pages (the splash is under it),
+  /// replaces the splash with [home] built with [homeArguments], so the page
+  /// stays on top with home to go back to. False when there is no such
+  /// page, or nothing to build home with.
+  bool _putHomeUnderPage(BuildContext context, String home) {
+    final splash = ModalRoute.of(context);
+    if (homeArguments == null || splash == null || splash.isCurrent) {
+      return false;
+    }
+    final navigator = Navigator.of(context);
+    final homeRoute = navigator.widget.onGenerateRoute
+        ?.call(RouteSettings(name: home, arguments: homeArguments));
+    if (homeRoute == null) return false;
+    navigator.replace(oldRoute: splash, newRoute: homeRoute);
+    return true;
   }
 }

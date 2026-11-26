@@ -47,6 +47,31 @@ class RouterApp {
         builder: (context) => InnerPageFrame(child: builder(context)));
   }
 
+  /// The pages a reload in the browser opens again, each with the side-menu
+  /// section home shows under it. The rest (a form, a record's page) need
+  /// what the page before handed them, which a reload no longer has.
+  static const _reopenedUnder = {
+    customersRoute: 'database',
+    receivesRoute: 'database',
+    stockCountsRoute: 'database',
+    supplierRoute: 'database',
+    suppliersRoute: 'database',
+    categoriesRoute: 'database',
+  };
+
+  /// The routes the app starts with at [initialRoute], the browser's
+  /// address on a reload. Every start goes through the splash page, which
+  /// checks the session; under a page that can be opened again, the splash
+  /// then puts home beneath it rather than replacing it.
+  static List<Route<dynamic>> generateInitialRoutes(String initialRoute) {
+    final section = _reopenedUnder[initialRoute];
+    return [
+      generateRoute(RouteSettings(name: rootRoute, arguments: section)),
+      if (initialRoute != rootRoute)
+        generateRoute(RouteSettings(name: initialRoute)),
+    ];
+  }
+
   /// Every route carries the name it was asked for, so the browser's
   /// address follows the page shown (and a refresh can find it again).
   static Route<dynamic> generateRoute(RouteSettings settings) {

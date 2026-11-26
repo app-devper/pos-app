@@ -19,7 +19,8 @@ class RouterUm {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case routeSplash:
-        return MaterialPageRoute(builder: (_) => const SplashPage());
+        return MaterialPageRoute(
+            builder: (_) => SplashPage(homeArguments: settings.arguments));
       case routeLogin:
         return MaterialPageRoute(builder: (_) => const LoginPage());
       case routeChangePassword:
@@ -32,7 +33,8 @@ class RouterUm {
         return MaterialPageRoute(builder: (_) => const UserAddPage());
       case routeUserEdit:
         final args = settings.arguments as UserArgument;
-        return MaterialPageRoute(builder: (_) => UserEditPage(userId: args.userId));
+        return MaterialPageRoute(
+            builder: (_) => UserEditPage(userId: args.userId));
       case routeUserHome:
         return MaterialPageRoute(builder: (_) => const UserHomePage());
       case routeError:
