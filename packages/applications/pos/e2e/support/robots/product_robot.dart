@@ -311,9 +311,10 @@ class ProductRobot {
   }
 
   /// From the detail: 'แก้ไข' → the red 'ลบสินค้า' → confirm
-  /// 'ต้องการลบสินค้าใช่หรือไม่'; returns once the menu is back.
+  /// the no-stock question; returns once the menu is back.
   Future<void> delete() async {
-    await _askToDelete('ต้องการลบสินค้าใช่หรือไม่');
+    await _askToDelete('สต็อกของสินค้านี้ในสาขาอื่น (ถ้ามี) จะถูกปรับเป็น 0 '
+        'ต้องการลบสินค้าใช่หรือไม่?');
     await shell.confirm();
     await form.awaitOutcome(_menu);
   }

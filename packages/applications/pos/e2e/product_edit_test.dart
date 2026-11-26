@@ -93,10 +93,11 @@ void main() {
       await products.openList();
       await products.open(_renamed);
       // Deleting a product with stock on hand asks first, naming the stock
-      // (was finding #6); the run answers no.
+      // and that every branch's stock goes (was finding #6); the run
+      // answers no.
       await products.askToDeleteAndCancel(
           'สินค้านี้มีสต็อกคงเหลือ ${_stocked.quantity} ${_stocked.unit} '
-          'ต้องการลบใช่หรือไม่?');
+          'การลบจะปรับสต็อกของสินค้านี้เป็น 0 ในทุกสาขา ต้องการลบใช่หรือไม่?');
       // pos-api's stock reports keep counting a deleted product's stock
       // rows (a server follow-up, see e2e-findings.md), so the run takes the
       // lot to 0 and deletes its stock row through the stock tab first, as
