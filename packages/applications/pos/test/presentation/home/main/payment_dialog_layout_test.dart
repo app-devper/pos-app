@@ -208,6 +208,22 @@ void main() {
       expect(find.text('฿70'), findsOneWidget);
     });
 
+    testWidgets('on a 360 px phone the four chips share one row',
+        (tester) async {
+      // Arrange
+      useViewSize(tester, phoneSize);
+
+      // Act
+      await open(tester);
+
+      // Assert
+      final tops = {
+        for (final label in ['฿60', '฿100', '฿500', '฿1,000'])
+          tester.getRect(find.text(label)).top.round()
+      };
+      expect(tops, hasLength(1), reason: 'the keypad stays in view below');
+    });
+
     for (final size in [phoneSize, desktopSize]) {
       testWidgets('the chips are 48 high and 8 apart, $size', (tester) async {
         // Arrange

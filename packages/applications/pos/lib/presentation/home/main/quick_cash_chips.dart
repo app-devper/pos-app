@@ -12,7 +12,7 @@ import 'package:pos/presentation/home/main/quick_cash.dart';
 const _chipSpacing = 8.0;
 
 /// The smallest a chip is, a finger's target high.
-const _chipMinSize = Size(72, 48);
+const _chipMinSize = Size(56, 48);
 
 /// The payment dialog's quick-cash chips for [total] (฿100 …), wrapping to a
 /// second row rather than overflowing. A tap passes its whole-baht amount to
@@ -49,7 +49,7 @@ class QuickCashChips extends StatelessWidget {
       onPressed: () => onSelected(amount),
       style: OutlinedButton.styleFrom(
         minimumSize: _chipMinSize,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         shape: const StadiumBorder(),
       ),
       child: Semantics(
@@ -58,7 +58,7 @@ class QuickCashChips extends StatelessWidget {
         child: Text(
           label,
           style: const TextStyle(
-            fontSize: 18,
+            fontSize: 16,
             fontWeight: FontWeight.bold,
             fontFeatures: [FontFeature.tabularFigures()],
           ),
