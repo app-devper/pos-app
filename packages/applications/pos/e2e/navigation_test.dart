@@ -102,9 +102,10 @@ void main() {
 }
 
 /// With no shop profile yet the form is empty and says so
-/// (`ยังไม่มีข้อมูลร้านค้า กรอกแล้วกดบันทึก`); it used to show a red
-/// "Error: ไม่พบข้อมูลที่ต้องการ [SY-404-002]" (was finding #14). No error is
-/// tolerated any more, on an empty or a populated database.
+/// (`ยังไม่มีข้อมูลร้านค้า กรอกแล้วกดบันทึก`); it used to show a red error
+/// bar, "ไม่พบข้อมูลที่ต้องการ [SY-404-002]" (was finding #14; error bars
+/// now start "ข้อผิดพลาด:"). No error is tolerated any more, on an empty
+/// or a populated database.
 const _noShopProfileHint = 'ยังไม่มีข้อมูลร้านค้า กรอกแล้วกดบันทึก';
 
 /// Opened and read only: the profile may be the shop's real one, so its

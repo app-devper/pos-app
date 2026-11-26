@@ -122,9 +122,10 @@ void main() {
   });
 
   // Was a finding (#12): a success bar outlived the screen that showed it,
-  // and its 'Clear' then threw "Looking up a deactivated widget's ancestor
-  // is unsafe" and left it over the stock count's 'เพิ่มสินค้า'. It now
-  // closes by itself, and its close (now 'ปิด') uses the messenger, not the screen.
+  // and its close action (then labelled in English) threw "Looking up a
+  // deactivated widget's ancestor is unsafe" and left it over the stock
+  // count's 'เพิ่มสินค้า'. It now closes by itself, and its ปิด uses the
+  // messenger, not the screen.
   // What this checks: the bar is gone within the wait and nothing threw.
   // 'ปิด' is pressed only if the bar still shows when the stock count
   // opens; it has usually closed by then, so the press is not guaranteed
