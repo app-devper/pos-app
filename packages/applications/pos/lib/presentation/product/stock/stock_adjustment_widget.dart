@@ -16,6 +16,7 @@ import 'package:pos/domain/model/core/core.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/domain/model/stock_adjustment/param.dart';
 import 'package:pos/presentation/core/core_widget.dart';
+import 'package:pos/presentation/product/stock/stock_direction_toggle.dart';
 import 'package:pos/presentation/product/core/catalogue_edit.dart';
 import 'package:pos/domain/repositories/stock_adjustment_repository.dart';
 
@@ -135,24 +136,13 @@ class _StockAdjustmentWidgetState extends State<StockAdjustmentWidget> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  ToggleButtons(
-                    isSelected: [_isIncrease, !_isIncrease],
-                    onPressed: (index) {
+                  StockDirectionToggle(
+                    isIncrease: _isIncrease,
+                    onChanged: (increase) {
                       setState(() {
-                        _isIncrease = index == 0;
+                        _isIncrease = increase;
                       });
                     },
-                    borderRadius: BorderRadius.circular(8.0),
-                    children: const [
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text('เพิ่มสต็อก'),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text('ลดสต็อก'),
-                      ),
-                    ],
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
