@@ -36,8 +36,8 @@ class HomeViewModel {
   }
 
   Future<void> getRole() async {
-    _state.value = _state.value
-        .copyWith(isAdmin: await getRoleUseCase.atLeast(Role.admin));
+    _state.value = _state.value.copyWith(
+        isAdmin: await getRoleUseCase.atLeast(Role.admin), roleKnown: true);
   }
 
   Future<void> logout() async {

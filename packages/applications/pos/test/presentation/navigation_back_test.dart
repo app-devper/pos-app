@@ -2,6 +2,9 @@
 // app: an inner page returns to the page it was opened from, and only the
 // selling screen leaves the app.
 
+// Dart imports:
+import 'dart:async';
+
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -107,6 +110,16 @@ void _registerBills(home.FakeLoginRepository login) {
         customerRepo: bill.FakeCustomerRepository(),
         productRepo: products.Catalogue(const []),
       ));
+}
+
+/// A session whose role comes back when [role] completes.
+class _PendingRole extends home.FakeLoginRepository {
+  final Future<String> pendingRole;
+
+  _PendingRole(this.pendingRole);
+
+  @override
+  Future<String> getRole() => pendingRole;
 }
 
 /// A stored session that is still alive, for the POS system.
@@ -556,7 +569,44 @@ void main() {
         findsOneWidget);
   });
 
-  testWidgets('the side menu beside a list shows a non-admin no admin entry',
+  testWidgets(
+      'a list from จัดการ waits for the role, the shell showing progress',
+      (tester) async {
+    // Arrange
+    useViewSize(tester, desktopSize);
+    _registerApp();
+    final role = Completer<String>();
+    sl.unregister<HomeViewModel>();
+    final login = _PendingRole(role.future);
+    sl.registerFactory(() => HomeViewModel(
+          getRoleUseCase: GetRoleUseCase(login),
+          logoutUseCase: LogoutUseCase(login),
+        ));
+
+    // Act
+    await tester.pumpWidget(MaterialApp(
+      theme: CustomTheme.mainTheme,
+      localizationsDelegates: [CommonLocalizationsDelegate(), thaiLanguages],
+      onGenerateRoute: RouterApp.generateRoute,
+      home: const InnerPageFrame(child: Scaffold(body: Text('page'))),
+    ));
+    await _settle(tester);
+
+    // Assert: not yet built, the shell and a progress indicator instead
+    expect(find.text('page'), findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('ขายสินค้า').hitTestable(), findsOneWidget);
+
+    // Act
+    role.complete('ADMIN');
+    await _settle(tester);
+
+    // Assert
+    expect(find.text('page').hitTestable(), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
+  testWidgets('a non-admin who lands on a list from จัดการ is sent home',
       (tester) async {
     // Arrange
     useViewSize(tester, desktopSize);
@@ -566,13 +616,14 @@ void main() {
     await tester.pumpWidget(MaterialApp(
       theme: CustomTheme.mainTheme,
       localizationsDelegates: [CommonLocalizationsDelegate(), thaiLanguages],
+      onGenerateRoute: RouterApp.generateRoute,
       home: const InnerPageFrame(child: Scaffold(body: Text('page'))),
     ));
     await _settle(tester);
 
     // Assert
-    expect(find.text('ขายสินค้า').hitTestable(), findsOneWidget);
-    expect(find.text('สินค้า').hitTestable(), findsNothing);
+    expect(find.text('page'), findsNothing);
+    expect(_sellingScreen.hitTestable(), findsOneWidget);
     expect(find.text('จัดการ').hitTestable(), findsNothing);
   });
 

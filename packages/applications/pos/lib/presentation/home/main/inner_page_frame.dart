@@ -18,6 +18,9 @@ import 'package:pos/presentation/home/main/pos_shell.dart';
 /// the signed-in role and the footer's user info and sign-out, as home
 /// shows them. A narrow one shows the list alone, its bar's back arrow
 /// leading back.
+///
+/// The list is built only once the role is known to be admin's: until then
+/// the shell shows a progress indicator, and anyone else is sent home.
 class InnerPageFrame extends StatefulWidget {
   final Widget child;
 
@@ -31,6 +34,7 @@ class _InnerPageFrameState extends State<InnerPageFrame> {
   late final HomeViewModel _viewModel = sl<HomeViewModel>();
   late final StreamSubscription<void> _loggedOut;
   bool _isAdmin = false;
+  bool _roleKnown = false;
 
   @override
   void initState() {
@@ -41,7 +45,15 @@ class _InnerPageFrameState extends State<InnerPageFrame> {
   }
 
   void _onStateChanged() {
-    setState(() => _isAdmin = _viewModel.state.value.isAdmin);
+    final state = _viewModel.state.value;
+    if (state.roleKnown && !state.isAdmin) {
+      Navigator.pushNamedAndRemoveUntil(context, homeRoute, (_) => false);
+      return;
+    }
+    setState(() {
+      _isAdmin = state.isAdmin;
+      _roleKnown = state.roleKnown;
+    });
   }
 
   void _onLoggedOut(void _) {
@@ -66,7 +78,9 @@ class _InnerPageFrameState extends State<InnerPageFrame> {
       onSelect: _openSection,
       onLogout: _viewModel.logout,
       showDrawer: false,
-      child: widget.child,
+      child: _roleKnown
+          ? widget.child
+          : const Center(child: CircularProgressIndicator()),
     );
   }
 
