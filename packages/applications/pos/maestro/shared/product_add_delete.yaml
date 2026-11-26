@@ -34,11 +34,7 @@ env:
     timeout: 15000
 - tapOn: "ชื่อสินค้า.*"
 - inputText: ${ADDED}
-- runFlow:
-    when:
-      platform: Android
-    commands:
-      - hideKeyboard
+- runFlow: steps/hide_keyboard.yaml
 - tapOn: "การแสดงข้อมูลสินค้า.*"
 - runFlow:
     file: steps/choose_dropdown_option.yaml
@@ -50,11 +46,7 @@ env:
     timeout: 10000
 - tapOn: "ชื่อหน่วยนับ.*"
 - inputText: "pc"
-- runFlow:
-    when:
-      platform: Android
-    commands:
-      - hideKeyboard
+- runFlow: steps/hide_keyboard.yaml
 - scrollUntilVisible:
     element: "ราคาขายต่อหน่วย \\(ค่าเริ่มต้น\\).*"
     direction: DOWN
@@ -63,22 +55,14 @@ env:
 - inputText: "30"
 - tapOn: "ราคาทุนต่อหน่วย \\(ค่าเริ่มต้น\\).*"
 - inputText: "12"
-- runFlow:
-    when:
-      platform: Android
-    commands:
-      - hideKeyboard
+- runFlow: steps/hide_keyboard.yaml
 - scrollUntilVisible:
     element: "บาร์โค้ด.*"
     direction: DOWN
     timeout: 10000
 - tapOn: "บาร์โค้ด.*"
 - inputText: 94${RUN_ID}0001
-- runFlow:
-    when:
-      platform: Android
-    commands:
-      - hideKeyboard
+- runFlow: steps/hide_keyboard.yaml
 - takeScreenshot: add-form
 # The form's title and its action both read เพิ่มสินค้า; the action is the
 # one right of the other.

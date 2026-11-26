@@ -11,9 +11,7 @@ appId: app.devper.pos
 - tapOn: "รหัสผ่าน"
 - eraseText: 40
 - inputText: ${PASSWORD}
-- runFlow:
-    when:
-      platform: Android
-    commands:
-      - hideKeyboard
+- runFlow: hide_keyboard.yaml
+- runFlow: dismiss_save_password.yaml
 - tapOn: "เข้าสู่ระบบ"
+- runFlow: dismiss_save_password.yaml

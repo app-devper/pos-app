@@ -62,11 +62,7 @@ env:
 # The list is searched rather than scrolled: a real shop has many customers.
 - tapOn: "ค้นหาลูกค้า\\.\\.\\."
 - inputText: MST-${RUN_ID}
-- runFlow:
-    when:
-      platform: Android
-    commands:
-      - hideKeyboard
+- runFlow: steps/hide_keyboard.yaml
 - extendedWaitUntil:
     visible: "${CUSTOMER}.*"
     timeout: 15000

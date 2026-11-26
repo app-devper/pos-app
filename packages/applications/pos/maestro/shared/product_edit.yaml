@@ -24,11 +24,7 @@ env:
 - tapOn: "ชื่อสินค้า"
 - eraseText: 40
 - inputText: ${RENAMED}
-- runFlow:
-    when:
-      platform: Android
-    commands:
-      - hideKeyboard
+- runFlow: steps/hide_keyboard.yaml
 - tapOn: "ยืนยัน"
 - extendedWaitUntil:
     visible: "ชื่อสินค้า\n?${RENAMED}"

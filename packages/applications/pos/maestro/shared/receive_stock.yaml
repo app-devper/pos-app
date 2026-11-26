@@ -42,11 +42,7 @@ appId: app.devper.pos
     timeout: 10000
 - tapOn: "หมายเลขอางอิง"
 - inputText: REF-${RUN_ID}
-- runFlow:
-    when:
-      platform: Android
-    commands:
-      - hideKeyboard
+- runFlow: steps/hide_keyboard.yaml
 - tapOn: "สร้างใบรับสินค้า"
 - extendedWaitUntil:
     visible: "เพิ่มรายการสินค้า"
@@ -64,11 +60,7 @@ appId: app.devper.pos
     timeout: 10000
 - tapOn: "ค้นหาสินค้า\\.\\.\\."
 - inputText: MST-${RUN_ID}
-- runFlow:
-    when:
-      platform: Android
-    commands:
-      - hideKeyboard
+- runFlow: steps/hide_keyboard.yaml
 - extendedWaitUntil:
     visible: "${PRODUCT_NAME}\n?.*ล็อต"
     timeout: 15000
@@ -82,11 +74,7 @@ appId: app.devper.pos
 - inputText: LOT${RUN_ID}
 - tapOn: "วันหมดอายุ \\(YYYY-MM-DD\\)"
 - inputText: "2030-01-31"
-- runFlow:
-    when:
-      platform: Android
-    commands:
-      - hideKeyboard
+- runFlow: steps/hide_keyboard.yaml
 - tapOn: "เพิ่มรายการ"
 - extendedWaitUntil:
     visible: "Name: ${PRODUCT_NAME}.*"

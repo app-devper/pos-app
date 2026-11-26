@@ -107,7 +107,16 @@ packages/applications/pos/maestro/
 - **Layout, not platform.** The phone shows the narrow layout (menu in a
   drawer, product grid behind a button), the browser the wide one. Steps that
   differ are picked with `when: true: ${LAYOUT == 'narrow'}`, which costs no
-  waiting. Only one thing is truly per platform: hiding the soft keyboard.
+  waiting. Only one thing is truly per platform: hiding the soft keyboard,
+  always through `steps/hide_keyboard.yaml`, never a bare `hideKeyboard`.
+  Maestro hides it on Android by pressing Back, and with no keyboard up that
+  Back leaves the screen (from sign-in it closes the app, and Android's
+  autofill then covers the screen with "Save password to Google?"). An
+  emulator with a hardware keyboard shows no on-screen keyboard, only
+  Gboard's "More keyboard options" button, so the step hides the keyboard
+  only when Gboard shows something else. Sign-in also answers that autofill
+  sheet "Not now" if it shows (`steps/dismiss_save_password.yaml`): that
+  saves nothing and changes no device setting.
 - **Selectors are full-match regular expressions.** Flutter hands a widget's
   texts over as one node — joined by a newline on Android, by nothing on the
   web — so a total is `"ยอดรวมสุทธิ\n?฿50\\.00"`, and a partial text never

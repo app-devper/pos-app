@@ -37,11 +37,7 @@ env:
     timeout: 15000
 - tapOn: "หมายเหตุ"
 - inputText: ${NOTE}
-- runFlow:
-    when:
-      platform: Android
-    commands:
-      - hideKeyboard
+- runFlow: steps/hide_keyboard.yaml
 - tapOn: "เพิ่มสินค้า"
 # The app's product picker and its search, as the receipt flow uses it.
 - extendedWaitUntil:
@@ -49,11 +45,7 @@ env:
     timeout: 10000
 - tapOn: "ค้นหาสินค้า\\.\\.\\."
 - inputText: MST-${RUN_ID}
-- runFlow:
-    when:
-      platform: Android
-    commands:
-      - hideKeyboard
+- runFlow: steps/hide_keyboard.yaml
 - extendedWaitUntil:
     visible: "${PRODUCT_NAME}\n?.*ล็อต"
     timeout: 15000
@@ -68,11 +60,7 @@ env:
 - tapOn: "นับได้.*"
 - eraseText: 10
 - inputText: "0"
-- runFlow:
-    when:
-      platform: Android
-    commands:
-      - hideKeyboard
+- runFlow: steps/hide_keyboard.yaml
 - assertVisible: "(นับได้\n?)?0+"
 - tapOn: "บันทึกการนับสต็อก"
 # Saved: the form closes back to the list.

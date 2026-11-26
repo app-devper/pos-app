@@ -7,11 +7,7 @@ appId: app.devper.pos
 - inputText: ${NAME}
 - tapOn: "โทรศัพท์"
 - inputText: ${PHONE}
-- runFlow:
-    when:
-      platform: Android
-    commands:
-      - hideKeyboard
+- runFlow: hide_keyboard.yaml
 - tapOn: "ยืนยัน"
 # "เพิ่มลูกค้า" is on both the form and the list, so the server is asked
 # until it has the customer.

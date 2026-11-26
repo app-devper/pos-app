@@ -51,11 +51,7 @@ env:
 - inputText: "1"
 - tapOn: "เหตุผลการคืน.*"
 - inputText: ${REASON}
-- runFlow:
-    when:
-      platform: Android
-    commands:
-      - hideKeyboard
+- runFlow: steps/hide_keyboard.yaml
 - tapOn: "ยืนยัน"
 - extendedWaitUntil:
     visible: "2x คืน 1 ${PRODUCT_NAME} .*"

@@ -32,11 +32,7 @@ appId: app.devper.pos
 - inputText: ${QUANTITY}
 - tapOn: "หมายเหตุ"
 - inputText: ${NOTE}
-- runFlow:
-    when:
-      platform: Android
-    commands:
-      - hideKeyboard
+- runFlow: hide_keyboard.yaml
 - tapOn: "ยืนยัน"
 - extendedWaitUntil:
     notVisible: "ปรับสต็อกสินค้า"
