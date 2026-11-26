@@ -24,6 +24,8 @@ import 'package:pos/presentation/receive/manage/receive_line_tile.dart';
 import 'package:pos/domain/model/receive/receive_item.dart';
 import '../support/app_fonts.dart';
 import '../support/app_languages.dart';
+import '../support/main_screens.dart';
+import '../support/manage_screens.dart';
 import 'home/main/cart_page_sale_test.dart' as cart;
 
 const _product = 'Paracetamol 500';
@@ -239,6 +241,26 @@ void main() {
     // Assert
     _expectRowNode(tester, 'Name: $_product\nQuantity: 2 Cost: 10.00\n20.00',
         ['ลบรายการ $_product']);
+    semantics.dispose();
+  });
+
+  testWidgets(
+      'a new stock count line reads as one node beside its field '
+      'and delete button', (tester) async {
+    // Arrange
+    final semantics = tester.ensureSemantics();
+    useViewSize(tester, desktopSize);
+
+    // Act
+    await showScreen(tester, manageScreens['a new stock count with a line']!(),
+        isDialog: false, languages: thaiLanguages);
+
+    // Assert
+    final row = _node(tester, 'Product p1\nล็อต LOT-1, ในระบบ 10');
+    expect(row.childrenCount, 0);
+    final remove =
+        tester.getSemantics(find.byTooltip('ลบรายการนับ Product p1 LOT-1'));
+    expect(_isInside(remove, row), isFalse);
     semantics.dispose();
   });
 }

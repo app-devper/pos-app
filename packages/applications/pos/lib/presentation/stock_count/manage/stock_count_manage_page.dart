@@ -9,6 +9,7 @@ import 'package:design_system/widgets/app_bar.dart';
 import 'package:design_system/widgets/snack_bar.dart';
 
 // Project imports:
+import 'package:pos/presentation/core/readable_tile.dart';
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/stock_count/stock_count.dart';
 import 'package:pos/localizations/language/languages.dart';
@@ -163,12 +164,14 @@ class _StockCountManagePageState extends State<StockCountManagePage> {
                   itemCount: state.items.length,
                   itemBuilder: (context, index) {
                     final item = state.items[index];
+                    final lot =
+                        'ล็อต ${item.lotNumber}, ในระบบ ${item.systemQuantity}';
                     return Column(
                       children: [
-                        ListTile(
+                        ReadableTile(
+                          label: '${item.productName}\n$lot',
                           title: Text(item.productName),
-                          subtitle: Text(
-                              'ล็อต ${item.lotNumber}, ในระบบ ${item.systemQuantity}'),
+                          subtitle: Text(lot),
                           trailing: SizedBox(
                             width: 140,
                             child: Row(
