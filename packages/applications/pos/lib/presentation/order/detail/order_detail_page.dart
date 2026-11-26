@@ -197,6 +197,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           return OrderLineTile(
             line: content,
             unitName: _viewModel.state.value.unitNameOf(content),
+            billCancelled: _viewModel.state.value.order?.isCancelled ?? false,
             isAdmin: isAdmin,
             onTap: () {
               if (isAdmin) {

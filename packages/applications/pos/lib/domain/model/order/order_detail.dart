@@ -49,6 +49,15 @@ class OrderDetail {
   /// A cancelled bill stays viewable, marked, and cannot be deleted again.
   bool get isCancelled => status == orderStatusCancelled;
 
+  /// Whether [line] is cancelled: by its own status, or because the whole
+  /// bill is (older data cancelled a bill and left its lines as they were).
+  bool isLineCancelled(OrderItemDetail line) => isCancelled || line.isCancelled;
+
+  /// The lines that count in a total, a receipt or an export: none of a
+  /// cancelled bill's, and of any other bill those not cancelled.
+  List<OrderItemDetail> get countedLines =>
+      isCancelled ? const [] : items.counted;
+
   String getCreatedDate() {
     final date = DateTime.parse(createdDate);
     final format = DateFormat("dd/MM/yyyy HH:mm");

@@ -21,7 +21,8 @@ OrderItemDetail _line(String id, {required double price, String status = ''}) =>
       status: status,
     );
 
-OrderDetail _bill(List<OrderItemDetail> items) => OrderDetail(
+OrderDetail _bill(List<OrderItemDetail> items, {String status = ''}) =>
+    OrderDetail(
       id: 'order-1',
       createdDate: '2026-11-26T10:00:00Z',
       items: items,
@@ -32,6 +33,7 @@ OrderDetail _bill(List<OrderItemDetail> items) => OrderDetail(
       code: 'OD_1',
       customerCode: '',
       customerName: '',
+      status: status,
     );
 
 final _supplier =
@@ -62,5 +64,22 @@ void main() {
     expect(receipt.items.map((line) => line.id), ['sold']);
     expect(receipt.info.number, 'OD_1');
     expect(receipt.info.date, '26/11/2026');
+  });
+
+  test(
+      'a cancelled bill\'s receipt prints none of its lines, even lines '
+      'not marked cancelled themselves', () {
+    // Arrange: older data, the bill cancelled and its lines left ACTIVE
+    final bill = _bill([
+      _line('a', price: 30, status: 'ACTIVE'),
+      _line('b', price: 20, status: 'ACTIVE'),
+    ], status: 'CANCELLED');
+
+    // Act
+    final receipt =
+        billReceipt(order: bill, supplier: _supplier, customer: _customer);
+
+    // Assert
+    expect(receipt.items, isEmpty);
   });
 }

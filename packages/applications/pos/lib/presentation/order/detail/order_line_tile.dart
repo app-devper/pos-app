@@ -15,14 +15,18 @@ import 'package:pos/presentation/core/readable_tile.dart';
 
 /// One line of a bill: its product, quantity (with its oversold and
 /// returned marks), what was paid, and for an admin its cost and profit and
-/// the delete, history and return actions. A cancelled line is still
-/// shown, marked [cancelledLabel], its amount struck through, and offers
-/// no action.
+/// the delete, history and return actions. A cancelled line, or any line
+/// of a cancelled bill, is still shown, marked [cancelledLabel], its amount
+/// struck through, and offers no action.
 class OrderLineTile extends StatelessWidget {
   final OrderItemDetail line;
 
   /// The name of the unit the line was sold in; empty while it is not known.
   final String unitName;
+
+  /// Whether the line's bill is cancelled: then the line is too, whatever
+  /// its own status says.
+  final bool billCancelled;
   final bool isAdmin;
   final VoidCallback onTap;
   final VoidCallback onDelete;
@@ -33,6 +37,7 @@ class OrderLineTile extends StatelessWidget {
     super.key,
     required this.line,
     this.unitName = '',
+    this.billCancelled = false,
     required this.isAdmin,
     required this.onTap,
     required this.onDelete,
@@ -42,6 +47,8 @@ class OrderLineTile extends StatelessWidget {
 
   static final _format = NumberFormat("#,##0.00", "en_US");
 
+  bool get _cancelled => billCancelled || line.isCancelled;
+
   @override
   Widget build(BuildContext context) {
     return ReadableTile(
@@ -50,7 +57,7 @@ class OrderLineTile extends StatelessWidget {
       title: Text(line.product?.name ?? ""),
       trailing: ExcludeSemantics(
         child: Text(_format.format(line.paid()),
-            style: amountStyle(cancelled: line.isCancelled)),
+            style: amountStyle(cancelled: _cancelled)),
       ),
       subtitle: _buildSubtitle(),
       onTap: onTap,
@@ -64,7 +71,7 @@ class OrderLineTile extends StatelessWidget {
         if (line.oversoldQty > 0) _oversold,
         if (line.returnedQty > 0) _returned,
         line.product?.name ?? '',
-        if (line.isCancelled) cancelledLabel,
+        if (_cancelled) cancelledLabel,
         if (isAdmin) _costAndProfit,
         '฿${_format.format(line.paid())}',
       ].join(' ').replaceAll(RegExp(r' {2,}'), ' ');
@@ -79,19 +86,19 @@ class OrderLineTile extends StatelessWidget {
   /// The cancelled mark sits here, not by the quantity, so that a line
   /// with its oversold or returned marks still fits its row.
   Widget? _buildSubtitle() {
-    if (!isAdmin && !line.isCancelled) return null;
+    if (!isAdmin && !_cancelled) return null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (line.isCancelled) const CancelledBadge(),
+        if (_cancelled) const CancelledBadge(),
         if (isAdmin) Text(_costAndProfit),
       ],
     );
   }
 
   Widget _buildListMenu(BuildContext context) {
-    if (!isAdmin || line.isCancelled) {
+    if (!isAdmin || _cancelled) {
       return ExcludeSemantics(child: _buildQuantityColumn(context));
     }
     final names = Languages.of(context);

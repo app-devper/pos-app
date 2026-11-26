@@ -52,12 +52,20 @@ class OrderDetailState {
   /// what the list renders before the first load finishes.
   List<OrderItemDetail> get items => order?.items ?? const [];
 
+  /// The lines that count (see [OrderDetail.countedLines]).
+  List<OrderItemDetail> get _counted => order?.countedLines ?? const [];
+
   /// What the customer paid for the bill: the sum of its counted lines (a
-  /// cancelled line is listed but counts in no total).
-  double get total => items.countedTotal;
+  /// cancelled line, or any line of a cancelled bill, is listed but counts
+  /// in no total).
+  double get total => _counted.countedTotal;
 
   /// What the bill's counted lines cost.
-  double get totalCost => items.countedCost;
+  double get totalCost => _counted.countedCost;
+
+  /// Whether [line] is shown as cancelled, by itself or with its bill.
+  bool isLineCancelled(OrderItemDetail line) =>
+      order?.isLineCancelled(line) ?? line.isCancelled;
 
   OrderDetailState copyWith({
     bool? loading,

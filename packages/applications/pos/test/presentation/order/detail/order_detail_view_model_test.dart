@@ -201,7 +201,7 @@ OrderItemDetail _buildOrderItem(String id) {
 }
 
 OrderDetail _buildOrderDetail(String id,
-    {List<OrderItemDetail> items = const []}) {
+    {List<OrderItemDetail> items = const [], String status = ''}) {
   return OrderDetail(
     id: id,
     createdDate: '2026-01-01T00:00:00.000Z',
@@ -213,6 +213,7 @@ OrderDetail _buildOrderDetail(String id,
     code: 'O-1',
     customerCode: 'CUST-1',
     customerName: 'Test Customer',
+    status: status,
   );
 }
 
@@ -468,6 +469,28 @@ void main() {
       expect(state.totalCost, 10);
       // The profit the bill shows (BillSummary: total - cost).
       expect(state.total - state.totalCost, 20);
+    });
+
+    test(
+        'a cancelled bill counts none of its lines, even lines not marked '
+        'cancelled themselves', () async {
+      // Arrange: older data, the bill cancelled and its lines left ACTIVE
+      final bill = _buildOrderDetail('o1', status: 'CANCELLED', items: [
+        line('i1', price: 30, cost: 10, status: 'ACTIVE'),
+        line('i2', price: 20, cost: 8, status: 'ACTIVE'),
+      ]);
+      final vm =
+          _buildViewModel(orderRepo: FakeOrderRepository(orderDetail: bill));
+
+      // Act
+      await vm.getOrderById('o1');
+
+      // Assert
+      final state = vm.state.value;
+      expect(state.items, hasLength(2), reason: 'the lines are still shown');
+      expect(state.total, 0);
+      expect(state.totalCost, 0);
+      expect(state.items.map(state.isLineCancelled), [true, true]);
     });
   });
 
