@@ -177,4 +177,45 @@ void main() {
     expect(handled, isFalse);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('each section makes its view model once per switch',
+      (tester) async {
+    // Arrange
+    final app = await _openHome(tester);
+    expect(app.made[CartViewModel], 1);
+
+    // Act
+    for (final section in ['รายการขาย', 'สินค้า', 'ขายสินค้า']) {
+      await _tapSection(tester, section);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+      await _settle(tester);
+    }
+
+    // Assert
+    expect(app.made, {
+      CartViewModel: 2,
+      OrderViewModel: 1,
+      ProductViewModel: 1,
+    });
+  });
+
+  testWidgets('Back in the middle of a fade goes to selling, as Task 1 set',
+      (tester) async {
+    // Arrange
+    await _openHome(tester);
+    await _tapSection(tester, 'รายการขาย');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    // Act
+    final handled = await tester.binding.handlePopRoute();
+    await _settle(tester);
+
+    // Assert
+    expect(handled, isTrue);
+    expect(find.byType(OrderPage), findsNothing);
+    expect(find.text('ตะกร้าสินค้า #1').hitTestable(), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }
