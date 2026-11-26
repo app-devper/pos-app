@@ -1,5 +1,5 @@
 // The layout sweep: every main screen and dialog the widget tests already
-// know how to build, laid out in the app's fonts and theme on a phone
+// know how to build (and the จัดการ screens of manage_screens.dart), laid out in the app's fonts and theme on a phone
 // (360×640) and a desktop (1400×900). Any overflow, or any other error the
 // framework reports, fails that screen's test.
 //
@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pos/container.dart';
 import '../support/app_fonts.dart';
 import '../support/main_screens.dart';
+import '../support/manage_screens.dart';
 
 void main() {
   setUpAll(loadAppFonts);
@@ -21,6 +22,7 @@ void main() {
   for (final size in [phoneSize, desktopSize]) {
     for (final (screens, isDialog) in [
       (mainPages, false),
+      (manageScreens, false),
       (mainDialogs, true)
     ]) {
       for (final MapEntry(key: name, value: build) in screens.entries) {
