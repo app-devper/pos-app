@@ -313,4 +313,38 @@ void main() {
     // Assert
     expect(find.text('ลูกค้าเดิม').hitTestable(), findsOneWidget);
   });
+
+  for (final (tile, title) in [
+    ('ใบรับสินค้า / Goods Receipt', 'รายการรับสินค้า'),
+    ('นับสต็อก', 'นับสต็อก'),
+    ('จัดการลูกค้า', 'ข้อมูลลูกค้า'),
+  ]) {
+    for (final size in [phoneSize, desktopSize]) {
+      testWidgets(
+          '$tile starts its header with a back arrow named ย้อนกลับ, '
+          'not the menu, at $size', (tester) async {
+        // Arrange
+        await _openApp(tester, size: size);
+        await _openSection(tester, 'จัดการ');
+        await tester.tap(find.text(tile));
+        await _settle(tester);
+        final arrow = find.byTooltip('ย้อนกลับ').hitTestable();
+
+        // Assert
+        expect(arrow, findsOneWidget);
+        expect(find.byTooltip('เมนู').hitTestable(), findsNothing);
+        expect(find.byIcon(Icons.arrow_back).hitTestable(), findsOneWidget);
+        final heading = find.text(title).hitTestable().last;
+        expect(tester.getCenter(arrow).dx,
+            lessThan(tester.getTopLeft(heading).dx));
+
+        // Act
+        await tester.tap(arrow);
+        await _settle(tester);
+
+        // Assert
+        expect(_managePage.hitTestable(), findsOneWidget);
+      });
+    }
+  }
 }

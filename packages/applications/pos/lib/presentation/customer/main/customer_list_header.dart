@@ -57,22 +57,11 @@ class CustomerListHeader extends StatelessWidget {
   Widget _buildBar(BuildContext context) {
     return Row(
       children: [
-        Semantics(
-          button: true,
-          label: backLabel,
-          child: InkWell(
-            onTap: onBack,
-            child: Container(
-              width: 40,
-              height: 40,
-              padding: const EdgeInsets.all(8.0),
-              child: Icon(
-                Icons.arrow_back_ios,
-                color: AppColors.of(context).textSecondary,
-                size: 16,
-              ),
-            ),
-          ),
+        // The page's way back, named like every other back arrow.
+        IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: backLabel,
+          onPressed: onBack,
         ),
         Expanded(
           // A header node of its own, so the web writes it into the page.
@@ -106,7 +95,8 @@ class CustomerListHeader extends StatelessWidget {
             ),
           ),
         ] else ...[
-          const SizedBox(width: 40)
+          // Balances the back arrow, so the title stays centred.
+          const SizedBox(width: 48)
         ]
       ],
     );

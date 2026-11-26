@@ -65,7 +65,7 @@ void main() {
     )));
 
     // Act
-    await tester.tap(find.byIcon(Icons.arrow_back_ios));
+    await tester.tap(find.byIcon(Icons.arrow_back));
 
     // Assert
     expect(back, 1);

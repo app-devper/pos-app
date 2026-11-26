@@ -163,7 +163,7 @@ class ReceiveRobot {
   /// Taps the top page's back arrow and waits for [page] to leave (the page
   /// under it has a back arrow too).
   Future<void> _back(Finder page) async {
-    await tester.tap(find.byType(BackButton).hitTestable().last);
+    await tester.tap(ShellRobot.backArrow.hitTestable().last);
     await tester.pump();
     await pumpUntilGone(tester, page);
   }

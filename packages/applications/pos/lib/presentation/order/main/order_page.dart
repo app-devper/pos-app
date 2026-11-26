@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 // Package imports:
-import 'package:design_system/widgets/app_bar.dart';
+import 'package:pos/presentation/core/page_bar.dart';
 import 'package:design_system/widgets/snack_bar.dart';
 import 'package:intl/intl.dart';
 
@@ -119,7 +119,8 @@ class _OrderPageState extends State<OrderPage> {
       onTap: () => FocusScope.of(context).requestFocus(_viewNode),
       child: Scaffold(
         key: _scaffoldKey,
-        appBar: buildAppBar(
+        appBar: buildPageBar(
+          context,
           Languages.of(context).ordersTitle,
         ),
         body: AnnotatedRegion<SystemUiOverlayStyle>(

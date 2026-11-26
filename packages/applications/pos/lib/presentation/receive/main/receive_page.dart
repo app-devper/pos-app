@@ -4,7 +4,7 @@ import 'package:design_system/widgets/title_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:design_system/theme/app_colors.dart';
 
-import 'package:design_system/widgets/app_bar.dart';
+import 'package:pos/presentation/core/page_bar.dart';
 
 // Project imports:
 import 'package:pos/localizations/language/languages.dart';
@@ -28,7 +28,7 @@ class _ReceivePageState extends State<ReceivePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: buildAppBar(Languages.of(context).receivesTitle),
+      appBar: buildPageBar(context, Languages.of(context).receivesTitle),
       body: Responsive(
         mobile: _buildMobile(),
         desktop: _buildDesktop(),

@@ -22,6 +22,8 @@ import 'package:pos/presentation/order/history/order_history_view_model.dart';
 import 'package:pos/presentation/product/main/product_detail_widget.dart';
 import 'package:pos/presentation/product/stock/product_stock_widget.dart';
 import 'package:pos/presentation/product/stock/stock_adjustment_history_view_model.dart';
+import 'package:pos/presentation/receive/main/receive_page.dart';
+import 'package:pos/presentation/receive/main/receives_view_model.dart';
 import 'package:pos/presentation/stock_count/main/stock_counts_page.dart';
 import 'package:pos/presentation/stock_count/main/stock_counts_view_model.dart';
 import 'package:pos/presentation/stock_count/manage/stock_count_manage_page.dart';
@@ -43,6 +45,8 @@ import '../presentation/order/history/order_history_view_model_test.dart'
     as history;
 import '../presentation/order/main/order_view_model_test.dart' as bills;
 import '../presentation/product/product_navigation_test.dart' as products;
+import '../presentation/receive/main/receives_view_model_test.dart'
+    as receipts;
 import '../presentation/stock_count/manage/stock_count_manage_view_model_test.dart'
     as counts;
 import '../presentation/supplier/edit/supplier_edit_view_model_test.dart'
@@ -61,7 +65,29 @@ final _unit = ProductUnit(
   volumeUnit: '',
 );
 
+/// [page] as the app shows it: pushed over another page, so its bar
+/// starts with the back arrow.
+Widget pushedOver(Widget page) => Navigator(
+      onGenerateInitialRoutes: (_, __) => [
+        MaterialPageRoute<void>(builder: (_) => const Scaffold()),
+        MaterialPageRoute<void>(builder: (_) => page),
+      ],
+    );
+
 final manageScreens = <String, Screen>{
+  'the receipts page, opened from จัดการ': () {
+    sl.registerFactory(() => ReceivesViewModel(
+            receiveRepo: receipts.FakeReceiveRepository(receives: [
+          receipts.buildReceive('1', 'RC-1'),
+          receipts.buildReceive('2', 'RC-2'),
+        ])));
+    return pushedOver(const ReceivePage());
+  },
+  'the stock counts list, opened from จัดการ': () {
+    sl.registerFactory(() => StockCountsViewModel(
+        stockCountRepo: counts.FakeStockCountRepository()));
+    return pushedOver(const StockCountsPage());
+  },
   'the bills list, for an admin': () {
     sl.registerFactory(() => OrderViewModel(
           orderRepo: bills.FakeOrderRepository(orders: [
