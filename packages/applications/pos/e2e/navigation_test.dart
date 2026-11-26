@@ -17,7 +17,7 @@ const _manageTiles = [
   'ร้านค้าของฉัน',
   'จัดการลูกค้า',
   'จัดการผู้ใช้งาน',
-  'ใบรับสินค้า / Goods Receipt',
+  'ใบรับสินค้า',
   'นับสต็อก',
 ];
 
@@ -138,7 +138,7 @@ Future<void> _customersOpenAndReturn(ShellRobot shell) async {
 
 /// The goods-receipt list is pushed over จัดการ; its back arrow returns.
 Future<void> _goodsReceiptsOpenAndReturn(ShellRobot shell) async {
-  await shell.openManageTile('ใบรับสินค้า / Goods Receipt');
+  await shell.openManageTile('ใบรับสินค้า');
   await shell
       .expectScreenWithoutError(shell.searchField('ค้นหาเลขที่ใบรับสินค้า...'));
   await shell.pageBack();

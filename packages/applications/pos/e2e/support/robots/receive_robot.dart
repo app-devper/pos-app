@@ -17,7 +17,7 @@ import 'product_picker.dart';
 import 'shell_robot.dart';
 import 'package:pos/presentation/receive/manage/receive_line_tile.dart';
 
-const _manageTile = 'ใบรับสินค้า / Goods Receipt';
+const _manageTile = 'ใบรับสินค้า';
 const _searchHint = 'ค้นหาเลขที่ใบรับสินค้า...';
 const _supplierField = 'ร้านขายสินค้า';
 const _itemDialogTitle = 'เพิ่มรายการรับสินค้า';

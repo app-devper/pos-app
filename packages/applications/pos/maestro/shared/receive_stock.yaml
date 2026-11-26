@@ -17,7 +17,7 @@ appId: app.devper.pos
     file: steps/open_screen.yaml
     env:
       SCREEN: "จัดการ"
-- tapOn: "ใบรับสินค้า / Goods Receipt"
+- tapOn: "ใบรับสินค้า"
 - extendedWaitUntil:
     visible: "ค้นหาเลขที่ใบรับสินค้า\\.\\.\\."
     timeout: 15000

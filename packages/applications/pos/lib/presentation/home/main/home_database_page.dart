@@ -39,7 +39,7 @@ class HomeDatabasePage extends StatelessWidget {
         ),
         _buildMenuItem(
           icon: Icons.receipt_long,
-          title: 'ใบรับสินค้า / Goods Receipt',
+          title: 'ใบรับสินค้า',
           onTap: () {
             Navigator.pushNamed(context, receivesRoute);
           },

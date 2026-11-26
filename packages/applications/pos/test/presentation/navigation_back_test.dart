@@ -223,7 +223,7 @@ void main() {
     // Arrange
     await _openApp(tester);
     await _openSection(tester, 'จัดการ');
-    await tester.tap(find.text('ใบรับสินค้า / Goods Receipt'));
+    await tester.tap(find.text('ใบรับสินค้า'));
     await _settle(tester);
     expect(find.text('RC-1').hitTestable(), findsOneWidget);
 
@@ -299,7 +299,7 @@ void main() {
     // Arrange
     await _openApp(tester);
     await _openSection(tester, 'จัดการ');
-    await tester.tap(find.text('ใบรับสินค้า / Goods Receipt'));
+    await tester.tap(find.text('ใบรับสินค้า'));
     await _settle(tester);
     await tester.tap(find.byTooltip('คำสั่งเพิ่มเติม'));
     await _settle(tester);
@@ -404,7 +404,7 @@ void main() {
   });
 
   for (final (tile, title) in [
-    ('ใบรับสินค้า / Goods Receipt', 'รายการรับสินค้า'),
+    ('ใบรับสินค้า', 'รายการรับสินค้า'),
     ('นับสต็อก', 'นับสต็อก'),
     ('จัดการลูกค้า', 'ข้อมูลลูกค้า'),
   ]) {
@@ -443,7 +443,7 @@ void main() {
     // Arrange
     await _openApp(tester, size: desktopSize);
     await _openSection(tester, 'จัดการ');
-    await tester.tap(find.text('ใบรับสินค้า / Goods Receipt'));
+    await tester.tap(find.text('ใบรับสินค้า'));
     await _settle(tester);
     expect(find.text('RC-1').hitTestable(), findsOneWidget);
 
@@ -457,7 +457,7 @@ void main() {
 
   for (final (section, tile) in [
     ('สินค้า', null),
-    ('จัดการ', 'ใบรับสินค้า / Goods Receipt'),
+    ('จัดการ', 'ใบรับสินค้า'),
   ]) {
     testWidgets(
         'the ${tile ?? section} list on a phone shows one menu at most: '
@@ -483,7 +483,7 @@ void main() {
   }
 
   for (final (tile, address) in [
-    ('ใบรับสินค้า / Goods Receipt', '/receives'),
+    ('ใบรับสินค้า', '/receives'),
     ('จัดการลูกค้า', '/customers'),
     ('นับสต็อก', '/stock-counts'),
     ('ร้านค้าของฉัน', '/supplier'),
@@ -557,7 +557,7 @@ void main() {
     await _openSection(tester, 'จัดการ');
 
     // Act
-    await tester.tap(find.text('ใบรับสินค้า / Goods Receipt'));
+    await tester.tap(find.text('ใบรับสินค้า'));
     await _settle(tester);
 
     // Assert
