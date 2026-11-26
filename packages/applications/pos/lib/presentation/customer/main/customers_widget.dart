@@ -113,7 +113,7 @@ class _CustomersWidgetState extends State<CustomersWidget> {
         if (state.items.isEmpty) {
           return Expanded(
             child: ListEmptyState(
-              searched: _viewModel.query.isNotEmpty,
+              searched: _viewModel.isSearching,
               icon: Icons.people_outline,
               title: Languages.of(context).noCustomersYet,
               addLabel: Languages.of(context).addFirstCustomer,

@@ -166,6 +166,18 @@ void main() {
       expect(vm.state.value.items.map((c) => c.id), ['2']);
     });
 
+    test('a query of only spaces is no search: it lists everyone', () async {
+      final vm = await loaded();
+
+      vm.search('   ');
+
+      expect(vm.isSearching, isFalse,
+          reason: 'an empty list then reads ยังไม่มีลูกค้า, not "no match"');
+      expect(vm.state.value.items.map((c) => c.id), ['1', '2']);
+      vm.search(' สม ');
+      expect(vm.isSearching, isTrue);
+    });
+
     test('never brings back a removed customer', () async {
       final vm = await loaded();
 
