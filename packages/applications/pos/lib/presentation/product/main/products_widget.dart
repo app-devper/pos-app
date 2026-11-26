@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:design_system/widgets/responsive.dart';
 
 // Project imports:
+import 'package:pos/presentation/core/list_empty_state.dart';
 import 'package:pos/presentation/core/more_commands_button.dart';
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/product/product.dart';
@@ -19,10 +20,14 @@ class ProductsWidget extends StatefulWidget {
   final Function(Product) onSelected;
   final Function() onMenu;
 
+  /// Adds the first one, offered while the list is empty.
+  final VoidCallback onAdd;
+
   const ProductsWidget({
     super.key,
     required this.onSelected,
     required this.onMenu,
+    required this.onAdd,
   });
 
   @override
@@ -153,6 +158,17 @@ class _ProductsWidgetState extends State<ProductsWidget> {
                 color: Theme.of(context).colorScheme.primary,
                 strokeCap: StrokeCap.round,
               ),
+            ),
+          );
+        }
+        if (state.items.isEmpty) {
+          return Expanded(
+            child: ListEmptyState(
+              searched: _searchEditingController.text.isNotEmpty,
+              icon: Icons.inventory_2_outlined,
+              title: Languages.of(context).noProductsYet,
+              addLabel: Languages.of(context).addFirstProduct,
+              onAdd: widget.onAdd,
             ),
           );
         }

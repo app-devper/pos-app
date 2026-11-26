@@ -11,6 +11,7 @@ import 'package:design_system/widgets/snack_bar.dart';
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/supplier/supplier.dart';
 import 'package:pos/localizations/language/languages.dart';
+import 'package:pos/presentation/core/list_empty_state.dart';
 import 'package:pos/presentation/constants.dart';
 import 'package:pos/presentation/supplier/argument.dart';
 import 'package:pos/presentation/supplier/main/suppliers_state.dart';
@@ -104,6 +105,17 @@ class _SuppliersPageState extends State<SuppliersPage> {
                 color: Theme.of(context).colorScheme.primary,
                 strokeCap: StrokeCap.round,
               ),
+            ),
+          );
+        }
+        if (state.items.isEmpty) {
+          return Expanded(
+            child: ListEmptyState(
+              searched: false,
+              icon: Icons.store_outlined,
+              title: Languages.of(context).noSuppliersYet,
+              addLabel: Languages.of(context).addFirstSupplier,
+              onAdd: () => _nextToSupplierAdd(context),
             ),
           );
         }

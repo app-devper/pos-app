@@ -44,6 +44,7 @@ class _ReceivePageState extends State<ReceivePage> {
           width: 320,
           child: ReceivesWidget(
             key: ValueKey(_revision),
+            onAdd: _nextToReceiveManage,
             onMenu: () {
               _showProductMenuDialog();
             },
@@ -69,6 +70,7 @@ class _ReceivePageState extends State<ReceivePage> {
         Expanded(
           child: ReceivesWidget(
             key: ValueKey(_revision),
+            onAdd: _nextToReceiveManage,
             onMenu: () {
               _showProductMenuDialog();
             },

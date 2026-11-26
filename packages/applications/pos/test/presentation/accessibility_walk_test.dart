@@ -292,7 +292,9 @@ final _morePages = <String, _Walked>{
             receipts.buildReceive('1', 'RC-1'),
             receipts.buildReceive('2', 'RC-2'),
           ])));
-      return Scaffold(body: ReceivesWidget(onSelected: (_) {}, onMenu: () {}));
+      return Scaffold(
+          body:
+              ReceivesWidget(onSelected: (_) {}, onMenu: () {}, onAdd: () {}));
     },
     then: null,
   ),

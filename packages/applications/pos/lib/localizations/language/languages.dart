@@ -215,4 +215,33 @@ abstract class Languages {
 
   /// The receipts page's add: a new goods receipt.
   String get addReceive;
+
+  /// An empty list: what it says, and its add of the first one (named apart
+  /// from the page's own add, which may be on screen too).
+  String get noProductsYet;
+
+  String get addFirstProduct;
+
+  String get noCustomersYet;
+
+  String get addFirstCustomer;
+
+  String get noReceivesYet;
+
+  String get addFirstReceive;
+
+  String get noStockCountsYet;
+
+  String get addFirstStockCount;
+
+  String get noCategoriesYet;
+
+  String get addFirstCategory;
+
+  String get noSuppliersYet;
+
+  String get addFirstSupplier;
+
+  /// A searched list that matched nothing.
+  String get noSearchResults;
 }

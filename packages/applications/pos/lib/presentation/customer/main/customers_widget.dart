@@ -9,6 +9,8 @@ import 'package:pos/domain/model/customer/customer.dart';
 import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/customer/main/customers_state.dart';
 import 'customer_list_header.dart';
+import 'package:pos/presentation/core/list_empty_state.dart';
+
 import 'package:pos/presentation/customer/main/customers_view_model.dart';
 import 'package:design_system/theme/app_colors.dart';
 import 'package:design_system/widgets/error_state.dart';
@@ -105,6 +107,17 @@ class _CustomersWidgetState extends State<CustomersWidget> {
                 color: Theme.of(context).colorScheme.primary,
                 strokeCap: StrokeCap.round,
               ),
+            ),
+          );
+        }
+        if (state.items.isEmpty) {
+          return Expanded(
+            child: ListEmptyState(
+              searched: _viewModel.query.isNotEmpty,
+              icon: Icons.people_outline,
+              title: Languages.of(context).noCustomersYet,
+              addLabel: Languages.of(context).addFirstCustomer,
+              onAdd: widget.onAdd,
             ),
           );
         }

@@ -11,6 +11,7 @@ import 'package:design_system/widgets/snack_bar.dart';
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/stock_count/stock_count.dart';
 import 'package:pos/localizations/language/languages.dart';
+import 'package:pos/presentation/core/list_empty_state.dart';
 import 'package:pos/presentation/constants.dart';
 import 'package:pos/presentation/stock_count/argument.dart';
 import 'package:pos/presentation/stock_count/main/stock_counts_state.dart';
@@ -90,12 +91,12 @@ class _StockCountsPageState extends State<StockCountsPage> {
           );
         }
         if (state.items.isEmpty) {
-          return Center(
-            child: Text(
-              'ยังไม่มีการนับสต็อก',
-              style: TextStyle(
-                  fontSize: 16, color: AppColors.of(context).textSecondary),
-            ),
+          return ListEmptyState(
+            searched: false,
+            icon: Icons.fact_check_outlined,
+            title: Languages.of(context).noStockCountsYet,
+            addLabel: Languages.of(context).addFirstStockCount,
+            onAdd: () => _nextToStockCountManage(context),
           );
         }
         return _buildStockCounts(state.items);

@@ -11,6 +11,7 @@ import 'package:pos/domain/model/receive/receive.dart';
 import 'package:pos/presentation/receive/main/receive_state.dart';
 import 'package:pos/presentation/receive/main/receives_view_model.dart';
 import 'package:design_system/theme/app_colors.dart';
+import 'package:pos/presentation/core/list_empty_state.dart';
 import 'package:pos/presentation/core/more_commands_button.dart';
 import 'package:pos/localizations/language/languages.dart';
 
@@ -18,10 +19,14 @@ class ReceivesWidget extends StatefulWidget {
   final Function(Receive) onSelected;
   final Function() onMenu;
 
+  /// Adds the first one, offered while the list is empty.
+  final VoidCallback onAdd;
+
   const ReceivesWidget({
     super.key,
     required this.onSelected,
     required this.onMenu,
+    required this.onAdd,
   });
 
   @override
@@ -134,6 +139,17 @@ class _ReceivesWidgetState extends State<ReceivesWidget> {
                 onPressed: _viewModel.getReceives,
                 child: const Text('ลองอีกครั้ง')),
           ])));
+        }
+        if (state.items.isEmpty) {
+          return Expanded(
+            child: ListEmptyState(
+              searched: _searchEditingController.text.isNotEmpty,
+              icon: Icons.receipt_long_outlined,
+              title: Languages.of(context).noReceivesYet,
+              addLabel: Languages.of(context).addFirstReceive,
+              onAdd: widget.onAdd,
+            ),
+          );
         }
         return _buildReceives(state.items);
       },

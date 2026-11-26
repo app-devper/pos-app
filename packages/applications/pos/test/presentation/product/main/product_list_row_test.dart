@@ -54,7 +54,7 @@ Future<void> _showList(WidgetTester tester, Product product) async {
   await tester.pumpWidget(MaterialApp(
     localizationsDelegates: const [thaiLanguages],
     home: Scaffold(
-      body: ProductsWidget(onSelected: (_) {}, onMenu: () {}),
+      body: ProductsWidget(onSelected: (_) {}, onMenu: () {}, onAdd: () {}),
     ),
   ));
   await tester.pumpAndSettle();

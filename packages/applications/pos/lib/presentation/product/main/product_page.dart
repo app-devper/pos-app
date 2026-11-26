@@ -123,6 +123,7 @@ class _ProductsPageState extends State<ProductsPage> {
         SizedBox(
           width: 320,
           child: ProductsWidget(
+            onAdd: () => _show(AddPage()),
             onMenu: () {
               _showProductMenuDialog();
             },
@@ -154,6 +155,7 @@ class _ProductsPageState extends State<ProductsPage> {
       final isMobile = Responsive.isMobile(context);
       if (isMobile) {
         return ProductsWidget(
+          onAdd: () => _show(AddPage()),
           onMenu: () {
             _showProductMenuDialog();
           },

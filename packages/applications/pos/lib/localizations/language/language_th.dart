@@ -296,4 +296,43 @@ class LanguageTh extends Languages {
 
   @override
   String get addReceive => "เพิ่มใบรับสินค้า";
+
+  @override
+  String get noProductsYet => "ยังไม่มีสินค้า";
+
+  @override
+  String get addFirstProduct => "เพิ่มสินค้ารายการแรก";
+
+  @override
+  String get noCustomersYet => "ยังไม่มีลูกค้า";
+
+  @override
+  String get addFirstCustomer => "เพิ่มลูกค้าคนแรก";
+
+  @override
+  String get noReceivesYet => "ยังไม่มีใบรับสินค้า";
+
+  @override
+  String get addFirstReceive => "เพิ่มใบรับสินค้าใบแรก";
+
+  @override
+  String get noStockCountsYet => "ยังไม่มีการนับสต็อก";
+
+  @override
+  String get addFirstStockCount => "เริ่มนับสต็อกครั้งแรก";
+
+  @override
+  String get noCategoriesYet => "ยังไม่มีหมวดหมู่";
+
+  @override
+  String get addFirstCategory => "เพิ่มหมวดหมู่แรก";
+
+  @override
+  String get noSuppliersYet => "ยังไม่มีร้านขายสินค้า";
+
+  @override
+  String get addFirstSupplier => "เพิ่มร้านขายสินค้าร้านแรก";
+
+  @override
+  String get noSearchResults => "ไม่พบรายการที่ค้นหา";
 }

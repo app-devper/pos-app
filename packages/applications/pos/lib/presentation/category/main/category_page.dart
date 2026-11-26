@@ -12,6 +12,7 @@ import 'package:pos/container.dart';
 import 'package:pos/domain/model/category/category.dart';
 import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/category/argument.dart';
+import 'package:pos/presentation/core/list_empty_state.dart';
 import 'package:pos/presentation/constants.dart';
 import 'category_state.dart';
 import 'category_view_model.dart';
@@ -102,6 +103,17 @@ class _CategoryPageState extends State<CategoryPage> {
               strokeWidth: 6,
               color: Theme.of(context).colorScheme.primary,
               strokeCap: StrokeCap.round,
+            ),
+          );
+        }
+        if (state.items.isEmpty) {
+          return Expanded(
+            child: ListEmptyState(
+              searched: false,
+              icon: Icons.category_outlined,
+              title: Languages.of(context).noCategoriesYet,
+              addLabel: Languages.of(context).addFirstCategory,
+              onAdd: () => _nextToCategoryAdd(context),
             ),
           );
         }

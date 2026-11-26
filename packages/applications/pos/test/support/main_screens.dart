@@ -35,6 +35,7 @@ import 'package:pos/presentation/product/stock/product_stock_quantity_widget.dar
 import 'package:pos/presentation/receive/manage/receive_item_dialog.dart';
 import 'package:pos/presentation/stock_count/manage/stock_count_item_picker_view_model.dart';
 import 'app_languages.dart';
+import 'empty_repositories.dart';
 import '../presentation/customer/edit/customer_edit_page_test.dart'
     as customer_edit;
 import '../presentation/customer/main/customer_page_test.dart' as customers;
@@ -112,6 +113,19 @@ final mainPages = <String, Screen>{
   'the product list': () {
     _registerProducts();
     return const Scaffold(body: ProductsPage());
+  },
+  'the product list with no products': () {
+    final catalogue = products.Catalogue([]);
+    sl.registerFactory(() => ProductViewModel(productRepo: catalogue));
+    sl.registerFactory(() => ProductsViewModel(productRepo: catalogue));
+    return const Scaffold(body: ProductsPage());
+  },
+  'the customer list with no customers': () {
+    final repo = NoCustomers();
+    sl.registerFactory(() => CustomersViewModel(customerRepo: repo));
+    sl.registerFactory(() => CustomerViewModel(customerRepo: repo));
+    sl.registerFactory(() => CustomerAddViewModel(customerRepo: repo));
+    return Scaffold(body: CustomerPage(onBack: () {}));
   },
   'the product edit form': () {
     _registerProducts();

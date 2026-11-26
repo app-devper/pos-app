@@ -289,4 +289,43 @@ class LanguageEn extends Languages {
 
   @override
   String get addReceive => "Add goods receipt";
+
+  @override
+  String get noProductsYet => "No products yet";
+
+  @override
+  String get addFirstProduct => "Add your first product";
+
+  @override
+  String get noCustomersYet => "No customers yet";
+
+  @override
+  String get addFirstCustomer => "Add your first customer";
+
+  @override
+  String get noReceivesYet => "No goods receipts yet";
+
+  @override
+  String get addFirstReceive => "Add your first goods receipt";
+
+  @override
+  String get noStockCountsYet => "No stock counts yet";
+
+  @override
+  String get addFirstStockCount => "Start your first stock count";
+
+  @override
+  String get noCategoriesYet => "No categories yet";
+
+  @override
+  String get addFirstCategory => "Add your first category";
+
+  @override
+  String get noSuppliersYet => "No suppliers yet";
+
+  @override
+  String get addFirstSupplier => "Add your first supplier";
+
+  @override
+  String get noSearchResults => "Nothing matches the search";
 }
