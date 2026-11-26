@@ -13,6 +13,10 @@ Widget menuEntry(IconData icon, String label, {Color? color}) => Row(
 
 /// A command menu's item showing [text] beside [icon], named [name] in full
 /// for a screen reader, in [color] when given.
+///
+/// It reads as a plain button, not a menuitem: Flutter web writes a
+/// menuitem's name only as aria-label, which Maestro's web driver cannot
+/// match.
 PopupMenuItem<T> commandMenuItem<T>({
   required T value,
   required IconData icon,
