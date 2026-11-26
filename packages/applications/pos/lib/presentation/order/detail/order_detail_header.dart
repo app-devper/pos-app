@@ -88,15 +88,20 @@ class OrderDetailActions extends StatelessWidget {
         _BillCommand.delete => onDelete(),
       },
       itemBuilder: (_) => [
-        PopupMenuItem(
+        commandMenuItem(
           value: _BillCommand.returns,
-          child: menuEntry(Icons.assignment_return, names.billReturns),
+          icon: Icons.assignment_return,
+          text: names.billReturns,
+          name: names.billReturns,
         ),
         if (canDelete) ...[
           const PopupMenuDivider(),
-          PopupMenuItem(
+          commandMenuItem(
             value: _BillCommand.delete,
-            child: menuEntry(Icons.delete, names.billDelete, color: error),
+            icon: Icons.delete,
+            text: names.billDelete,
+            name: names.billDelete,
+            color: error,
           ),
         ],
       ],

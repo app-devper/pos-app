@@ -150,14 +150,8 @@ class OrderLineTile extends StatelessWidget {
   PopupMenuItem<VoidCallback> _item(
           IconData icon, String text, String name, VoidCallback action,
           {Color? color}) =>
-      PopupMenuItem(
-        value: action,
-        child: Semantics(
-          label: name,
-          excludeSemantics: true,
-          child: menuEntry(icon, text, color: color),
-        ),
-      );
+      commandMenuItem(
+          value: action, icon: icon, text: text, name: name, color: color);
 
   /// The quantity, `2×`, with its oversold and returned marks under it.
   Widget _buildQuantity(BuildContext context) {
