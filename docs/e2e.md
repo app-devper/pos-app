@@ -118,9 +118,17 @@ listed under "Coverage still open" in [e2e-findings.md](e2e-findings.md)).
 | No way in | suppliers list and edit (`/suppliers`, `/supplier-edit`) | — | — | cannot be automated: no way in; widget: the walk |
 | No way in | expired products and lot edit (`/product-expired`, `/product-lot-edit`) | — | — | cannot be automated: no way in |
 
-Every screen the widget tests can build is also laid out by
+Every screen and dialog in the widget tests' shared set
+(`test/support/main_screens.dart`, `test/support/manage_screens.dart` and
+the product detail's tabs) is laid out by
 `test/presentation/layout_sweep_test.dart` (360×640, 1400×900, dialogs at
-640×360) and walked by `test/presentation/accessibility_walk_test.dart`.
+640×360) and walked by `test/presentation/accessibility_walk_test.dart`,
+which also walks a few more (the filled selling screen, cart and bill
+lines, the receipt list and page, a product stock card). The walk skips
+none of them: the English names finding 30 leaves on the bills list are
+let through by their exact text, and every other fault there still fails.
+A screen outside that set is not walked; the camera scanner is one (it
+opens the camera plugin), and its app-bar actions have a test of their own.
 
 The helpers in `e2e/support/` that hold logic have unit tests in
 `packages/applications/pos/test/e2e_support/`. Those tests run with the

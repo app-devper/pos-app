@@ -10,6 +10,7 @@ import 'package:flutter/rendering.dart';
 
 // Package imports:
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 import 'package:um/domain/usecase/auth_use_cases.dart';
 
 // Project imports:
@@ -254,11 +255,20 @@ final _screens = <String, (_Walked, bool)>{
     key: ((build: value, then: null), false),
 };
 
-/// Screens with an open finding the walk meets, pinned until it is fixed.
-const _findings = <String, String>{
-  'the bills list, for an admin': 'FINDING 30: the store filter chips '
-      '(All, Store, Online), the date range (Today) and its date (Nov 26) '
-      'are named in English only; order_page.dart, order_view_model.dart:69',
+/// Names an open finding leaves in English on a screen, each by its exact
+/// text: the walk visits the screen and fails every other fault on it, and
+/// any other English name.
+final _findings = <String, Set<String>>{
+  // FINDING 30 (docs/e2e-findings.md): the store filter chips, the date
+  // range and its date are named in English only; order_page.dart,
+  // order_view_model.dart:69. The date is today's, as the page formats it.
+  'the bills list, for an admin': {
+    'All',
+    'Store',
+    'Online',
+    'Today',
+    DateFormat('MMM dd').format(DateTime.now()),
+  },
 };
 
 bool _isTappable(Widget widget) =>
@@ -414,7 +424,9 @@ bool _isOneControl(List<Element> elements) =>
     !elements.skip(1).any((e) => debugIsLocalCreationLocation(e.widget));
 
 /// The texts a control holds itself: its texts and icon labels, and the
-/// label or tooltip of the widgets right around it.
+/// label or tooltip of a widget that wraps the control alone (its own
+/// tooltip, a Semantics directly around it). A label of an ancestor that
+/// also holds other widgets is the row's, not the control's.
 Set<String> _ownTexts(Element element) {
   final texts = <String>{};
   void add(String? text) {
@@ -444,12 +456,18 @@ Set<String> _ownTexts(Element element) {
   }
 
   visit(element);
-  var depth = 0;
   element.visitAncestorElements((ancestor) {
+    if (_childCount(ancestor) != 1) return false;
     read(ancestor.widget);
-    return ++depth < 12;
+    return true;
   });
   return texts;
+}
+
+int _childCount(Element element) {
+  var count = 0;
+  element.visitChildren((_) => count++);
+  return count;
 }
 
 /// Whether the name a screen reader says for [element] is none of its
@@ -482,7 +500,8 @@ bool _isEnglishOnly(String name) =>
 /// Every control with no name, a name in English only, a control merged
 /// into another's node or kept from a screen reader, and every name two
 /// controls share.
-List<String> _faults(WidgetTester tester) {
+List<String> _faults(WidgetTester tester,
+    {Set<String> knownEnglish = const {}}) {
   final (controls, faults) = _controls(tester);
   final byName = <String, List<SemanticsNode>>{};
   for (final MapEntry(key: node, value: elements) in controls.entries) {
@@ -498,7 +517,7 @@ List<String> _faults(WidgetTester tester) {
     }
     if (name.isEmpty) {
       faults.add('no name: ${_describe(elements.first)}');
-    } else if (_isEnglishOnly(name)) {
+    } else if (_isEnglishOnly(name) && !knownEnglish.contains(name)) {
       faults.add('English only: "$name": ${_describe(elements.first)}');
     } else {
       byName.putIfAbsent(name, () => []).add(node);
@@ -515,8 +534,9 @@ List<String> _faults(WidgetTester tester) {
 
 /// Controls a screen reader cannot use, planted to prove the walk sees
 /// each kind: a tap kept out of the semantics, a button under
-/// ExcludeSemantics, an unnamed icon merged into its row's node, and a name
-/// in English only.
+/// ExcludeSemantics, an unnamed icon merged into its row's node, an
+/// unnamed icon merged into a labelled row (read by the row's label), and a
+/// name in English only.
 class _PlantedOffenders extends StatelessWidget {
   const _PlantedOffenders();
 
@@ -539,6 +559,16 @@ class _PlantedOffenders extends StatelessWidget {
             onTap: () {},
             trailing:
                 GestureDetector(onTap: () {}, child: const Icon(Icons.close)),
+          ),
+          MergeSemantics(
+            child: Semantics(
+              label: 'แถวมีชื่อ',
+              child: Row(children: [
+                const Text('รายละเอียด'),
+                GestureDetector(
+                    onTap: () {}, child: const Icon(Icons.remove_circle)),
+              ]),
+            ),
           ),
           IconButton(
               tooltip: 'Delete',
@@ -566,7 +596,10 @@ void main() {
         faults.where((f) => f.startsWith(kind)).join('\n');
     expect(kinds('not offered').split('\n'), hasLength(2),
         reason: faults.join('\n'));
-    expect(kinds('merged'), isNotEmpty, reason: faults.join('\n'));
+    expect(kinds('merged, read by its row\'s text "แถว"'), isNotEmpty,
+        reason: faults.join('\n'));
+    expect(kinds('merged, read by its row\'s text "แถวมีชื่อ'), isNotEmpty,
+        reason: faults.join('\n'));
     expect(kinds('English only: "Delete"'), isNotEmpty,
         reason: faults.join('\n'));
     semantics.dispose();
@@ -608,12 +641,13 @@ void main() {
         await screen.then?.call(tester);
 
         // Act
-        final faults = _faults(tester);
+        final faults =
+            _faults(tester, knownEnglish: _findings[name] ?? const {});
 
         // Assert
         expect(faults, isEmpty, reason: faults.join('\n'));
         semantics.dispose();
-      }, skip: _findings.containsKey(name));
+      });
     }
   }
 }
