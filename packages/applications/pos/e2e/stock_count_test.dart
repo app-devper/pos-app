@@ -53,7 +53,7 @@ void main() {
 
       // Assert
       await counts.shell
-          .expectSnackbar('Error: โปรดเพิ่มสินค้าอย่างน้อย 1 รายการ');
+          .expectSnackbar('ข้อผิดพลาด: โปรดเพิ่มสินค้าอย่างน้อย 1 รายการ');
       expect(counts.newCountTitle, findsOneWidget,
           reason: 'the form should stay open, nothing saved');
       await counts.shell.waitForSnackbarToClose();
@@ -124,11 +124,11 @@ void main() {
   // Was a finding (#12): a success bar outlived the screen that showed it,
   // and its 'Clear' then threw "Looking up a deactivated widget's ancestor
   // is unsafe" and left it over the stock count's 'เพิ่มสินค้า'. It now
-  // closes by itself, and its 'Clear' uses the messenger, not the screen.
+  // closes by itself, and its close (now 'ปิด') uses the messenger, not the screen.
   // What this checks: the bar is gone within the wait and nothing threw.
-  // 'Clear' is pressed only if the bar still shows when the stock count
+  // 'ปิด' is pressed only if the bar still shows when the stock count
   // opens; it has usually closed by then, so the press is not guaranteed
-  // (the messenger's Clear has its own widget test).
+  // (the messenger's ปิด has its own widget test).
   group('success bar from an earlier screen', () {
     testWidgets(
         'an earlier screen\'s success bar closes by itself on the stock '
@@ -142,7 +142,7 @@ void main() {
 
       // Act: the receipt page is gone once the stock count is open
       await StockCountRobot(shell).openList();
-      final clear = find.text('Clear').hitTestable();
+      final clear = find.text('ปิด').hitTestable();
       if (clear.evaluate().isNotEmpty) {
         await tester.tap(clear.first);
         await tester.pump();

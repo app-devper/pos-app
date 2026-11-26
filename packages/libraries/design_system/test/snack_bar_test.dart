@@ -61,7 +61,7 @@ void main() {
     expect(find.text('Add success'), findsNothing);
   });
 
-  testWidgets('Clear on a success bar works after its screen was closed', (
+  testWidgets('ปิด on a success bar works after its screen was closed', (
     tester,
   ) async {
     // Arrange
@@ -78,7 +78,7 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
 
     // Act
-    await tester.tap(find.text('Clear').hitTestable());
+    await tester.tap(find.text('ปิด').hitTestable());
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
 
@@ -104,8 +104,8 @@ void main() {
     await tester.pump(const Duration(seconds: 30));
 
     // Assert
-    expect(find.text('Error: ไม่พบสินค้า'), findsOneWidget);
-    expect(find.text('Clear'), findsOneWidget);
+    expect(find.text('ข้อผิดพลาด: ไม่พบสินค้า'), findsOneWidget);
+    expect(find.text('ปิด'), findsOneWidget);
   });
 
   for (final (kind, show) in <(String, void Function(CustomSnackBar))>[

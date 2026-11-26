@@ -127,7 +127,7 @@ void main() {
       final cart = CartRobot(shell);
       await cart.open();
       await cart.addByBarcode(_stocked.barcode, found: false);
-      await shell.expectSnackbar('Error: ไม่พบสินค้า');
+      await shell.expectSnackbar('ข้อผิดพลาด: ไม่พบสินค้า');
       await shell.waitForSnackbarToClose();
       expect(cart.isEmpty, isTrue);
     });

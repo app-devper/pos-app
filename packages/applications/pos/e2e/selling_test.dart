@@ -81,7 +81,7 @@ void main() {
       await cart.addByBarcode(_unknownBarcode, found: false);
 
       // Assert
-      await shell.expectSnackbar('Error: ไม่พบสินค้า');
+      await shell.expectSnackbar('ข้อผิดพลาด: ไม่พบสินค้า');
       await shell.waitForSnackbarToClose();
       expect(cart.line(_product), findsOneWidget,
           reason: 'the unknown barcode leaves the sale as it was');
@@ -165,7 +165,7 @@ void main() {
       await cart.submitPayment();
 
       // Assert
-      await cart.expectRefused('Error: คุณรับเงินน้อยกว่ายอดราคาสินค้า');
+      await cart.expectRefused('ข้อผิดพลาด: คุณรับเงินน้อยกว่ายอดราคาสินค้า');
       expect(cart.paymentDue('฿75.00'), findsOneWidget,
           reason: 'the payment stays open');
       await cart.closePayment();

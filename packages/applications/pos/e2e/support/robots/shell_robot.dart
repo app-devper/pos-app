@@ -27,7 +27,7 @@ const _step = Duration(milliseconds: 100);
 
 final _snackbar = find.byKey(const Key('snackbar'));
 
-/// CustomSnackBar.showErrorSnackBar: red, text "Error: …".
+/// CustomSnackBar.showErrorSnackBar: red, text "ข้อผิดพลาด: …".
 final _errorRed = Colors.red[400];
 final _errorAlertTitle = find.text('พบข้อผิดพลาด').hitTestable();
 final _confirmTitle = find.text('แจ้งเตือน').hitTestable();

@@ -28,10 +28,17 @@ class CustomSnackBar {
     return screen > maxWidth + 2 * _sideMargin ? maxWidth : null;
   }
 
-  /// An error bar; with [action] it keeps its Clear and stays until cleared.
+  /// What an error bar says before its message, so an error is not told
+  /// by the bar's colour alone.
+  static const errorPrefix = "ข้อผิดพลาด: ";
+
+  /// The bar's action that closes it.
+  static const closeLabel = "ปิด";
+
+  /// An error bar; with [action] it keeps its ปิด and stays until closed.
   void showErrorSnackBar(final Object? msg, {bool action = false}) {
     _show(
-      text: "Error: $msg",
+      text: "$errorPrefix$msg",
       duration: _errorDuration,
       color: Colors.red[400],
       action: action,
@@ -67,7 +74,7 @@ class CustomSnackBar {
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
-  /// A success bar: it closes by itself after [duration], and its Clear
+  /// A success bar: it closes by itself after [duration], and its ปิด
   /// closes it sooner.
   void showSnackBar({
     required String text,
@@ -93,7 +100,7 @@ class CustomSnackBar {
     bool? persist,
   }) {
     hideAll();
-    // The messenger outlives the screen that shows the bar; Clear may be
+    // The messenger outlives the screen that shows the bar; ปิด may be
     // pressed after that screen's context is gone.
     final messenger = ScaffoldMessenger.of(context);
     final snackBar = SnackBar(
@@ -109,7 +116,7 @@ class CustomSnackBar {
       width: _width(),
       action: action
           ? SnackBarAction(
-              label: "Clear",
+              label: closeLabel,
               textColor: Colors.black,
               onPressed: messenger.removeCurrentSnackBar,
             )
