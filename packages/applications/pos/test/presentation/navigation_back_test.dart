@@ -18,7 +18,15 @@ import 'package:pos/presentation/customer/add/customer_add_view_model.dart';
 import 'package:pos/presentation/customer/main/customer_view_model.dart';
 import 'package:pos/presentation/customer/main/customers_view_model.dart';
 import 'package:pos/presentation/home/main/home_page.dart';
+import 'package:pos/domain/model/order/order_detail.dart';
+import 'package:pos/domain/model/supplier/supplier.dart';
 import 'package:pos/presentation/home/main/home_view_model.dart';
+import 'package:pos/presentation/order/detail/order_detail_view_model.dart';
+import 'package:pos/presentation/order/main/order_view_model.dart';
+import 'package:pos/presentation/product/edit/product_edit_view_model.dart';
+import 'package:pos/presentation/product/main/product_view_model.dart';
+import 'package:pos/presentation/product/main/products_view_model.dart';
+import 'package:pos/presentation/stock_count/main/stock_counts_view_model.dart';
 import 'package:pos/presentation/receive/main/receives_view_model.dart';
 import 'package:pos/presentation/router.dart';
 import '../support/app_fonts.dart';
@@ -26,6 +34,10 @@ import '../support/app_languages.dart';
 import 'customer/main/customer_page_test.dart' as customers;
 import 'home/main/cart_page_sale_test.dart' as cart;
 import 'home/main/home_view_model_test.dart' as home;
+import 'order/detail/order_detail_view_model_test.dart' as bill;
+import 'order/main/order_view_model_test.dart' as bills;
+import 'product/product_navigation_test.dart' as products;
+import 'stock_count/manage/stock_count_manage_view_model_test.dart' as counts;
 import 'receive/main/receives_view_model_test.dart' as receipts;
 
 /// The จัดการ landing page, recognised by a tile only it shows.
@@ -41,10 +53,51 @@ void _registerApp() {
   sl.registerFactory(() => ReceivesViewModel(
       receiveRepo: receipts.FakeReceiveRepository(
           receives: [receipts.buildReceive('1', 'RC-1')])));
+  _registerProducts();
+  _registerBills(login);
+  sl.registerFactory(() =>
+      StockCountsViewModel(stockCountRepo: counts.FakeStockCountRepository()));
   final people = customers.ServerCustomers();
   sl.registerFactory(() => CustomersViewModel(customerRepo: people));
   sl.registerFactory(() => CustomerViewModel(customerRepo: people));
   sl.registerFactory(() => CustomerAddViewModel(customerRepo: people));
+}
+
+void _registerProducts() {
+  final catalogue = products.Catalogue([products.paracetamol()]);
+  sl.registerFactory(() => ProductViewModel(productRepo: catalogue));
+  sl.registerFactory(() => ProductsViewModel(productRepo: catalogue));
+  sl.registerFactory(() => ProductEditViewModel(productRepo: catalogue));
+}
+
+/// One bill, OD-1, listed and opened as the detail of bill OD_DETAIL.
+void _registerBills(home.FakeLoginRepository login) {
+  sl.registerFactory(() => OrderViewModel(
+        orderRepo:
+            bills.FakeOrderRepository(orders: [bills.order('1', 'Cash')]),
+        getRoleUseCase: GetRoleUseCase(login),
+      ));
+  sl.registerFactory(() => OrderDetailViewModel(
+        getRoleUseCase: GetRoleUseCase(login),
+        orderRepo: bill.FakeOrderRepository(
+            orderDetail: OrderDetail(
+          id: '1',
+          createdDate: '2026-11-26T10:00:00Z',
+          items: const [],
+          total: 100,
+          totalCost: 40,
+          discount: 0,
+          type: 'Cash',
+          code: 'OD_DETAIL',
+          customerCode: '',
+          customerName: '',
+        )),
+        supplierRepo: bill.FakeSupplierRepository(
+            supplier: Supplier(
+                id: 's1', name: 'ร้าน', address: '', phone: '', taxId: '')),
+        customerRepo: bill.FakeCustomerRepository(),
+        productRepo: products.Catalogue(const []),
+      ));
 }
 
 /// Lets loads and route transitions run without waiting on spinners, which
@@ -189,4 +242,57 @@ void main() {
     expect(find.text('เพิ่มใบรับสินค้า'), findsNothing);
     expect(find.text('RC-1').hitTestable(), findsOneWidget);
   });
+
+  testWidgets('system Back on the stock counts list returns to จัดการ',
+      (tester) async {
+    // Arrange
+    await _openApp(tester);
+    await _openSection(tester, 'จัดการ');
+    await tester.tap(find.text('นับสต็อก'));
+    await _settle(tester);
+    expect(_managePage.hitTestable(), findsNothing);
+
+    // Act
+    await _systemBack(tester);
+
+    // Assert
+    expect(_managePage.hitTestable(), findsOneWidget);
+  });
+
+  testWidgets('system Back on a bill detail returns to the bills list',
+      (tester) async {
+    // Arrange
+    await _openApp(tester);
+    await _openSection(tester, 'รายการขาย');
+    await tester.tap(find.text('OD-1'));
+    await _settle(tester);
+    expect(find.textContaining('OD_DETAIL').hitTestable(), findsWidgets);
+
+    // Act
+    await _systemBack(tester);
+
+    // Assert
+    expect(find.textContaining('OD_DETAIL'), findsNothing);
+    expect(find.text('OD-1').hitTestable(), findsOneWidget);
+  });
+
+  for (final size in [phoneSize, desktopSize]) {
+    testWidgets('system Back on a product detail returns to the list at $size',
+        (tester) async {
+      // Arrange
+      await _openApp(tester, size: size);
+      await _openSection(tester, 'สินค้า');
+      await tester.tap(find.text('Paracetamol').hitTestable().first);
+      await _settle(tester);
+      expect(find.text('ข้อมูลทั่วไป').hitTestable(), findsWidgets);
+
+      // Act
+      await _systemBack(tester);
+
+      // Assert
+      expect(find.text('ข้อมูลทั่วไป'), findsNothing);
+      expect(_sellingScreen, findsNothing);
+      expect(find.text('Paracetamol').hitTestable(), findsOneWidget);
+    });
+  }
 }

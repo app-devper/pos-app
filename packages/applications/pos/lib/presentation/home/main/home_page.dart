@@ -34,6 +34,10 @@ class _HomePageState extends State<HomePage> {
   MenuEvent _menuEvent = MenuEvent.home;
   bool _isAdmin = false;
 
+  /// Back within the current section (a product's detail to the list), or
+  /// null when the section shows its first page.
+  VoidCallback? _sectionBack;
+
   @override
   void initState() {
     super.initState();
@@ -80,6 +84,7 @@ class _HomePageState extends State<HomePage> {
 
   void _onSelect(String id) {
     setState(() {
+      _sectionBack = null;
       _menuEvent = switch (id) {
         'order' => MenuEvent.order,
         'product' => MenuEvent.product,
@@ -103,12 +108,23 @@ class _HomePageState extends State<HomePage> {
         items: _items,
         selectedId: _selectedId,
         onSelect: _onSelect,
-        // Back from another section goes to selling; from selling it leaves.
-        onBack: _menuEvent == MenuEvent.home ? null : () => _onSelect('home'),
+        onBack: _onBack,
         sidebarFooter: _buildFooter,
         child: _buildPage(),
       ),
     );
+  }
+
+  /// Back steps out of the section's inner page first; from another
+  /// section it goes to selling; from selling it leaves the app (null).
+  VoidCallback? get _onBack {
+    if (_sectionBack case final back?) return back;
+    if (_menuEvent == MenuEvent.home) return null;
+    return () => _onSelect('home');
+  }
+
+  void _onSectionBackChanged(VoidCallback? back) {
+    if (mounted) setState(() => _sectionBack = back);
   }
 
   Widget _buildFooter(bool collapsed) {
@@ -155,7 +171,7 @@ class _HomePageState extends State<HomePage> {
       case MenuEvent.order:
         return const OrderPage();
       case MenuEvent.product:
-        return const ProductsPage();
+        return ProductsPage(onBackChanged: _onSectionBackChanged);
       case MenuEvent.database:
         return const HomeDatabasePage();
     }
