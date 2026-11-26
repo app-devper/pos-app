@@ -146,16 +146,17 @@ Future<void> _settle(WidgetTester tester) async {
   }
 }
 
-/// The app as the router builds it, signed in as an admin, on the selling
-/// screen.
-Future<void> _openApp(WidgetTester tester, {Size size = phoneSize}) async {
+/// The app as the router builds it, signed in as [role] (an admin), on
+/// the selling screen, or on home's [section].
+Future<void> _openApp(WidgetTester tester,
+    {Size size = phoneSize, String role = 'ADMIN', String? section}) async {
   useViewSize(tester, size);
-  _registerApp();
+  _registerApp(role: role);
   await tester.pumpWidget(MaterialApp(
     theme: CustomTheme.mainTheme,
     localizationsDelegates: [CommonLocalizationsDelegate(), thaiLanguages],
     onGenerateRoute: RouterApp.generateRoute,
-    home: const HomePage(),
+    home: HomePage(section: section),
   ));
   await _settle(tester);
 }
@@ -491,6 +492,25 @@ void main() {
       });
     }
   }
+
+  testWidgets('home asked for จัดการ by a non-admin opens selling instead',
+      (tester) async {
+    // Arrange / Act
+    await _openApp(tester, role: 'USER', section: 'database');
+
+    // Assert
+    expect(_managePage, findsNothing);
+    expect(_sellingScreen.hitTestable(), findsOneWidget);
+  });
+
+  testWidgets('home asked for จัดการ by an admin opens จัดการ',
+      (tester) async {
+    // Arrange / Act
+    await _openApp(tester, section: 'database');
+
+    // Assert
+    expect(_managePage.hitTestable(), findsOneWidget);
+  });
 
   testWidgets('a start at the splash address ends on the selling screen',
       (tester) async {

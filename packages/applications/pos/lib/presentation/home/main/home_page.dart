@@ -35,7 +35,12 @@ class _HomePageState extends State<HomePage> {
   late HomeViewModel _viewModel;
   late StreamSubscription<void> _loggedOut;
 
-  late MenuEvent _menuEvent = menuEventOf(widget.section);
+  /// An admin-only section asked for by [HomePage.section], opened once
+  /// the role is known to be an admin's; selling shows until then.
+  late MenuEvent? _pendingSection = _requestedAdminSection();
+
+  late MenuEvent _menuEvent =
+      _pendingSection == null ? menuEventOf(widget.section) : MenuEvent.home;
   bool _isAdmin = false;
 
   /// Back within the current section (a product's detail to the list), or
@@ -51,8 +56,21 @@ class _HomePageState extends State<HomePage> {
     _viewModel.prepareData();
   }
 
+  MenuEvent? _requestedAdminSection() {
+    final requested = menuEventOf(widget.section);
+    return isAdminOnly(requested) ? requested : null;
+  }
+
+  /// A section the role may not see is never shown: it gives way to
+  /// selling.
   void _onStateChanged() {
-    setState(() => _isAdmin = _viewModel.state.value.isAdmin);
+    setState(() {
+      _isAdmin = _viewModel.state.value.isAdmin;
+      final pending = _pendingSection;
+      if (_isAdmin && pending != null) _menuEvent = pending;
+      _pendingSection = null;
+      if (!_isAdmin && isAdminOnly(_menuEvent)) _menuEvent = MenuEvent.home;
+    });
   }
 
   void _onLoggedOut(void _) {
@@ -72,6 +90,7 @@ class _HomePageState extends State<HomePage> {
 
   void _onSelect(String id) {
     setState(() {
+      _pendingSection = null;
       _sectionBack = null;
       _menuEvent = menuEventOf(id);
     });

@@ -14,6 +14,10 @@ enum MenuEvent {
 
 const posBrand = 'Devper POS';
 
+/// Whether only an admin may open [section]; the others are every role's.
+bool isAdminOnly(MenuEvent section) =>
+    section == MenuEvent.product || section == MenuEvent.database;
+
 /// The side menu's entries. Cashiers only sell and review sales; the rest
 /// is admin territory.
 List<AppShellItem> posMenuItems({required bool isAdmin}) {
