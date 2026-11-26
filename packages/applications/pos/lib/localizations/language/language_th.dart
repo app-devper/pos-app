@@ -274,4 +274,14 @@ class LanguageTh extends Languages {
 
   @override
   String payWithChange(String amount) => "เงินทอน $amount";
+
+  @override
+  String productOnHand(String quantity, String unit) =>
+      "คงเหลือ $quantity $unit";
+
+  @override
+  String get outOfStock => "หมด";
+
+  @override
+  String get lowStock => "ใกล้หมด";
 }

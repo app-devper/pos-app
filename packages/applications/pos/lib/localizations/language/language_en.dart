@@ -267,4 +267,14 @@ class LanguageEn extends Languages {
 
   @override
   String payWithChange(String amount) => "Change $amount";
+
+  @override
+  String productOnHand(String quantity, String unit) =>
+      "$quantity $unit on hand";
+
+  @override
+  String get outOfStock => "Out of stock";
+
+  @override
+  String get lowStock => "Low stock";
 }

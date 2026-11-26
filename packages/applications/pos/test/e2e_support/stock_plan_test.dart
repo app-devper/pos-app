@@ -60,6 +60,22 @@ void main() {
       expect(onHand, -3);
     });
 
+    test('reads the quantity after the price in a product row', () {
+      // Act
+      final onHand = onHandIn('฿10.00 · คงเหลือ 12 ชิ้น');
+
+      // Assert
+      expect(onHand, 12);
+    });
+
+    test('reads the quantity when a stock cue follows it', () {
+      // Act
+      final onHand = onHandIn('฿10.00 · คงเหลือ 0 ชิ้น · หมด');
+
+      // Assert
+      expect(onHand, 0);
+    });
+
     test('is null for the unsorted subtitle, which is only the unit', () {
       // Act
       final onHand = onHandIn('ชิ้น');

@@ -106,9 +106,9 @@ class ProductRobot {
 
   // --- Stock on hand in the list ----------------------------------------------
 
-  /// The on-hand figure the list shows for [name] with its sort toggle on
-  /// (`คงเหลือ <q> <unit>`): the sum of the signed-in Branch's lots; null if
-  /// the row does not show one.
+  /// The on-hand figure the list row shows for [name], after its price
+  /// (`คงเหลือ <q> <unit>`): the signed-in Branch's lots of the product's
+  /// first unit; null if the row does not show one.
   Future<int?> stockOnHand(String name) async {
     await _showOnHand(name);
     return onHandIn(_subtitleOf(name) ?? '');
@@ -121,8 +121,13 @@ class ProductRobot {
       {required String unit}) async {
     await _showOnHand(name);
     final wanted = 'คงเหลือ $expected $unit';
+    bool shown() {
+      final subtitle = _subtitleOf(name) ?? '';
+      return onHandIn(subtitle) == expected && subtitle.contains(wanted);
+    }
+
     final clock = Stopwatch()..start();
-    while (_subtitleOf(name) != wanted) {
+    while (!shown()) {
       if (clock.elapsed > _stockTimeout) {
         fail('$name: the list shows "${_subtitleOf(name)}", not "$wanted"');
       }
@@ -130,23 +135,16 @@ class ProductRobot {
     }
   }
 
-  /// Searches for [name] and turns the sort-by-stock toggle on (the
-  /// subtitle shows only the unit while it is off).
+  /// Searches for [name]: its row shows what is on hand.
   Future<void> _showOnHand(String name) async {
     expect(await isListed(name), isTrue, reason: '$name is not listed');
-    final sortOff =
-        find.descendant(of: _list, matching: find.byIcon(Icons.balance));
-    if (sortOff.hitTestable().evaluate().isEmpty) return;
-    await tester.tap(sortOff.hitTestable());
-    await tester.pump();
-    await pumpUntilFound(
-        tester, find.descendant(of: _list, matching: find.byIcon(Icons.sort)));
   }
 
   String? _subtitleOf(String name) {
     final row = _row(name).evaluate().firstOrNull;
     final subtitle = (row?.widget as ListTile?)?.subtitle;
-    return subtitle is Text ? subtitle.data : null;
+    if (subtitle is! Text) return null;
+    return subtitle.data ?? subtitle.textSpan?.toPlainText();
   }
 
   // --- Add ------------------------------------------------------------------

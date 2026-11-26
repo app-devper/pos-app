@@ -10,6 +10,7 @@ import 'package:pos/container.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:design_system/theme/app_colors.dart';
 import 'package:design_system/widgets/error_state.dart';
+import 'product_list_row.dart';
 import 'products_state.dart';
 import 'products_view_model.dart';
 import 'package:pos/localizations/language/languages.dart';
@@ -161,37 +162,15 @@ class _ProductsWidgetState extends State<ProductsWidget> {
   }
 
   Expanded _buildProducts(List<Product> item) {
-    getSubTitle(Product content) {
-      if (_sortBalance) {
-        return "คงเหลือ ${content.getQuantity()} ${content.units.isNotEmpty ? content.units.first.unit : ""}";
-      } else {
-        return content.units.isNotEmpty ? content.units.first.unit : "";
-      }
-    }
-
     return Expanded(
       child: ListView.builder(
         itemCount: item.length,
         itemBuilder: (context, index) {
           final content = item[index];
           return Column(children: [
-            ListTile(
-              title: Text(content.name),
-              subtitle: Text(
-                getSubTitle(content),
-                style: TextStyle(
-                  color: AppColors.of(context).textSecondary,
-                  fontSize: 14,
-                ),
-              ),
-              trailing: Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: AppColors.of(context).textSecondary,
-              ),
-              onTap: () {
-                widget.onSelected(content);
-              },
+            ProductListRow(
+              product: content,
+              onTap: () => widget.onSelected(content),
             ),
             const Divider(height: 1),
           ]);

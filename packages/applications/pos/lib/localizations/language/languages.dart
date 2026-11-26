@@ -195,4 +195,14 @@ abstract class Languages {
 
   /// The pay button with change to give: [amount] already formatted.
   String payWithChange(String amount);
+
+  /// A product row's stock: [quantity] of [unit] on hand.
+  String productOnHand(String quantity, String unit);
+
+  /// Said beside a product's stock when none is left, so it is not told by
+  /// colour alone.
+  String get outOfStock;
+
+  /// Said beside a product's stock when it is at or below its minimum.
+  String get lowStock;
 }

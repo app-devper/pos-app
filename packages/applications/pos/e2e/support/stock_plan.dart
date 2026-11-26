@@ -13,7 +13,7 @@ const keptSupplierName = 'E2E supplier';
 const importedReceiveStatus = 'IMPORTED';
 const cancelledReceiveStatus = 'CANCELLED';
 
-final _onHand = RegExp(r'^คงเหลือ (-?\d+) ');
+final _onHand = RegExp(r'(?:^|· )คงเหลือ (-?\d+) ');
 
 /// The lot number a run receives its stock under.
 String runLot(String runId) => 'L$runId';
@@ -33,8 +33,9 @@ String shortDate(String yyyyMmDd) {
 
 String _twoDigits(int n) => n.toString().padLeft(2, '0');
 
-/// The quantity in the product list's subtitle while it is sorted by stock
-/// (`คงเหลือ <q> <unit>`); null for the unsorted subtitle (the unit only).
+/// The quantity in a product list row's subtitle, after its price
+/// (`คงเหลือ <q> <unit>`, perhaps with a stock cue after it); null when it
+/// shows none.
 int? onHandIn(String subtitle) {
   final match = _onHand.firstMatch(subtitle);
   return match == null ? null : int.parse(match.group(1)!);
