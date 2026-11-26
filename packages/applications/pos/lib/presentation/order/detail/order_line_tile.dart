@@ -51,13 +51,16 @@ class OrderLineTile extends StatelessWidget {
 
   bool get _cancelled => billCancelled || line.isCancelled;
 
+  /// The width of the line's menu button.
+  static const _menuWidth = 48.0;
+
   /// The least room the product's name keeps beside the amount; below it
   /// the amount moves under the name.
   static const _minNameWidth = 140.0;
 
   /// The row's own room besides the name and the amount: ListTile's side
   /// padding and gaps, the quantity column and the menu button.
-  static const _rowFixedWidth = 16.0 * 2 + 16 + 56 + 16 + 48;
+  static const _rowFixedWidth = 16.0 * 2 + 16 + 56 + 16 + _menuWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -79,6 +82,9 @@ class OrderLineTile extends StatelessWidget {
           children: [
             if (!narrow) ExcludeSemantics(child: amount),
             if (isAdmin && !_cancelled) _buildMenu(context),
+            // Where an admin's other lines have their menu, so the amounts
+            // line up.
+            if (isAdmin && _cancelled) const SizedBox(width: _menuWidth),
           ],
         ),
         subtitle: _buildSubtitle(context,

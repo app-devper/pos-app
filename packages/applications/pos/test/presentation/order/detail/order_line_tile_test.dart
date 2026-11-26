@@ -279,4 +279,36 @@ void main() {
       expect(find.text('คืน 1'), findsOneWidget);
     }
   });
+
+  group('beside lines with a menu', () {
+    setUpAll(loadAppFonts);
+
+    testWidgets('a cancelled line\'s amount lines up with the other lines\'',
+        (tester) async {
+      // Arrange
+      useViewSize(tester, phoneSize);
+      Widget tile(OrderItemDetail line) => OrderLineTile(
+          line: line,
+          isAdmin: true,
+          onTap: () {},
+          onDelete: () {},
+          onHistory: () {},
+          onReturn: () {});
+
+      // Act
+      await tester.pumpWidget(MaterialApp(
+        theme: CustomTheme.mainTheme,
+        localizationsDelegates: const [thaiLanguages],
+        home: Scaffold(
+            body: ListView(children: [
+          tile(_line()),
+          tile(_line(status: 'CANCELLED', price: 41)),
+        ])),
+      ));
+
+      // Assert
+      expect(tester.getRect(find.text('41.00')).right,
+          tester.getRect(find.text('40.00')).right);
+    });
+  });
 }
