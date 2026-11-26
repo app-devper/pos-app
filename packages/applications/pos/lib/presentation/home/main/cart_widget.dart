@@ -294,8 +294,9 @@ class CartOrderItem extends StatelessWidget {
   static const _controlsWidth = 288.0;
 
   /// The narrowest line that keeps the controls beside the name: the
-  /// controls, the tile's 40 px of padding and 160 px for the name.
-  static const _wideMinWidth = _controlsWidth + 40 + 160;
+  /// controls, the tile's 40 px of padding and 112 px for the name (440 px;
+  /// every cart the app builds today, 309-400 px, is narrower).
+  static const _wideMinWidth = _controlsWidth + 40 + 112;
 
   /// A narrow cart (a phone's, a tablet's or the desktop's panel): the
   /// name, unit and price on the first row, the quantity controls on a row

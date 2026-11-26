@@ -17,7 +17,8 @@ import '../../../support/app_languages.dart';
 
 const _name = 'พาราเซตามอล 500 มก. แผงละ 10 เม็ด';
 
-Widget _host(double width, {required double discount}) => MaterialApp(
+Widget _host(double width, {required double discount, List<String>? taps}) =>
+    MaterialApp(
       theme: CustomTheme.mainTheme,
       localizationsDelegates: const [thaiLanguages],
       home: Scaffold(
@@ -33,11 +34,11 @@ Widget _host(double width, {required double discount}) => MaterialApp(
               discount: discount,
               priceDetail: 'ราคาหน้าร้าน',
               allowOversell: false,
-              onRemove: () {},
-              onAdd: () {},
-              onEdit: () {},
+              onRemove: () => taps?.add('remove'),
+              onAdd: () => taps?.add('add'),
+              onEdit: () => taps?.add('edit'),
               onEditPrice: () {},
-              onToggleOversell: () {},
+              onToggleOversell: () => taps?.add('oversell'),
             ),
           ),
         ),
@@ -88,7 +89,9 @@ void main() {
     expect(tester.getSize(find.text(_name)).width, greaterThan(0));
   }, variant: _densities);
 
-  for (final width in [phoneSize.width - 51, 400.0]) {
+  // The carts the app builds: a 360 px phone's, the tablet's and the
+  // desktop's. A 480 px cart keeps the one-row line.
+  for (final width in [phoneSize.width - 51, 340.0, 400.0]) {
     testWidgets('a $width px cart line lays out the whole product name',
         (tester) async {
       // Arrange
@@ -126,5 +129,42 @@ void main() {
       expect(find.byTooltip('อนุญาตขายเกินสต็อก $_name'), findsOneWidget);
       semantics.dispose();
     }, variant: _densities);
+
+    testWidgets('each button of a $width px cart line can be tapped',
+        (tester) async {
+      // Arrange
+      final taps = <String>[];
+      useViewSize(tester, phoneSize);
+      await tester.pumpWidget(_host(width, discount: 0, taps: taps));
+
+      // Act
+      for (final label in [
+        'ลดจำนวน $_name',
+        'แก้ไขจำนวน $_name',
+        'เพิ่มจำนวน $_name',
+      ]) {
+        await tester.tap(find.bySemanticsLabel(label));
+      }
+      await tester.tap(find.byTooltip('อนุญาตขายเกินสต็อก $_name'));
+
+      // Assert
+      expect(taps, ['remove', 'edit', 'add', 'oversell']);
+    }, variant: _densities);
   }
+
+  testWidgets('a 480 px cart line keeps its buttons beside the name',
+      (tester) async {
+    // Arrange
+    useViewSize(tester, desktopSize);
+
+    // Act
+    await tester.pumpWidget(_host(480, discount: 0));
+
+    // Assert
+    expect(tester.takeException(), isNull);
+    final name = tester.getRect(find.text(_name));
+    final add = tester.getRect(find.bySemanticsLabel('เพิ่มจำนวน $_name'));
+    expect(add.center.dy, closeTo(name.center.dy, 12),
+        reason: 'the buttons are on the name\'s row');
+  }, variant: _densities);
 }
