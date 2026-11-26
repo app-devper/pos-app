@@ -81,8 +81,9 @@ void main() {
     await tester.pump();
     expect(find.text('ลูกค้าเดิม'), findsOneWidget);
 
-    // Act: add a customer through the form beside the list
-    await tester.tap(find.text('เพิ่มลูกค้า'));
+    // Act: add a customer through the form beside the list, opened from the
+    // pane's add (in the test's English strings)
+    await tester.tap(find.text('Add Customer'));
     await tester.pump();
     await tester.enterText(
         find.widgetWithText(TextFormField, 'ชื่อลูกค้า'), 'ลูกค้าใหม่');

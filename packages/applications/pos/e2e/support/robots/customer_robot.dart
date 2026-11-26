@@ -32,7 +32,14 @@ const _saveTimeout = Duration(seconds: 30);
 /// One drag of the list; about four rows.
 
 final _list = find.byType(CustomersWidget);
-final _menu = find.widgetWithText(ListTile, _addMenuItem).hitTestable();
+
+/// The add beside the list: the wide pane's button (with nothing chosen), or
+/// a menu entry.
+final _menu = find
+    .ancestor(of: find.text(_addMenuItem), matching: _addControl)
+    .hitTestable();
+final _addControl =
+    find.byWidgetPredicate((w) => w is ListTile || w is ButtonStyleButton);
 
 /// The error alert. The saving spinner is an AlertDialog too, so the alert
 /// is told apart by its title.

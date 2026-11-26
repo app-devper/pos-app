@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:design_system/theme/app_colors.dart';
 
 // Package imports:
+import 'package:design_system/widgets/empty_state.dart';
 import 'package:design_system/widgets/responsive.dart';
 import 'package:design_system/widgets/title_bar.dart';
 import 'package:file_picker/file_picker.dart';
@@ -13,6 +14,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/domain/model/product/product_history.dart';
+import 'package:pos/localizations/language/languages.dart';
 import 'package:design_system/widgets/dialogs.dart';
 import 'package:pos/presentation/product/add/product_add_page.dart';
 import 'package:pos/presentation/product/edit/product_edit_page.dart';
@@ -160,16 +162,28 @@ class _ProductsPageState extends State<ProductsPage> {
           },
         );
       } else {
-        return ProductMenuWidget(
-          onAdd: () {
-            _show(AddPage());
-          },
-          onExport: () {
-            _viewModel.exportProducts();
-          },
-          onImportCsv: () {
-            _pickAndImportCSV();
-          },
+        // The menu keeps its add, export and import; under it the pane says
+        // what choosing a product does.
+        return Column(
+          children: [
+            ProductMenuWidget(
+              onAdd: () {
+                _show(AddPage());
+              },
+              onExport: () {
+                _viewModel.exportProducts();
+              },
+              onImportCsv: () {
+                _pickAndImportCSV();
+              },
+            ),
+            Expanded(
+              child: EmptyState(
+                icon: Icons.inventory_2_outlined,
+                title: Languages.of(context).chooseProductHint,
+              ),
+            ),
+          ],
         );
       }
     } else if (_pageState is InfoPage) {

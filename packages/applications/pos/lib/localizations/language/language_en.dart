@@ -277,4 +277,16 @@ class LanguageEn extends Languages {
 
   @override
   String get lowStock => "Low stock";
+
+  @override
+  String get chooseProductHint => "Choose a product to see its details";
+
+  @override
+  String get chooseCustomerHint => "Choose a customer to see their details";
+
+  @override
+  String get chooseReceiveHint => "Choose a goods receipt to see its details";
+
+  @override
+  String get addReceive => "Add goods receipt";
 }

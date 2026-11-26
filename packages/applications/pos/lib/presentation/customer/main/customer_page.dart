@@ -6,15 +6,16 @@ import 'package:design_system/theme/app_colors.dart';
 
 // Package imports:
 import 'package:common/core/ext/widget_ext.dart';
+import 'package:design_system/widgets/empty_state.dart';
 import 'package:design_system/widgets/responsive.dart';
 
 // Project imports:
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/customer/customer.dart';
+import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/customer/add/customer_add_page.dart';
 import 'package:pos/presentation/customer/edit/customer_edit_page.dart';
 import 'package:pos/presentation/customer/main/customer_detail_widget.dart';
-import 'package:pos/presentation/customer/main/customer_menu_widget.dart';
 import 'package:pos/presentation/customer/main/customer_view_model.dart';
 import 'package:pos/presentation/customer/main/customers_view_model.dart';
 import 'package:pos/presentation/customer/main/customers_widget.dart';
@@ -141,11 +142,11 @@ class _CustomerPageState extends State<CustomerPage> {
           },
         );
       } else {
-        return CustomerMenuWidget(
-          onAdd: () {
-            _show(AddPage());
-          },
-          onExport: () {},
+        return EmptyState(
+          icon: Icons.people_outline,
+          title: Languages.of(context).chooseCustomerHint,
+          actionLabel: Languages.of(context).customerAddTitle,
+          onAction: () => _show(AddPage()),
         );
       }
     } else if (_pageState is InfoPage) {

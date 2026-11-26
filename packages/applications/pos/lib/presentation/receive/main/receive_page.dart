@@ -11,6 +11,7 @@ import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/constants.dart';
 import 'package:pos/presentation/receive/argument.dart';
 import 'package:design_system/widgets/dialogs.dart';
+import 'package:design_system/widgets/empty_state.dart';
 import 'package:pos/presentation/receive/main/receive_menu_widget.dart';
 import 'package:pos/presentation/receive/main/receives_widget.dart';
 
@@ -51,10 +52,11 @@ class _ReceivePageState extends State<ReceivePage> {
         ),
         Container(width: 1, color: AppColors.of(context).border),
         Expanded(
-          child: ReceiveMenuWidget(
-            onAdd: () {
-              _nextToReceiveManage();
-            },
+          child: EmptyState(
+            icon: Icons.receipt_long_outlined,
+            title: Languages.of(context).chooseReceiveHint,
+            actionLabel: Languages.of(context).addReceive,
+            onAction: _nextToReceiveManage,
           ),
         ),
       ],

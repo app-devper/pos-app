@@ -205,4 +205,14 @@ abstract class Languages {
 
   /// Said beside a product's stock when it is at or below its minimum.
   String get lowStock;
+
+  /// A wide list page's pane while nothing in the list is chosen.
+  String get chooseProductHint;
+
+  String get chooseCustomerHint;
+
+  String get chooseReceiveHint;
+
+  /// The receipts page's add: a new goods receipt.
+  String get addReceive;
 }

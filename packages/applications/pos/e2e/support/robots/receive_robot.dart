@@ -26,7 +26,13 @@ const _itemDialogTitle = 'เพิ่มรายการรับสินค
 const _supplierAddress = 'E2E';
 
 final _list = find.byType(ReceivesWidget);
-final _addMenu = find.widgetWithText(ListTile, 'เพิ่มใบรับสินค้า');
+
+/// The add: the wide pane's button (with nothing chosen), or the narrow
+/// layout's menu entry.
+final _addMenu = find.ancestor(
+    of: find.text('เพิ่มใบรับสินค้า'),
+    matching:
+        find.byWidgetPredicate((w) => w is ListTile || w is ButtonStyleButton));
 final _createButton = find.byKey(const Key('add'));
 final _addItemButton = find.byKey(const Key('product'));
 final _importButton = find.byKey(const Key('import-receive'));

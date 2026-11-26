@@ -284,4 +284,16 @@ class LanguageTh extends Languages {
 
   @override
   String get lowStock => "ใกล้หมด";
+
+  @override
+  String get chooseProductHint => "เลือกสินค้าเพื่อดูรายละเอียด";
+
+  @override
+  String get chooseCustomerHint => "เลือกลูกค้าเพื่อดูรายละเอียด";
+
+  @override
+  String get chooseReceiveHint => "เลือกใบรับสินค้าเพื่อดูรายละเอียด";
+
+  @override
+  String get addReceive => "เพิ่มใบรับสินค้า";
 }
