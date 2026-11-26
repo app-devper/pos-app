@@ -81,7 +81,7 @@ class ReceiveRobot {
     await shell.expectScreenWithoutError(shell.searchField(_searchHint));
     await pumpUntilGone(tester,
         find.descendant(of: _list, matching: find.byType(ProgressIndicator)));
-    expect(find.text('ลองอีกครั้ง'), findsNothing,
+    expect(find.text('ลองใหม่'), findsNothing,
         reason: 'the receipt list failed to load');
   }
 

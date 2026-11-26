@@ -19,6 +19,8 @@ import 'package:pos/domain/repositories/stock_count_repository.dart';
 import 'package:pos/domain/repositories/supplier_repository.dart';
 import 'package:pos/presentation/category/main/category_page.dart';
 import 'package:pos/presentation/category/main/category_view_model.dart';
+import 'package:pos/presentation/receive/main/receive_page.dart';
+import 'package:pos/presentation/receive/main/receives_view_model.dart';
 import 'package:pos/presentation/stock_count/main/stock_counts_page.dart';
 import 'package:pos/presentation/stock_count/main/stock_counts_view_model.dart';
 import 'package:pos/presentation/supplier/main/suppliers_page.dart';
@@ -27,6 +29,7 @@ import '../../support/app_languages.dart';
 import '../category/main/category_view_model_test.dart' as categories;
 import '../stock_count/manage/stock_count_manage_view_model_test.dart'
     as counts;
+import '../receive/main/receives_view_model_test.dart' as receipts;
 import '../supplier/main/suppliers_view_model_test.dart' as suppliers;
 
 /// A load that fails the first time and answers [items] after that.
@@ -222,5 +225,25 @@ void main() {
       expect(find.byType(ErrorState), findsNothing);
       expect(find.byType(SnackBar), findsOneWidget);
     });
+  });
+
+  testWidgets('the receipts list says its load failed as the other lists do',
+      (tester) async {
+    // Arrange
+    sl.registerFactory(() => ReceivesViewModel(
+        receiveRepo: receipts.FakeReceiveRepository(
+            throws: const NetworkException(message: 'offline'))));
+
+    // Act
+    await tester.pumpWidget(const MaterialApp(
+      localizationsDelegates: [thaiLanguages],
+      home: Scaffold(body: ReceivePage()),
+    ));
+    await tester.pumpAndSettle();
+
+    // Assert
+    expect(find.byType(ErrorState), findsOneWidget);
+    expect(find.text('ลองใหม่'), findsOneWidget);
+    expect(find.text('ลองอีกครั้ง'), findsNothing);
   });
 }

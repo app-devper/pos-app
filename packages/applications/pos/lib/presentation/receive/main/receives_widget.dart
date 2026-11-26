@@ -3,6 +3,7 @@ import 'package:common/core/ext/date_ext.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
+import 'package:design_system/widgets/error_state.dart';
 import 'package:design_system/widgets/responsive.dart';
 
 // Project imports:
@@ -132,13 +133,9 @@ class _ReceivesWidgetState extends State<ReceivesWidget> {
         }
         if (state.error != null) {
           return Expanded(
-              child: Center(
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Text(state.error!),
-            TextButton(
-                onPressed: _viewModel.getReceives,
-                child: const Text('ลองอีกครั้ง')),
-          ])));
+            child: ErrorState(
+                message: state.error!, onRetry: _viewModel.getReceives),
+          );
         }
         if (state.items.isEmpty) {
           return Expanded(
