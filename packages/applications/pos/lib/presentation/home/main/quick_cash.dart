@@ -9,11 +9,11 @@ const _satangPerBaht = 100;
 /// The quick-cash amounts the payment dialog offers for [total]: [total]
 /// rounded up to the next multiple of 20, 50, 100, 500 and 1000, each
 /// strictly above it, distinct, ascending, at most four. None for a total of
-/// zero or less.
+/// zero or less, or one that is not a finite number.
 ///
 /// Worked in whole satang, so a total such as 59.99 rounds up to exactly 60.
 List<double> quickCashAmounts(double total) {
-  if (total <= 0) return List.unmodifiable(const <double>[]);
+  if (!total.isFinite || total <= 0) return const [];
   final totalSatang = (total * _satangPerBaht).round();
   final amounts = {
     for (final step in _stepsInBaht) _nextAbove(totalSatang, step),

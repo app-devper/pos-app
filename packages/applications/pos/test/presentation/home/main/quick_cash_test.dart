@@ -23,6 +23,12 @@ void main() {
     expect(quickCashAmounts(0), isEmpty);
   });
 
+  test('a total that is not a finite number offers nothing', () {
+    for (final total in [double.nan, double.infinity]) {
+      expect(quickCashAmounts(total), isEmpty, reason: '$total');
+    }
+  });
+
   test('a negative total offers nothing', () {
     expect(quickCashAmounts(-5), isEmpty);
   });
