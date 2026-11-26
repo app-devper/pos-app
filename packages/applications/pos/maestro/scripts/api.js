@@ -13,8 +13,14 @@
 //   billStatus     (CODE)  -> output.billStatus (CONFIRMED or CANCELLED)
 //   dayTotal               -> output.dayTotal (today's bills less the cancelled ones, '#,##0.00'),
 //                             output.dayTotalAll (with the cancelled ones)
-const UM = 'http://127.0.0.1:8585';
-const POS = 'http://127.0.0.1:8586';
+// The runner names this platform's stack by port (web and Android each have one).
+function port(value, fallback) {
+  const text = String(value === undefined || value === null || value === '' ? fallback : value);
+  if (!/^[0-9]{2,5}$/.test(text)) throw new Error('api.js: a port must be digits, got ' + text);
+  return text;
+}
+const UM = 'http://127.0.0.1:' + port(typeof MAESTRO_UM_PORT === 'undefined' ? '' : MAESTRO_UM_PORT, '8585');
+const POS = 'http://127.0.0.1:' + port(typeof MAESTRO_POS_PORT === 'undefined' ? '' : MAESTRO_POS_PORT, '8586');
 
 function signIn() {
   const res = http.post(UM + '/api/um/v1/auth/login', {

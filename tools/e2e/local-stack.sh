@@ -8,6 +8,11 @@
 #   local-stack.sh stop          stop only the processes this script started
 #   local-stack.sh status        say what is running
 #   local-stack.sh reset-limits  forget um-api's sign-in rate-limit counters
+#   local-stack.sh ports         print the four ports
+#
+# A second stack can run beside the first: give it its own E2E_STACK_STATE,
+# E2E_STACK_ENV_FILE (where its accounts are written) and E2E_STACK_PORT_OFFSET
+# (added to all four ports; see stack-ports.sh).
 #
 # um-api and pos-api are found next to this repo's main checkout, laid out as
 # <workspace>/Devper/pos-app, <workspace>/Devper/pos-api and
@@ -27,14 +32,12 @@ default_workspace() {
 WORKSPACE="${E2E_WORKSPACE:-$(default_workspace)}"
 UM_API_DIR="${UM_API_DIR:-$WORKSPACE/UM/um-api}"
 POS_API_DIR="${POS_API_DIR:-$WORKSPACE/Devper/pos-api}"
-ENV_FILE="$REPO_ROOT/packages/applications/pos/.env.e2e.local"
+ENV_FILE="${E2E_STACK_ENV_FILE:-$REPO_ROOT/packages/applications/pos/.env.e2e.local}"
 
 TMP_ROOT="${TMPDIR:-/tmp}"
 STATE="${E2E_STACK_STATE:-${TMP_ROOT%/}/pos-e2e-stack}"
-MONGO_PORT=27719
-REDIS_PORT=6390
-UM_PORT=8585
-POS_PORT=8586
+# shellcheck source=stack-ports.sh
+. "$SCRIPT_DIR/stack-ports.sh"
 REPLICA_SET=rs0
 MONGO_URI="mongodb://127.0.0.1:$MONGO_PORT/?replicaSet=$REPLICA_SET"
 REDIS_URL="redis://127.0.0.1:$REDIS_PORT"
@@ -135,7 +138,7 @@ start_redis() {
 
 seed() {
   (cd "$SCRIPT_DIR/seed-local" && go run . -mongo "$MONGO_URI" -db "$UM_DB" \
-    -pos-host "http://127.0.0.1:$POS_PORT" -env-file "$ENV_FILE")
+    -pos-host "http://127.0.0.1:$APP_POS_PORT" -env-file "$ENV_FILE")
 }
 
 # Builds the service and runs the binary itself, so the pid file names the
@@ -221,5 +224,6 @@ case "${1:-}" in
   stop) stop ;;
   status) status ;;
   reset-limits) reset_limits ;;
-  *) die "usage: $0 start|stop|status|reset-limits" ;;
+  ports) printf 'mongod=%s redis=%s um=%s pos=%s\n' "$MONGO_PORT" "$REDIS_PORT" "$UM_PORT" "$POS_PORT" ;;
+  *) die "usage: $0 start|stop|status|reset-limits|ports" ;;
 esac

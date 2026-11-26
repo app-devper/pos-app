@@ -13,10 +13,14 @@
 # to name another target: the app is built from config/e2e-local.json, which
 # must point at 127.0.0.1.
 #
-# The flows have a database of their own (state in ${TMPDIR}/pos-e2e-maestro-stack),
-# not the Dart suite's, which is crowded on purpose: Maestro cannot pick one
-# product out of a plain dropdown of hundreds. Both stacks use the same ports,
-# so only one runs at a time. Maestro's output (it holds typed text) goes to
+# The flows have databases of their own, not the Dart suite's, which is crowded
+# on purpose: Maestro cannot pick one product out of a plain dropdown of
+# hundreds. Each platform has its own stack, so both can run at once
+# (maestro-all.sh): the web's on the usual ports (state in
+# ${TMPDIR}/pos-e2e-maestro-stack; the Dart suite's stack uses the same ports,
+# so only one of those two runs at a time), Android's 1000 above them (state
+# and accounts in ${TMPDIR}/pos-e2e-maestro-stack-android; `adb reverse` gives
+# the emulator the ports the app was built for). Maestro's output (it holds typed text) goes to
 # ${TMPDIR}/pos-e2e-maestro, never into the repository.
 #
 # Environment: E2E_AVD (emulator name, default Medium_Phone);
@@ -38,7 +42,7 @@ OUT_ROOT="${TMPDIR:-/tmp}"
 OUT_ROOT="${OUT_ROOT%/}/pos-e2e-maestro"
 BOOT_TIMEOUT_SEC=240
 TMP_ROOT="${TMPDIR:-/tmp}"
-export E2E_STACK_STATE="${E2E_MAESTRO_STACK_STATE:-${TMP_ROOT%/}/pos-e2e-maestro-stack}"
+ANDROID_PORT_OFFSET=1000
 ALL_FLOWS="auth navigation sell_and_bill customer receive_stock product_edit stock_adjust stock_count product_add_delete bill_cancel_return roles"
 
 log() { printf 'maestro.sh: %s\n' "$*"; }
@@ -57,6 +61,21 @@ done
 [ -n "$platform" ] || usage
 
 refuse() { printf 'maestro.sh: %s\n' "$*" >&2; exit 2; }
+
+# One stack per platform. E2E_MAESTRO_STACK_STATE still names the state folder.
+if [ "$platform" = android ]; then
+  export E2E_STACK_PORT_OFFSET="$ANDROID_PORT_OFFSET"
+  export E2E_STACK_STATE="${E2E_MAESTRO_STACK_STATE:-${TMP_ROOT%/}/pos-e2e-maestro-stack-android}"
+  export E2E_STACK_ENV_FILE="$E2E_STACK_STATE/env.e2e.local"
+  ENV_FILE="${E2E_MAESTRO_ENV_FILE:-$E2E_STACK_ENV_FILE}"
+else
+  export E2E_STACK_PORT_OFFSET=0
+  export E2E_STACK_STATE="${E2E_MAESTRO_STACK_STATE:-${TMP_ROOT%/}/pos-e2e-maestro-stack}"
+fi
+# shellcheck source=stack-ports.sh
+. "$SCRIPT_DIR/stack-ports.sh"
+# scripts/api.js asks this platform's stack, on the host.
+export MAESTRO_UM_PORT="$UM_PORT" MAESTRO_POS_PORT="$POS_PORT"
 
 # The local-only guard: both API addresses in the app's build config.
 grep -q '"apiUrl": *"http://127\.0\.0\.1:8585"' "$CONFIG" 2>/dev/null \
@@ -168,8 +187,8 @@ prepare_android() {
   keep_awake_and_unlocked
   "$ADB" -s "$device" install -r "$apk" >/dev/null
   # The emulator reaches the host's stack on its own 127.0.0.1; lost on every boot.
-  "$ADB" -s "$device" reverse tcp:8585 tcp:8585 >/dev/null
-  "$ADB" -s "$device" reverse tcp:8586 tcp:8586 >/dev/null
+  "$ADB" -s "$device" reverse "tcp:$APP_UM_PORT" "tcp:$UM_PORT" >/dev/null
+  "$ADB" -s "$device" reverse "tcp:$APP_POS_PORT" "tcp:$POS_PORT" >/dev/null
   # A freshly booted emulator draws nothing for a while: open the app once and
   # wait for its first frame, so the first flow does not start on a black screen.
   "$ADB" -s "$device" shell am start -W -n "$APP_ID/.MainActivity" >/dev/null
@@ -190,7 +209,7 @@ prepare_web() {
 }
 
 run_flow() { # run_flow <name> <run id>; prints the PASS/FAIL line, returns maestro's status
-  local name="$1" run_id="$2" out="$OUT_ROOT/$2-$1" started code=0
+  local name="$1" run_id="$2" out="$OUT_ROOT/$2-$platform-$1" started code=0
   mkdir -p "$out"
   set -- test -e RUN_ID="$run_id" -e PRODUCT_NAME="MST-$run_id tea" --test-output-dir "$out"
   if [ "$platform" = android ]; then
@@ -213,8 +232,8 @@ setup=1; [ "${E2E_MAESTRO_SKIP_SETUP:-0}" != 1 ] || setup=0   # the self-test ru
 # local stack (the Dart suite's) holds the ports.
 start_stack() {
   if "$SCRIPT_DIR/local-stack.sh" status | grep -q 'pos-api running'; then return; fi
-  ! lsof -nP -iTCP:8586 -sTCP:LISTEN >/dev/null 2>&1 \
-    || die "another local stack is running on these ports (the Dart suite's?). Stop it first: tools/e2e/local-stack.sh stop"
+  ! lsof -nP -iTCP:"$POS_PORT" -sTCP:LISTEN >/dev/null 2>&1 \
+    || die "another local stack is running on port $POS_PORT (the Dart suite's?). Stop it first: tools/e2e/local-stack.sh stop"
   local out
   started_stack=1
   out="$("$SCRIPT_DIR/local-stack.sh" start 2>&1)" || { printf '%s\n' "$out" >&2; die "the local stack did not start"; }
