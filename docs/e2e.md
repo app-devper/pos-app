@@ -45,37 +45,92 @@ What it cannot see:
 
 ## 2. Coverage
 
-| Screen / feature | File | What is asserted |
-|---|---|---|
-| Sign-in, sign-out | `auth_test.dart` | the app talks to the server the run names; a wrong password gives `[UM-401-004]` and stays on sign-in; sign-in opens the selling screen, sign-out returns to sign-in; admin, manager and user can each sign in |
-| Navigation and roles | `navigation_test.dart` | every sidebar area opens its screen without an error; the five จัดการ tiles are shown, and ร้านค้าของฉัน, customers, Goods Receipt, นับสต็อก and ข้อมูลผู้ใช้งาน open and return; a user and a manager see only selling and bills |
-| Customers (จัดการ → จัดการลูกค้า) | `customer_test.dart` | add (listed at once on a wide screen), list, detail, edit phone (the type kept), remove (local; it leaves the list), the kept customer reused (hosted), a missing name is refused |
-| Products, Goods Receipt, stock adjustment | `stock_in_test.dart` | a product is created and listed (an empty name is refused); receiving 10 and importing gives exactly 10 on hand, on the list and the stock tab; +2/−2 adjustments give 12 then 10, with history rows and notes; a draft receipt can be deleted |
-| Selling, payment, bills, returns, cancelling | `selling_test.dart` | barcode + Enter adds a line (the grid is filtered by name before a tile is read, since a real catalogue does not fit on screen), an unknown barcode says `Error: ไม่พบสินค้า`; a cash sale of 3 (`฿75.00`); a short payment is refused; a PromptPay sale with a customer and a per-unit discount (`฿40.00`); a return of 1; cancelling a line and a bill puts stock back: 10 → 7 → 7 → 5 → 6 → 7 → 10 |
-| Stock count (จัดการ → นับสต็อก) | `stock_count_test.dart` | an empty count is refused (`โปรดเพิ่มสินค้าอย่างน้อย 1 รายการ`); counting 8 of a lot of 10 sets the stock to 8 (list and stock tab), the count's list row (found by its number, not its position, since another admin may count at the same time) shows `รายการ: 1`, the detail shows `ในระบบ 10 / นับได้ 8` and `-2`, and the product shows the `นับสต็อก` adjustment of −2 |
-| Product edit, price, delete | `product_edit_test.dart` | a rename shows in the detail and the list; changing the General price to 30 and adding a wholesale price of 20 shows both on the ราคา tab; the selling grid and a scanned line show the new name at `฿30.00` (the selling screen is entered afresh, so the "grid does not refresh" finding is not met here); deleting it with stock on hand asks `สินค้านี้มีสต็อกคงเหลือ …` first (answered no); the stock is taken to 0 through the adjustment dialog, then deleting the product removes it from the list and its barcode then gives `Error: ไม่พบสินค้า` |
+One row per feature of the app, built from `presentation/router.dart`, the
+shell's sidebar (`home_page.dart`), the จัดการ tiles
+(`home_database_page.dart`), the products and receipts menus
+(`product_menu_widget.dart`, `receive_menu_widget.dart`) and every dialog
+the screens open (`showCenterDialog`, `showConfirmDialog` and the named
+`show…Dialog` helpers). **Dart** is this suite (`packages/applications/pos/e2e/`),
+**Maestro** the flows of [e2e-maestro.md](e2e-maestro.md) (Android and web).
+Widget tests that reach a feature without a server are named where they are
+all there is. Where neither suite drives a feature, the last column says why:
+**cannot be automated** (and why), or **not automated yet** (it could be;
+listed under "Coverage still open" in [e2e-findings.md](e2e-findings.md)).
+
+| Area | Feature | Dart | Maestro | Notes |
+|---|---|---|---|---|
+| Sign-in | sign in, sign out, a wrong password refused (`[UM-401-004]`), each role signs in | `auth_test.dart` | `auth` | |
+| Sign-in | passkey sign-in | — | — | cannot be automated: the browser's or OS's own passkey prompt |
+| Shell | every sidebar area opens its screen, and back to selling | `navigation_test.dart` | `navigation` | |
+| Shell | what each role sees: admin all areas and bill costs; manager and user selling and bills only, no cost, no store filter, no date range | `navigation_test.dart` | `roles` | the store filter is checked by Dart only: a chip's label is not text on the web |
+| Shell | ข้อมูลผู้ใช้งาน (UM's profile page) | `navigation_test.dart` (opens, returns) | `navigation` (opens, returns) | its content is UM's own screen, tested in um-api / the um package |
+| ขายสินค้า | a product added from the grid and its search | `selling_test.dart`, `product_edit_test.dart` | `sell_and_bill`, `product_add_delete`, `bill_cancel_return` | |
+| ขายสินค้า | a barcode typed + Enter adds a line; unknown says `ไม่พบสินค้า`; a scan right after paying lands in the search field | `selling_test.dart`, `product_edit_test.dart` | `sell_and_bill` (web) | the phone layout has no search field on the selling screen |
+| ขายสินค้า | camera barcode scanner (`/scan`) | — | — | cannot be automated: needs a camera (typing the barcode goes through the same lookup, above) |
+| ขายสินค้า | quantity dialog `จำนวนสินค้า` (the line's `2x`) | `selling_test.dart` | — | layout: `quantity_dialog_layout_test.dart`, the sweep |
+| ขายสินค้า | line dialog: per-unit discount, remove the line | `selling_test.dart`, `product_edit_test.dart` | — | |
+| ขายสินค้า | the line's + and − | — | `sell_and_bill` (the product tapped twice) | widget: `cart_order_item_layout_test.dart` taps each button |
+| ขายสินค้า | oversell toggle on a line | — | — | not automated yet; widget: its name and tap (`cart_order_item_layout_test.dart`) |
+| ขายสินค้า | choose a customer for the sale, take it off | `selling_test.dart` | `customer` | |
+| ขายสินค้า | add a customer from the cart (customer add dialog) | — | — | not automated yet |
+| ขายสินค้า | compliance info dialog (a product whose category requires the buyer's details) | — | — | not automated yet: needs a category with `requireCustomerOrder`, and categories have no way in (below); it could be seeded |
+| ขายสินค้า | payment: exact cash | `selling_test.dart` | `sell_and_bill`, `bill_cancel_return` | |
+| ขายสินค้า | payment: a short payment refused | `selling_test.dart` | — | |
+| ขายสินค้า | payment: PromptPay with a customer and change | `selling_test.dart` | — | |
+| ขายสินค้า | several carts (the cart slots) | — | — | not automated yet |
+| รายการขาย | the list: row numbers, a cancelled bill marked `ยกเลิกแล้ว`, ยอดรวม leaving it out | `selling_test.dart` | `sell_and_bill`, `bill_cancel_return` | |
+| รายการขาย | the date-range dropdown | `navigation_test.dart` (shown to an admin only) | — | choosing a range is not automated yet |
+| รายการขาย | store filter chips (All, Store, Online) | `navigation_test.dart`, `selling_test.dart` (All lists a PromptPay bill) | — | a chip's label is not text on the web |
+| รายการขาย | bill detail: lines, totals | `selling_test.dart` | `sell_and_bill`, `bill_cancel_return` | |
+| รายการขาย | return dialog `รับคืนสินค้า` | `selling_test.dart` | `bill_cancel_return` | |
+| รายการขาย | returns history | `selling_test.dart` | — | |
+| รายการขาย | cancel a line | `selling_test.dart` | — | |
+| รายการขาย | cancel a bill | `selling_test.dart` | `bill_cancel_return` | |
+| รายการขาย | a line's sales history page (`/order-history`) | — | — | not automated yet; widget: `order_history_totals_test.dart`, the walk |
+| รายการขาย | a line opens its product's edit page | — | — | not automated yet |
+| รายการขาย | receipt PDF, sales history CSV | — | — | cannot be automated here: web-only download code; the buttons are named and walked, never pressed |
+| สินค้า | list, search, sort by stock | `stock_in_test.dart`, `product_edit_test.dart` | `product_edit`, `stock_adjust`, `product_add_delete` | |
+| สินค้า | add a product (form) | `stock_in_test.dart` | `product_add_delete` | an empty name refused: Dart |
+| สินค้า | export products (`ส่งออกสินค้า`) | — | — | cannot be automated here: a file download |
+| สินค้า | import from CSV | — | — | cannot be automated: the OS file dialog |
+| สินค้า | ข้อมูลทั่วไป: edit (rename) | `product_edit_test.dart` | `product_edit` | |
+| สินค้า | delete a product, the stock question | `product_edit_test.dart` | `product_add_delete` | |
+| สินค้า | หน่วยนับ: the unit dialog | — | — | not automated yet |
+| สินค้า | ราคา: add and change a price (price dialog) | `product_edit_test.dart` | — | |
+| สินค้า | สต็อก: add a lot (lot form) | — | — | not automated yet (lots come in through receipts, above); widget: the walk |
+| สินค้า | สต็อก: edit a lot | — | — | not automated yet |
+| สินค้า | สต็อก: set on hand (`ปรับจำนวนคงเหลือ`) | — | — | not automated yet; widget: the sweep and walk |
+| สินค้า | สต็อก: lot order (sequence dialog) | — | — | not automated yet |
+| สินค้า | สต็อก: delete a stock row | `product_edit_test.dart` | — | |
+| สินค้า | สต็อก: stock adjustment dialog | `stock_in_test.dart`, `product_edit_test.dart` | `stock_adjust` | |
+| สินค้า | ประวัติ and ปรับสต็อก tabs | `stock_in_test.dart`, `stock_count_test.dart` | `stock_adjust` | |
+| จัดการ | ร้านค้าของฉัน (shop profile) | `navigation_test.dart` (opened, never saved) | `navigation` (tile shown) | saving is not automated: on the hosted target it is the shop's real profile |
+| จัดการ | จัดการลูกค้า: list, search, add, detail, edit, remove | `customer_test.dart` | `customer` | |
+| จัดการ | a customer's purchase history tab | — | — | not automated yet |
+| จัดการ | จัดการผู้ใช้งาน | — | `navigation` (tile shown) | cannot be automated here: UM's own screens |
+| จัดการ | Goods Receipt: list, new, supplier, a line through the product picker, import | `stock_in_test.dart` | `receive_stock` | |
+| จัดการ | Goods Receipt: add a supplier from the receipt | — | — | not automated yet |
+| จัดการ | Goods Receipt: delete a draft | `stock_in_test.dart` | — | |
+| จัดการ | Goods Receipt: delete a line | — | — | not automated yet |
+| จัดการ | นับสต็อก: list, new count, detail naming the product | `stock_count_test.dart` | `stock_count` | |
+| จัดการ | นับสต็อก: an empty count refused | `stock_count_test.dart` | — | |
+| No way in | categories (`/categories`, add, edit) | — | — | cannot be automated: no button leads there (below); widget: the walk |
+| No way in | suppliers list and edit (`/suppliers`, `/supplier-edit`) | — | — | cannot be automated: no way in; widget: the walk |
+| No way in | expired products and lot edit (`/product-expired`, `/product-lot-edit`) | — | — | cannot be automated: no way in |
+
+Every screen the widget tests can build is also laid out by
+`test/presentation/layout_sweep_test.dart` (360×640, 1400×900, dialogs at
+640×360) and walked by `test/presentation/accessibility_walk_test.dart`.
 
 The helpers in `e2e/support/` that hold logic have unit tests in
 `packages/applications/pos/test/e2e_support/`. Those tests run with the
 normal `flutter test`. The e2e files themselves never do: `flutter test`
 only picks up `test/`.
 
-### Not covered
-
-| What | Why |
-|---|---|
-| Barcode scanner (`/scan`) | needs a camera. Typing the barcode and pressing Enter goes through the same lookup and is covered |
-| Passkey sign-in | native/browser prompt |
-| CSV import of products | OS file dialog |
-| PDF and CSV export, receipts to print | web-only download code. The buttons are checked to exist, not pressed |
-| Date-range pickers | platform date picker. The admin's bills date-range dropdown is checked to be shown (`navigation_test.dart`), not opened |
-| UM user management (จัดการ → จัดการผู้ใช้งาน) | belongs to UM. The tile is checked to be shown, not opened |
-
 #### Not reachable from the UI
 
 These screens exist in the code but no button leads to them, so a user can
-never see them. They are not tested. Deciding what to do with them is the
-owner's call:
+never see them. Deciding what to do with them is the owner's call:
 
 - Categories: `/categories`, add and edit. No entry point.
 - Suppliers list and edit: `/suppliers`, `/supplier-edit`. Only

@@ -1,29 +1,142 @@
 # What the e2e suite found in the POS app
 
 This list was made while the end-to-end UI suite was being built (see
-[e2e.md](e2e.md)). It is as of 2026-11-25, re-checked at the final review fixes (pos-app branch
-`feature/ui-e2e-tests`), run against pos-api `28cbb3e` on the local stack.
+[e2e.md](e2e.md)) and kept while the faults were fixed. It is as of
+2026-11-26 (pos-app branch `feature/ux-findings`), run against pos-api
+`28cbb3e` on the local stack.
 
-Each open item is pinned by **a skipped test**: it is marked
-`skip: 'FINDING: …'`, states what a user expects, and fails until the app
-is fixed. (The suite also used counted tolerances, which let one known
-layout overflow through; the last three went with findings #17-#19, fixed
-2026-11-26, and nothing is let through now.)
+The **Fixed** table first: each finding, the commit that fixed it, and the
+test that now guards it. Then **what remains**, most serious first: the
+server follow-ups (each with the test that will prove it), the open app
+findings, the owner's questions, the screens with no way in, and the
+features no automated test drives yet. The detailed records of every
+finding (what a user saw, where, the effect) follow under "The findings in
+detail".
 
-To act on an item:
-
-1. Fix the app.
-2. Unskip the named test.
-3. Change the running test's "asserted as the app behaves" line next to it.
-4. Run `tools/e2e/run.sh local <file>`.
+An open item is pinned by a skipped test where one can state it: it is
+marked `skip:` with a `FINDING` comment, states what a user expects, and
+fails until the app is fixed. To act on one: fix the app, unskip the named
+test, change the running test's "asserted as the app behaves" line next to
+it, and run it (`tools/e2e/run.sh local <file>`, or `fvm flutter test
+<file>` for a widget test).
 
 "Observed" means a test run showed it. "Read in code" means it was found by
-reading the code and no test exercises it. Every file:line was re-checked
-at the commit above. Paths are under `packages/applications/pos/lib/`, except
-those starting `libraries/` or `features/`, which are under `packages/`.
-pos-api paths are under `pos-api/app/`.
+reading the code and no test exercises it. Paths are under
+`packages/applications/pos/lib/`, except those starting `libraries/` or
+`features/`, which are under `packages/`. pos-api paths are under
+`pos-api/app/`.
 
-## Summary, most serious first
+## What a user now sees differently
+
+The fixes are meant to leave the app as it was except where it was wrong,
+but some change what a sighted user sees:
+
+- A cancelled bill stays in รายการขาย marked `ยกเลิกแล้ว`, its amount struck
+  through, and the day's ยอดรวม leaves it out; a cancelled bill line is
+  marked the same way and offers no action (#1, #2).
+- A sale says `ขายสำเร็จ เลขที่บิล <code>`; a bill row shows its number above
+  its time; the bill labels are Thai (ยอดรวม, ต้นทุน, กำไร) (#26). The
+  bill and product forms' buttons read บันทึก / เพิ่ม instead of Update /
+  Add, and the category form's checkbox ต้องระบุลูกค้าเมื่อขาย (Task 6).
+- Success bars close by themselves after 4 s (#11).
+- The customer list and the receipt line's product picker have a search
+  field (#25).
+- The product's stock tab has a ล็อต column, and on a phone its row scrolls
+  sideways with a visible scrollbar (#15, Task 4).
+- On every cart the app builds today (309-400 px wide) a cart line puts its
+  quantity buttons on a row of their own under the name, unit and price
+  (#29); from 440 px the one-row line is unchanged.
+- On a phone the bills list's filter chips wrap under each other (Task 6).
+- Deleting a product with stock asks first, naming the stock (#6).
+- With no shop profile, ร้านค้าของฉัน shows an empty form and a hint, not an
+  error (#14).
+- A receipt row no longer ripples on a press that did nothing; the number
+  and return dialogs scroll on a phone held sideways; the payment dialog's
+  amount boxes grow with a larger system text size (Task 4/5).
+- Icon buttons have tooltips (a name shown on hover or long-press) (#23).
+
+## Fixed
+
+| # | Finding | Commit(s) | Guarded by |
+|---|---|---|---|
+| 1 | a cancelled bill stayed in the list, unmarked, and in the day's total | `dd32ef5` | `selling_test.dart` "a cancelled bill is marked and not counted"; `order_view_model_test.dart`, `order_list_tile_test.dart`; Maestro `bill_cancel_return` |
+| 2 | a cancelled line stayed counted and actionable on the bill detail | `08c04e1`, `09f2abc`, `2d9e3f9`, `4c7990d`, `ee8131a` | `selling_test.dart` "a cancelled line is marked, not counted, and offers nothing"; `order_detail_view_model_test.dart`, `order_line_tile_test.dart` |
+| 3 | editing a customer reset its type | `1b4e327` | `customer_test.dart` "editing only the phone keeps the customer type"; `customer_edit_page_test.dart` |
+| 4 | the selling grid kept the stock from before a sale | `1e6720d`, `ebd3e0a`, `aa8d03c`, `4a5e002` | `selling_test.dart` "after a sale the grid shows the new stock"; `product_search_reload_test.dart` |
+| 5 | no one got the bills date-range dropdown | `6bc7b61`, `f4cc4f1` | `navigation_test.dart` "an admin can choose the date range of the bills"; `order_view_model_test.dart` |
+| 6 | (app side) a product with stock was deleted without a question | `07e3f0f` | `product_edit_test.dart` "a product can be deleted and no longer sells"; `product_delete_question_test.dart`; Maestro `product_add_delete` |
+| 7 | (app side) a removed customer stayed listed | `1a909da` | `customer_test.dart` "a removed customer is no longer listed"; `customers_view_model_test.dart`; Maestro `customer` |
+| 8 | (app side) a deleted draft receipt stayed listed | `1a909da` | `stock_in_test.dart` "a deleted draft receive is no longer listed"; `receives_view_model_test.dart` |
+| 9 | (app side) a stock count line was titled with a product id | `1b7ddba`, `29aac43` | `stock_count_test.dart` "the stock count detail names the counted product"; `stock_count_detail_line_test.dart`; Maestro `stock_count` |
+| 10, 22 | a wrong password read "session expired" | `ef233bb` | `auth_test.dart`; Maestro `auth` |
+| 11 | success bars never closed | `96dcfdf` | `stock_in_test.dart` "the receipt page success snackbar closes on its own"; design_system `snack_bar_test.dart` |
+| 12 | a success bar's Clear failed once its screen was gone | `96dcfdf` | design_system `snack_bar_test.dart` "Clear on a success bar works after its screen was closed"; `stock_count_test.dart` "an earlier screen's success bar closes by itself on the stock count, with no error" (renamed in Task 6: it presses Clear only if the bar still shows) |
+| 13 | the wide customer list did not reload after a change | `8db713e` | `customer_test.dart` "a new customer appears in the list without leaving the page"; `customer_page_test.dart` |
+| 14 | ร้านค้าของฉัน greeted a new shop with an error | `e015462`, `5207fae` | `navigation_test.dart`; `supplier_info_view_model_test.dart` |
+| 15 | the stock tab showed no lot number | `a1844b0`, `07273cb`, `b8415b5` | `stock_in_test.dart` "the stock tab shows the received lot number"; `product_stock_card_test.dart` |
+| 17 | the receipt's supplier picker overflowed | `f5009a4` | `stock_in_test.dart` "the receipt page shows the chosen supplier without overflow"; `receive_supplier_picker_test.dart` |
+| 18 | the quantity dialog overflowed | `b349fbf`, `cfffa29` | `selling_test.dart` "the quantity and payment dialogs fit their text"; `quantity_dialog_layout_test.dart`; the layout sweep |
+| 19 | the payment dialog overflowed | `849382e`, `e4fcf33` | the same E2E test; `payment_dialog_layout_test.dart` |
+| 23 | controls with no accessible name | `50f7ad4`, `f14f3f9`, `890ebca`, `e0122d3`, `75bd0f1` | `accessibility_walk_test.dart` (every tappable named, in Thai, its own node offering the tap, no two alike; a product in two units; the จัดการ screens, the product detail's tabs) |
+| 24 | on the web, text beside a control did not reach assistive technology | `b54e876`, `47a1617`, `64af908`, `d62d423`, `fd801a7`, `05adb1f`, `48c70e2`, `8e9b079`, `2df848a`, `4ce1969` | `text_beside_controls_semantics_test.dart`, `bill_summary_test.dart`, `readable_tab_test.dart`, `readable_option_test.dart`, `stock_direction_toggle_test.dart`, design_system `title_semantics_test.dart`, `dropdown_input_semantics_test.dart`; every Maestro flow on the web |
+| 25 | choosing a customer or a receipt's product meant scrolling everything | `b4a912e`, `3bb640d`, `8768f5f` | `customer_test.dart`; Maestro `customer`, `receive_stock`, `stock_count` |
+| 26 | no bill number after a sale; bills told apart only by time; English bill labels | `9cfa7fe` | `selling_test.dart` "a cash sale of 3 with exact payment succeeds and takes 3 from stock"; `cart_page_sale_test.dart` "a sale says it is done and names its bill"; Maestro `sell_and_bill` |
+| 27 | the products screen's menu button under the status bar | `cd9579f` | design_system `app_shell_safe_area_test.dart` |
+| 28 | the stock quantity dialog overflowed | `994ad59` | `layout_sweep_test.dart` "the stock quantity dialog lays out without overflow" |
+| 29 | a cart line had no room for its product name on a 309-400 px cart | `98d1d1b`, `4fa1a2a` | `cart_order_item_layout_test.dart` (309, 340, 400: the whole name, every button named and tapped; 480: one row); the walk at 360×640 |
+| — | the web's focus after paying went nowhere (Edge run) | `7637fe2` | `cart_page_sale_test.dart`; Maestro `sell_and_bill` (web) |
+| — | (Task 6) on a 360 px phone the bills list's header overflowed by 156 px | `54c204e` | `layout_sweep_test.dart` "the bills list, for an admin lays out without overflow" |
+
+## What remains, most serious first
+
+### Server follow-ups
+
+Listed, not done here (the owner, 2026-11-26: "pos-api list ไว้แก้ตาม
+automate test"). Each is fixed later in pos-api, test-first, and is already
+watched by a test on the app side. Order of work there: 1, 2 (figures a shop
+relies on) → 7, 8 → 6 → 9, 16, 26. Releases of pos-api go only to
+`pos-dev-api`; never `pos-002-api` / `pos-003-api`.
+
+| # | What the server does | Fix in pos-api (later) | The automated test that proves it |
+|---|---|---|---|
+| 1 | `GetOrderRange` returns cancelled bills with no way to leave them out | a status filter (default: confirmed only) and the status in the row | pos-api handler test + `selling_test.dart` "the bills list" / "a cancelled bill is marked and not counted", with the app-side filter (`order_view_model.dart`) removed; Maestro `bill_cancel_return` (`api.js dayTotal` then equals `dayTotalAll`, and its `!=` check is turned round) |
+| 2 | a bill's detail returns cancelled lines and a total of 0.00 that disagrees with its lines | return the line status and a total of the live lines | pos-api test + `selling_test.dart` "the bill detail" / "a cancelled line is marked, not counted, and offers nothing" |
+| 6 | a product with stock can be deleted; its rows stay in the stock and low-stock reports | refuse (409) or zero the stock in the same transaction; reports skip deleted products | pos-api test + `product_edit_test.dart` "a product can be deleted and no longer sells" (it then needs no zeroing first) |
+| 7 | `GetCustomerAll` returns ARCHIVED customers | filter by status (a param to include them) | pos-api test + Maestro `customer` (`api.js customerCount` then needs no status filter) and `customer_test.dart` "customer removal" / "a removed customer is no longer listed" |
+| 8 | `GetReceives` returns CANCELLED receipts | filter by status | pos-api test + `stock_in_test.dart` "receive removal" / "a deleted draft receive is no longer listed" |
+| 9 | stock count lines carry only product ids | include the product name (or the app keeps resolving it) | pos-api test + `stock_count_test.dart` "count line names" / "the stock count detail names the counted product"; Maestro `stock_count` |
+| 16 | an adjustment's note is not in the history description | decide (owner): include the note | pos-api test + `stock_in_test.dart` "an adjustment up then down changes the stock by that much" (the ประวัติ rows); Maestro `stock_adjust` |
+| 26 | the create-order response is what the app shows as the bill number | confirm it returns the code (the app needs it for "ขายสำเร็จ เลขที่บิล …") | pos-api test + `selling_test.dart` "a cash sale of 3 with exact payment succeeds and takes 3 from stock" (asserts `ขายสำเร็จ เลขที่บิล <code>`) |
+
+### Open in the app
+
+| # | What | Where | Pinned by |
+|---|---|---|---|
+| 20 | **Security.** In any debug build the HTTP logger prints every request header (`Authorization` included) and full bodies: sign-in passwords, access tokens. Deserves its own change soon | `libraries/common/lib/core/network/http_logging_interceptor.dart:15-38`; `features/um/lib/container.dart:52`; `main.dart:16` | — (cannot be asserted without printing secrets) |
+| 30 | The bills list's store filter chips (All, Store, Online), its date range (Today …) and the date under it (Nov 26) are in English only, the only English controls left (found by the widened walk) | `presentation/order/main/order_page.dart` (`_choices`, `_dateFormat`), `order_view_model.dart:69` (range names); the chip labels are also the filter's keys | `accessibility_walk_test.dart` "every control on the bills list, for an admin has its own name" (skipped, FINDING 30) |
+| 31 | Success bars are English: `Add success`, `Update <name> success`, `Add <name> success` (category, supplier, lot edit, receipt pages). Not controls, so the walk does not see them | `category_add_page.dart:78`, `category_edit_page.dart:74`, `supplier_*_page.dart`, `product_lot_edit_page.dart:84`, `receive_manage_page.dart:111` | — (read in code; Maestro `receive_stock` waits for `Update success` to go) |
+| 21 | The first screen is built twice at start (two splash pages, then two sign-in pages) | `presentation/app.dart:62`, `presentation/router.dart:130-132` | — |
+| — | The range and price dropdowns (bills date range, expired products' range, the cart line's price) still use plain menu items: their options are not text on the web | `order_page.dart`, `products_expired_page.dart`, `core/order_item_widget.dart` | — (`readableOption` would fix them; no flow opens them) |
+
+### Questions for the owner, and screens with no way in
+
+Below ("Questions for the owner", "Screens with no way in from the UI").
+The screens with no way in are walked and laid out by the widget tests
+(`test/support/manage_screens.dart`), but no end-to-end test can reach them.
+
+### Features no automated test drives yet
+
+From the coverage table in [e2e.md](e2e.md#2-coverage): each could be driven
+(none needs a camera, file dialog or passkey), and none is yet: the oversell
+toggle on a cart line; adding a customer from the cart; the compliance info
+dialog (needs a category with `requireCustomerOrder`, and categories have no
+way in, so it would be seeded); several carts; choosing a bills date range;
+a bill line's sales history page and its open-product link; the units
+dialog; adding, editing, setting on hand and ordering lots on the stock tab;
+a customer's purchase history tab; adding a supplier from a receipt;
+deleting a receipt line.
+
+## The findings in detail
 
 ### Figures and data a shop relies on
 
@@ -53,17 +166,18 @@ pos-api paths are under `pos-api/app/`.
 
 ### Layout (fixed sizes too small for the app's Sarabun text)
 
-All fixed 2026-11-26 but #29. Every layout test now pumps with the app's own
+All fixed 2026-11-26. Every layout test now pumps with the app's own
 fonts (`test/support/app_fonts.dart`) at 360×640 and 1400×900, and
 `test/presentation/layout_sweep_test.dart` lays out each main screen and
 dialog the widget tests can build at both sizes, and each dialog also at
 640×360 (a phone held sideways: the number and return dialogs scroll), and
 fails on any overflow.
-The sweep does not reach screens no widget test can build yet: the bills
-list and bill detail pages, the receipt list and receipt page as a whole,
-the stock count pages, the supplier pages, the shop profile, the product
-detail with its tabs, sign-in and splash (UM), and the home shell with
-real navigation.
+Since Task 6 it also lays out the bills list, the supplier, category and
+stock count pages, a product's sales history, the lot form and each tab of
+the product detail but ประวัติ (`test/support/manage_screens.dart`). It does
+not reach the bill detail page as a whole, the receipt page as a whole, the
+shop profile, the product detail's ประวัติ tab, sign-in and splash (UM), and
+the home shell with real navigation: no widget test has their fakes yet.
 
 | # | What a user sees | Where | Effect | Pinned by |
 |---|---|---|---|---|
@@ -71,7 +185,7 @@ real navigation.
 | 18 | **Fixed 2026-11-26** (`DecimalInput`'s display sizes itself and the dialog grows to its content, up to 600 px). The quantity dialog `จำนวนสินค้า` overflows | `libraries/design_system/lib/widgets/dialogs.dart:99-100` (430 px), `libraries/design_system/lib/widgets/decimal_input.dart:94` (100 px box), `:103` (the Column that overflows) | 12–13 px overflow. Observed | `selling_test.dart` "the quantity and payment dialogs fit their text" (runs; the tolerance is gone); `quantity_dialog_layout_test.dart` |
 | 19 | **Fixed 2026-11-26** (the dialog is as tall as its content, up to 720 px, and scrolls on a phone lower than that; the summary amounts shrink to one line on a narrow phone instead of wrapping). The payment dialog's `ยอดรับเงินรวม` display overflows | `presentation/home/main/payment_screen.dart:214` (100 px box), `:221` (the Column that overflows) | 18 px overflow (42 and 27 px on a 360×640 phone). Observed | Same E2E test as #18; `payment_dialog_layout_test.dart`; `cart_page_sale_test.dart` (its filter for this overflow is gone) |
 | 28 | **Fixed 2026-11-26**, found by the layout sweep: the stock tab's ปรับจำนวนคงเหลือ dialog overflows, like #18 | `presentation/product/stock/product_stock_quantity_widget.dart` (`showStockQuantityDialog`, a fixed 320×430 dialog around `DecimalInput`) | 13 px overflow. Observed in a widget test | `layout_sweep_test.dart` "the stock quantity dialog lays out without overflow" |
-| 29 | **Open**, found by the accessibility walk: on a 360 px phone a cart line has no room for its product name. The cart is the screen less its 51 px cart slots, 309 px; the line's buttons and price take 288 px and its padding 40 (`Trailing widget consumes the entire tile width`) | `presentation/home/main/cart_widget.dart` `CartOrderItem` (a 288 px trailing `SizedBox`) | Observed in a widget test; the emulator's 411 px phone fits. Needs a narrow layout for the line (a visible change, the owner's call) | `cart_order_item_layout_test.dart` "a cart line fits the 309 px cart of a 360 px phone" (skipped, FINDING 29) |
+| 29 | **Fixed 2026-11-26** (`98d1d1b`, `4fa1a2a`): under 440 px of cart a line puts its four quantity buttons on a row of their own under the name, unit and price; from 440 px it is one row as before. Found by the accessibility walk: on a 360 px phone the cart is 309 px (the screen less its 51 px cart slots) and the line's buttons and price took 288 px and its padding 40 (`Trailing widget consumes the entire tile width`). The fault was wider than that phone: the tablet's 340 px cart left the name about 12-20 px, the desktop's 400 px cart 16 px (measured), the emulator's 411 px phone (a 360 px cart) about 32-40 px | `presentation/home/main/cart_widget.dart` `CartOrderItem` | Observed in widget tests | `cart_order_item_layout_test.dart` (309, 340, 400 px: the whole name laid out, nothing overflows, every button named and tapped; 480 px: one row) |
 | — | **Checked 2026-11-26, no fault**: the product's stock row (eight columns since #15) overflowed by 264 px on a 360 px phone with a long lot number; it now scrolls sideways. The cart line's price column, the cancelled-bill marks and the bill code fit at 360 px in the app's fonts | `presentation/product/main/product_stock_card.dart` | — | `product_stock_card_test.dart`; `cart_order_item_layout_test.dart`; `cancelled_marks_layout_test.dart` |
 
 ### Security and hygiene

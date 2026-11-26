@@ -1,6 +1,6 @@
 # POS main-path flows with Maestro (Android and web)
 
-Six [Maestro](https://maestro.dev) flows drive the real POS app the way a
+Eleven [Maestro](https://maestro.dev) flows drive the real POS app the way a
 person does — by what is on the screen — on the Android emulator and in a
 browser, against the local test stack. They sit beside the Dart suite
 ([e2e.md](e2e.md)), which is the thorough one; these are the short, readable
@@ -16,10 +16,16 @@ check that the main paths work on a phone and on the web.
 | `customer` | two customers added by the form are on the server; one is found and chosen for a sale (the cart shows its name and code), found by the list's search, and archived by its delete button: it leaves the list while the other, found by the same search, is listed (finding 7, fixed) |
 | `receive_stock` | a goods receipt for a supplier chosen from the dropdown by its name (and shown chosen), one line of five of the product chosen through the product search, imported: the server holds 1005 on hand |
 | `product_edit` | a product renamed on its page: the server and the selling screen show the new name, stock untouched |
+| `stock_adjust` | the run's lot adjusted up 2 then down 2 (reason อื่นๆ, each with a note) on the product's สต็อก tab: the server holds 1002, then 1000, and lists `+2,-2`; the ประวัติ tab lists both adjustments and the ปรับสต็อก tab both notes |
+| `stock_count` | a new count of the run's lot (picked through the product picker), counted to 0: the server has the count with one line and its note, and holds 0 on hand; the count's detail names the product, `ในระบบ 1000 / นับได้ 0` and `-1000` |
+| `product_add_delete` | a product added by the form (shown in the shop, unit, price, cost, barcode) is on the server and on the selling grid at its price; deleted from its edit form (the plain question) it leaves the server and the list; deleting the stocked run's product asks first, naming its 1000 on hand, and is answered no |
+| `bill_cancel_return` | two sold; one returned from the bill's line (the line reads `คืน 1`, the server holds 999); the bill cancelled from its detail: the row reads `ยกเลิกแล้ว`, the server says CANCELLED and holds 1000, and the list's ยอดรวม is today's bills without the cancelled ones, which differs from the server's own sum |
+| `roles` | an admin's menu has products and จัดการ and the bills show costs; a manager's and a user's menu has selling and bills only and the bills show no cost (row or foot) |
 
-Not covered: iOS; anything hosted (see "Local only"); stock counts, returns,
-PDF/CSV export, the scanner; prices per customer type. The Dart suite covers
-more of those.
+Not covered: iOS; anything hosted (see "Local only"); PDF/CSV export, the
+scanner; prices per customer type; and the features listed as "not
+automated yet" in the coverage table of [e2e.md](e2e.md#2-coverage), which
+says, feature by feature, which Dart test and which flow check it.
 
 ## Running
 
@@ -37,17 +43,20 @@ tools/e2e/maestro-selftest.sh               # the runner's own checks, no device
 ```
 
 One `PASS|FAIL <platform> <flow> <seconds>s` line per flow; exit 0 only when
-all passed. A run of all six takes about nine minutes on the emulator and
-seven on the web, plus the build the first time (APK about four minutes, web
-about one). `E2E_MAESTRO_REUSE_BUILD=1` skips the build when the artefact is
+all passed. A run of all eleven takes about TIMING_ANDROID on the emulator
+and TIMING_WEB on the web, plus the build the first time (APK about four
+minutes, web about one). `E2E_MAESTRO_REUSE_BUILD=1` skips the build when the artefact is
 there — only when the app's code has not changed.
 
 What the runner does: refuses unless `config/e2e-local.json` points at
 127.0.0.1; starts the flows' own local stack; builds the debug APK (or the web
 build with `--dart-define=E2E_SEMANTICS=true`); starts the emulator if none is
 running, keeps its screen on and forwards the two API ports (or serves the web
-build on 127.0.0.1:8090); then for each flow seeds one product and one
-supplier named `MST-<run id>`, runs Maestro and removes them. It stops what it
+build on 127.0.0.1:8090); then for each flow seeds one product (1000 on hand in one lot) and one
+supplier named `MST-<run id>`, runs Maestro and removes every product,
+customer and supplier whose name starts `MST-<run id>` (a product a flow
+adds is named so). A stock count cannot be deleted: `stock_count`'s counts
+stay in the flows' own local database, as do the sales. It stops what it
 started — an emulator or a stack that was already running is left running.
 On the emulator it reinstalls the app and clears its data (a session you had
 in `app.devper.pos` there is gone) and leaves "stay awake while charging" on.
@@ -86,8 +95,11 @@ packages/applications/pos/maestro/
   web/<flow>.yaml       url,   LAYOUT: wide,   launchApp (a fresh profile each run)
   shared/<flow>.yaml    the flow itself, the same file for both
   shared/steps/         sign_in, sign_out, open_screen, add_product_twice, add_customer,
-                        choose_dropdown_option
-  scripts/api.js        asks the local API what the server recorded
+                        choose_dropdown_option, open_product, open_product_edit,
+                        adjust_stock, sell_two, expect_staff_menu
+  scripts/api.js        asks the local API what the server recorded (bills, a
+                        bill's status, the day's totals, stock on hand,
+                        adjustments, stock counts, products, customers)
 ```
 
 - **Layout, not platform.** The phone shows the narrow layout (menu in a
@@ -112,10 +124,12 @@ packages/applications/pos/maestro/
 
 Maestro reads the screen through the accessibility (semantics) tree. On the
 web it reads an element's own DOM text only, and Flutter web writes a node's
-label as text only when the node has no children (a node with children, or
-a menu item, gets an `aria-label`). So the app's changes are of three kinds,
-each with a widget test, none changing what a user sees except a tooltip on
-hover or long-press:
+label as text only when the node has no children (a node with children, a
+menu item, a tab or a toggle gets an `aria-label`). Each change has a widget
+test. Most change nothing a sighted user sees; those that do are listed in
+[e2e-findings.md](e2e-findings.md#what-a-user-now-sees-differently) (the
+cart line's two rows on every cart the app builds today, tooltips, Thai
+button labels, the stock row's scrollbar, among others).
 
 - `lib/main.dart`: `e2eSemanticsEnabled` — a web build made with
   `--dart-define=E2E_SEMANTICS=true` keeps the semantics tree on. An ordinary
@@ -124,16 +138,24 @@ hover or long-press:
   Thai and English), and no two on a screen share one
   (`test/presentation/accessibility_walk_test.dart` walks the screens the
   widget tests can build). The ones the flows use: `เลือกสินค้า` (the phone's
-  product picker), `นำลูกค้า <name> ออก`, `เพิ่มลูกค้า`, `เมนูใบรับสินค้า`. A
-  row's buttons name their row: `ลดจำนวน <product>`, `เพิ่มจำนวน <product>`,
-  `แก้ไขจำนวน <product>` on a cart line.
+  product picker), `นำลูกค้า <name> ออก`, `เพิ่มลูกค้า`, `เมนูใบรับสินค้า`,
+  `เมนูสินค้า`, `ปรับสต็อก ล็อต <lot>`, `เพิ่มการนับสต็อก`,
+  `บันทึกการนับสต็อก`, `ลบบิล`. A row's buttons name their row:
+  `ลดจำนวน <product> <unit>`, `เพิ่มจำนวน <product> <unit>`,
+  `2x แก้ไขจำนวน <product> <unit>` on a cart line, `คืนสินค้า 2x <product>
+  ฿<amount>` on a bill line.
 - A row's texts are one node of their own, beside its buttons
   (`ReadableTile`): the cart line `2x <product> <unit> ฿<amount> <price
-  kind>`, the chosen customer `<name>\n<code>`, a bill line `<quantity>
-  <product> … <amount>`, a receipt line `Name: <product>\n…`. Dialog and
-  list titles and the cart title `ตะกร้าสินค้า #N` are header nodes of their
-  own. An open dropdown's options each have a text node of their own, so
-  `choose_dropdown_option` taps the option's text on both platforms.
+  kind>`, the chosen customer `<name>\n<code>`, a bill line `2x <product>
+  … ฿<amount>`, a receipt line `Name: <product>\n…`, a new stock count's
+  line `<product>\nล็อต <lot>, ในระบบ <n>`. Each row of a bill's foot is a
+  node of its own (`ยอดรวม ฿ 950.00`). Dialog and list titles and the cart
+  title `ตะกร้าสินค้า #N` are header nodes of their own. An open dropdown's
+  options each have a text node of their own (`DropdownInput`,
+  `readableOption`), so `choose_dropdown_option` taps the option's text on
+  both platforms.
+- Tabs and the stock adjustment's add / take toggle carry their text as
+  their identifier (above).
 
 ### Known limits
 
@@ -143,6 +165,18 @@ hover or long-press:
   25, which the project's Gradle cannot run on); `maestro-build.sh` calls
   Gradle with a JDK 17 instead. `flutter config --jdk-dir <jdk 17>` would fix
   the ordinary command too — the owner's call.
+- A centred number field cannot be overwritten: a tap puts the cursor
+  somewhere in the figure, Maestro has no select-all, and a double tap does
+  not select on the web. `stock_count` therefore counts the lot to 0 (what
+  is right of the cursor is only zeros), not 8 as the Dart suite does.
+- The store filter chips' labels are not text on the web (Flutter writes a
+  chip's label as an `aria-label`); `roles` checks the costs a role hides
+  instead, and the chips are left to `navigation_test.dart`.
+- A role's hidden items are checked once the bills list has loaded and its
+  animations ended (`expect_staff_menu`): the admin's run of the same flow
+  shows them at that same point.
+- The flows type only ASCII (names `MST-<run id> …`, the unit `pc`):
+  Maestro's typing of Thai on Android is not relied on (not tried).
 
 What the flows showed about the app is in
 [e2e-findings.md](e2e-findings.md#found-by-the-maestro-flows).
