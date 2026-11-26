@@ -26,12 +26,34 @@ void main() {
     )));
 
     // Act
-    await tester.tap(find.bySemanticsLabel('เพิ่มลูกค้า'));
+    await tester.tap(find.byTooltip('เพิ่มลูกค้า'));
 
     // Assert
     expect(added, 1);
     expect(find.text('ข้อมูลลูกค้า'), findsOneWidget);
     semantics.dispose();
+  });
+
+  testWidgets('the add button is a 48 dp button named เพิ่มลูกค้า',
+      (tester) async {
+    // Arrange / Act
+    await tester.pumpWidget(_host(CustomerListHeader(
+      title: 'ข้อมูลลูกค้า',
+      backLabel: 'ย้อนกลับ',
+      addLabel: 'เพิ่มลูกค้า',
+      showAdd: true,
+      onBack: () {},
+      onAdd: () {},
+      onSearch: (_) {},
+    )));
+
+    // Assert
+    final add = find.widgetWithIcon(IconButton, Icons.add);
+    expect(add, findsOneWidget);
+    expect(tester.widget<IconButton>(add).tooltip, 'เพิ่มลูกค้า');
+    final size = tester.getSize(add);
+    expect(size.width, greaterThanOrEqualTo(48));
+    expect(size.height, greaterThanOrEqualTo(48));
   });
 
   testWidgets('the wide customer list has no add button in its header',

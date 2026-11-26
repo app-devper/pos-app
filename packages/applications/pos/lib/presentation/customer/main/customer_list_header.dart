@@ -81,18 +81,11 @@ class CustomerListHeader extends StatelessWidget {
           ),
         ),
         if (showAdd) ...[
-          InkWell(
-            onTap: onAdd,
-            child: SizedBox(
-              width: 40,
-              height: 40,
-              child: Icon(
-                Icons.add,
-                semanticLabel: addLabel,
-                color: Theme.of(context).colorScheme.primary,
-                size: 24,
-              ),
-            ),
+          IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: addLabel,
+            color: Theme.of(context).colorScheme.primary,
+            onPressed: onAdd,
           ),
         ] else ...[
           // Balances the back arrow, so the title stays centred.
