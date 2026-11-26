@@ -1,0 +1,87 @@
+# The run's lot is adjusted up by 2 and down by 2, reason อื่นๆ, each with a
+# note: the server holds 1002, then 1000; the product's history lists both
+# adjustments and the ปรับสต็อก tab shows both notes and changes.
+appId: app.devper.pos
+env:
+  UP_NOTE: MST-${RUN_ID} up
+  DOWN_NOTE: MST-${RUN_ID} down
+---
+- runScript:
+    file: ../scripts/api.js
+    env:
+      ACTION: productOnHand
+      NAME: ${PRODUCT_NAME}
+- assertTrue: ${output.onHand == '1000'}
+- runFlow:
+    file: steps/sign_in.yaml
+    env:
+      USERNAME: ${MAESTRO_USERNAME}
+      PASSWORD: ${MAESTRO_PASSWORD}
+- runFlow:
+    file: steps/open_product.yaml
+    env:
+      NAME: ${PRODUCT_NAME}
+      TAB: "สต็อก"
+- extendedWaitUntil:
+    visible: "ปรับสต็อก ล็อต L${RUN_ID}"
+    timeout: 15000
+- runFlow:
+    file: steps/adjust_stock.yaml
+    env:
+      DIRECTION: "เพิ่มสต็อก"
+      QUANTITY: "2"
+      ON_HAND: "1000"
+      NOTE: ${UP_NOTE}
+- repeat:
+    times: 15
+    while:
+      true: ${output.onHand != '1002'}
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 1000
+      - runScript:
+          file: ../scripts/api.js
+          env:
+            ACTION: productOnHand
+            NAME: ${PRODUCT_NAME}
+- assertTrue: ${output.onHand == '1002'}
+# The dialog reads the lot afresh: it now holds 1002.
+- runFlow:
+    file: steps/adjust_stock.yaml
+    env:
+      DIRECTION: "ลดสต็อก"
+      QUANTITY: "2"
+      ON_HAND: "1002"
+      NOTE: ${DOWN_NOTE}
+- repeat:
+    times: 15
+    while:
+      true: ${output.onHand != '1000'}
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 1000
+      - runScript:
+          file: ../scripts/api.js
+          env:
+            ACTION: productOnHand
+            NAME: ${PRODUCT_NAME}
+- assertTrue: ${output.onHand == '1000'}
+- runScript:
+    file: ../scripts/api.js
+    env:
+      ACTION: adjustments
+      NAME: ${PRODUCT_NAME}
+- assertTrue: ${output.adjustDeltas == '+2,-2'}
+- tapOn:
+    id: "ประวัติ"
+- extendedWaitUntil:
+    visible: ".*ปรับสต็อกสินค้า \\(อื่นๆ\\) จำนวน 2.*"
+    timeout: 15000
+- assertVisible: ".*ปรับสต็อกสินค้า \\(อื่นๆ\\) จำนวน -2.*"
+- tapOn:
+    id: "ปรับสต็อก"
+- extendedWaitUntil:
+    visible: ".*${UP_NOTE}.*"
+    timeout: 15000
+- assertVisible: ".*${DOWN_NOTE}.*"
+- takeScreenshot: adjustments
