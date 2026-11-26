@@ -47,33 +47,16 @@ class RouterApp {
         builder: (context) => InnerPageFrame(child: builder(context)));
   }
 
-  /// The pages a reload in the browser opens again, each with the side-menu
-  /// section home shows under it. The rest (a form, a record's page) need
-  /// what the page before handed them, which a reload no longer has.
-  static const _reopenedUnder = {
-    customersRoute: 'database',
-    receivesRoute: 'database',
-    stockCountsRoute: 'database',
-    supplierRoute: 'database',
-    suppliersRoute: 'database',
-    categoriesRoute: 'database',
-  };
-
-  /// The routes the app starts with at [initialRoute], the browser's
-  /// address on a reload. Every start goes through the splash page, which
-  /// checks the session; under a page that can be opened again, the splash
-  /// then puts home beneath it rather than replacing it.
-  static List<Route<dynamic>> generateInitialRoutes(String initialRoute) {
-    final section = _reopenedUnder[initialRoute];
-    return [
-      generateRoute(RouteSettings(name: rootRoute, arguments: section)),
-      if (initialRoute != rootRoute)
-        generateRoute(RouteSettings(name: initialRoute)),
-    ];
-  }
+  /// The routes the app starts with, whatever [initialRoute] (the
+  /// browser's address on a reload or a typed link) says: only the splash
+  /// page, which checks the session and then opens home. A page that needs
+  /// what the page before handed it cannot be rebuilt from an address, and
+  /// a page must never open before the session and role are known.
+  static List<Route<dynamic>> generateInitialRoutes(String initialRoute) =>
+      [generateRoute(const RouteSettings(name: rootRoute))];
 
   /// Every route carries the name it was asked for, so the browser's
-  /// address follows the page shown (and a refresh can find it again).
+  /// address follows the page shown and its Back pops to the parent.
   static Route<dynamic> generateRoute(RouteSettings settings) {
     if (settings.name?.startsWith('/um') ?? false) {
       return RouterUm.generateRoute(settings);
@@ -189,7 +172,7 @@ class RouterApp {
               builder: (_) => const ScannerPage(mode: "SCAN"));
         case rootRoute:
           return RouterUm.generateRoute(
-              RouteSettings(name: routeSplash, arguments: settings.arguments));
+              const RouteSettings(name: routeSplash));
         default:
           return MaterialPageRoute(
             settings: settings,

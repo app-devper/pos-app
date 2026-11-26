@@ -19,8 +19,7 @@ class RouterUm {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case routeSplash:
-        return MaterialPageRoute(
-            builder: (_) => SplashPage(homeArguments: settings.arguments));
+        return MaterialPageRoute(builder: (_) => const SplashPage());
       case routeLogin:
         return MaterialPageRoute(builder: (_) => const LoginPage());
       case routeChangePassword:

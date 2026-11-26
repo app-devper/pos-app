@@ -49,9 +49,9 @@ import 'receive/main/receives_view_model_test.dart' as receipts;
 /// The จัดการ landing page, recognised by a tile only it shows.
 final _managePage = find.text('จัดการลูกค้า');
 
-void _registerApp() {
+void _registerApp({String role = 'ADMIN'}) {
   cart.registerSellingScreen('OD_202611260001');
-  final login = home.FakeLoginRepository(role: 'ADMIN');
+  final login = home.FakeLoginRepository(role: role);
   sl.registerFactory(() => HomeViewModel(
         getRoleUseCase: GetRoleUseCase(login),
         logoutUseCase: LogoutUseCase(login),
@@ -109,7 +109,7 @@ void _registerBills(home.FakeLoginRepository login) {
 
 /// A stored session that is still alive, for the POS system.
 class _LiveSession extends home.FakeLoginRepository {
-  _LiveSession() : super(role: 'ADMIN');
+  _LiveSession({super.role = 'ADMIN'});
 
   @override
   Future<Login> keepAlive() async => Login(accessToken: 'token');
@@ -119,14 +119,15 @@ class _LiveSession extends home.FakeLoginRepository {
       id: 's', clientId: 'c', systemName: 'POS', systemCode: 'POS', host: '');
 }
 
-/// The app reloaded in the browser at [address], with a live session: the
-/// splash page checks the session first, as at every start.
-Future<void> _reloadAt(WidgetTester tester, String address) async {
+/// The app reloaded in the browser at [address], with a live session of
+/// [role]: the splash page checks the session first, as at every start.
+Future<void> _reloadAt(WidgetTester tester, String address,
+    {String role = 'ADMIN'}) async {
   useViewSize(tester, phoneSize);
-  _registerApp();
+  _registerApp(role: role);
   sl.registerLazySingleton(() => AppConfig(
       apiUrl: '', logo: '', name: 'POS', system: 'POS', home: homeRoute));
-  sl.registerFactory(() => RestoreSessionUseCase(_LiveSession()));
+  sl.registerFactory(() => RestoreSessionUseCase(_LiveSession(role: role)));
   await tester.pumpWidget(MaterialApp(
     theme: CustomTheme.mainTheme,
     localizationsDelegates: [CommonLocalizationsDelegate(), thaiLanguages],
@@ -471,20 +472,25 @@ void main() {
     });
   }
 
-  testWidgets('a reload at the receipts address shows the receipts again',
-      (tester) async {
-    // Arrange / Act
-    await _reloadAt(tester, receivesRoute);
+  // A reload or a typed address starts at the splash, which checks the
+  // session, and ends on selling, whatever the address and the role: a page
+  // that needs what the page before handed it cannot be rebuilt, and an
+  // admin page must not open for another role.
+  for (final role in ['ADMIN', 'USER']) {
+    for (final address in [orderDetailRoute, productEditRoute, receivesRoute]) {
+      testWidgets('a start at $address as $role ends on the selling screen',
+          (tester) async {
+        // Arrange / Act
+        await _reloadAt(tester, address, role: role);
 
-    // Assert
-    expect(find.text('RC-1').hitTestable(), findsOneWidget);
-
-    // Act
-    await _systemBack(tester);
-
-    // Assert
-    expect(_managePage.hitTestable(), findsOneWidget);
-  });
+        // Assert
+        expect(tester.takeException(), isNull);
+        expect(_sellingScreen.hitTestable(), findsOneWidget);
+        expect(find.text('RC-1'), findsNothing);
+        expect(_managePage, findsNothing);
+      });
+    }
+  }
 
   testWidgets('a start at the splash address ends on the selling screen',
       (tester) async {
