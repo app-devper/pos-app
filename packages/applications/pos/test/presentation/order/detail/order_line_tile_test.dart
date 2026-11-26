@@ -16,6 +16,8 @@ import '../../../support/app_languages.dart';
 OrderItemDetail _line(
         {String status = 'CONFIRMED',
         int returnedQty = 0,
+        int oversoldQty = 0,
+        double price = 40,
         String name = 'tea'}) =>
     OrderItemDetail(
       id: 'i1',
@@ -30,13 +32,14 @@ OrderItemDetail _line(
         stocks: const [],
       ),
       quantity: 2,
-      price: 40,
+      price: price,
       costPrice: 16,
       discount: 0,
       createdDate: '2026-11-26T10:00:00Z',
       order: null,
       status: status,
       returnedQty: returnedQty,
+      oversoldQty: oversoldQty,
     );
 
 /// Compact, the app's density on desktop and the web, where the E2E suite
@@ -103,6 +106,48 @@ void main() {
       final title = tester.renderObject<RenderParagraph>(find.text(name));
       expect(title.didExceedMaxLines, isFalse);
       expect(tester.widget<Text>(find.text(name)).maxLines, 2);
+    });
+
+    testWidgets(
+        'at 320 px and 1.3x text a long name keeps its room beside a '
+        'million amount and both marks', (tester) async {
+      // Arrange
+      useViewSize(tester, const Size(320, 640));
+      tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      const name = 'Paracetamol 500 mg tablets x10';
+      expect(name.length, 30);
+
+      // Act
+      await tester.pumpWidget(_phoneHost(
+          _line(name: name, price: 1234567, oversoldQty: 1, returnedQty: 1),
+          {}));
+
+      // Assert
+      expect(tester.takeException(), isNull);
+      expect(tester.getSize(find.text(name)).width, greaterThanOrEqualTo(140));
+      final amount = find.text('1,234,567.00');
+      expect(amount, findsOneWidget);
+      expect(tester.getRect(amount).right, lessThanOrEqualTo(320));
+      expect(find.byTooltip(RegExp('^คำสั่งเพิ่มเติมของ')), findsOneWidget,
+          reason: 'the menu stays at the end');
+    });
+
+    testWidgets('at 360 px both marks fit a line with its amount at the end',
+        (tester) async {
+      // Arrange
+      useViewSize(tester, phoneSize);
+
+      // Act
+      await tester
+          .pumpWidget(_phoneHost(_line(oversoldQty: 1, returnedQty: 1), {}));
+
+      // Assert
+      expect(tester.takeException(), isNull);
+      expect(find.text('เกิน 1'), findsOneWidget);
+      expect(find.text('คืน 1'), findsOneWidget);
+      expect(tester.getCenter(find.text('40.00')).dx,
+          greaterThan(tester.getCenter(find.text('tea')).dx));
     });
 
     testWidgets('the quantity leads as 2× and the amount ends the row, bold',
