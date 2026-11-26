@@ -1,5 +1,6 @@
-// The จัดการ screens the widget tests have fakes for (suppliers,
-// categories, stock counts), a product's sales history and the lot form:
+// The bills list, the จัดการ screens the widget tests have fakes for
+// (suppliers, categories, stock counts), a product's sales history, the lot
+// form and the product detail:
 // the accessibility walk and the layout sweep go through them as well.
 
 // Flutter imports:
@@ -14,6 +15,9 @@ import 'package:pos/presentation/category/edit/category_edit_view_model.dart';
 import 'package:pos/presentation/category/main/category_page.dart';
 import 'package:pos/presentation/category/main/category_view_model.dart';
 import 'package:pos/presentation/order/history/order_history_page.dart';
+import 'package:pos/presentation/order/main/order_page.dart';
+import 'package:pos/presentation/order/main/order_view_model.dart';
+import 'package:um/domain/usecase/auth_use_cases.dart';
 import 'package:pos/presentation/order/history/order_history_view_model.dart';
 import 'package:pos/presentation/product/main/product_detail_widget.dart';
 import 'package:pos/presentation/product/stock/product_stock_widget.dart';
@@ -37,6 +41,7 @@ import '../presentation/inventory_history_view_models_test.dart'
     as history_tabs;
 import '../presentation/order/history/order_history_view_model_test.dart'
     as history;
+import '../presentation/order/main/order_view_model_test.dart' as bills;
 import '../presentation/product/product_navigation_test.dart' as products;
 import '../presentation/stock_count/manage/stock_count_manage_view_model_test.dart'
     as counts;
@@ -57,6 +62,17 @@ final _unit = ProductUnit(
 );
 
 final manageScreens = <String, Screen>{
+  'the bills list, for an admin': () {
+    sl.registerFactory(() => OrderViewModel(
+          orderRepo: bills.FakeOrderRepository(orders: [
+            bills.order('1', 'Cash'),
+            bills.order('2', 'PromptPay', status: 'CANCELLED'),
+          ]),
+          getRoleUseCase:
+              GetRoleUseCase(bills.FakeLoginRepository(role: 'ADMIN')),
+        ));
+    return const Scaffold(body: OrderPage());
+  },
   'the suppliers list': () {
     sl.registerFactory(() => SuppliersViewModel(
             supplierRepo: suppliers.FakeSupplierRepository(suppliers: [

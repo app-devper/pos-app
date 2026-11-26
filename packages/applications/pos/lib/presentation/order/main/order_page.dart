@@ -202,7 +202,9 @@ class _OrderPageState extends State<OrderPage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            _buildFilter(),
+            // Flexible: on a phone the chips wrap under each other instead
+            // of pushing the date range off the screen.
+            Flexible(child: _buildFilter()),
             _buildDropdown(context),
           ],
         ),
