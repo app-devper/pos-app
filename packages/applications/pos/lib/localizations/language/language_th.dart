@@ -196,6 +196,11 @@ class LanguageTh extends Languages {
   String adjustLot(String lot) => "ปรับสต็อก ล็อต $lot";
 
   @override
+  String unnumberedLot(int row, {String importDate = ''}) => importDate.isEmpty
+      ? "ไม่มีเลข แถวที่ $row"
+      : "ไม่มีเลข แถวที่ $row นำเข้า $importDate";
+
+  @override
   String get saveStockCount => "บันทึกการนับสต็อก";
 
   @override

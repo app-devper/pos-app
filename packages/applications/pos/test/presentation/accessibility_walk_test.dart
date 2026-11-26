@@ -32,6 +32,9 @@ import 'package:pos/presentation/receive/main/receives_view_model.dart';
 import 'package:pos/presentation/receive/main/receives_widget.dart';
 import 'package:pos/presentation/receive/manage/receive_manage_page.dart';
 import 'package:pos/presentation/receive/manage/receive_manage_view_model.dart';
+import 'package:pos/domain/model/stock_count/param.dart';
+import 'package:pos/presentation/stock_count/manage/stock_count_manage_page.dart';
+import 'package:pos/presentation/stock_count/manage/stock_count_manage_view_model.dart';
 import '../support/app_fonts.dart';
 import '../support/app_languages.dart';
 import '../support/main_screens.dart';
@@ -40,6 +43,7 @@ import 'home/main/cart_page_sale_test.dart' as cart;
 import 'order/detail/order_detail_view_model_test.dart' as bill;
 import 'receive/main/receives_view_model_test.dart' as receipts;
 import 'receive/manage/receive_manage_view_model_test.dart' as receipt;
+import 'stock_count/manage/stock_count_manage_view_model_test.dart' as counts;
 
 /// A screen and what to do on it once it is shown, before the walk.
 typedef _Walked = ({Screen build, Future<void> Function(WidgetTester)? then});
@@ -190,6 +194,35 @@ Future<void> _fillCart(WidgetTester tester) async {
   }
 }
 
+/// A product stock card of [stocks].
+Widget _stockCard(List<ProductStock> stocks) => Scaffold(
+      body: ProductStockCard(
+        unit: _unit,
+        stocks: stocks,
+        price: ProductPrice(
+            id: 'pr1',
+            unitId: 'u1',
+            productId: 'p1',
+            price: 10,
+            customerType: 'General'),
+        onSequence: () {},
+        onAdd: () {},
+        onEdit: (_) {},
+        onQuantity: (_) {},
+        onAdjust: (_) {},
+      ),
+    );
+
+/// A count line of one product's lot [stockId] that has no lot number.
+StockCountItemParam _unnumberedCountLine(String stockId) => StockCountItemParam(
+      productId: 'p1',
+      stockId: stockId,
+      counted: 8,
+      productName: 'Product p1',
+      lotNumber: '',
+      systemQuantity: 10,
+    );
+
 final _morePages = <String, _Walked>{
   'the selling screen with a line and a customer': (
     build: () {
@@ -265,24 +298,26 @@ final _morePages = <String, _Walked>{
     },
     then: null,
   ),
+  // Lots with no lot number, received the same day: told apart by row.
+  'a product stock card with two lots without a number': (
+    build: () => _stockCard([_lot('s1', ''), _lot('s2', '')]),
+    then: null,
+  ),
+  'a new stock count with two lines without a lot number': (
+    build: () {
+      final count = StockCountManageViewModel(
+        stockCountRepo: counts.FakeStockCountRepository(),
+        productRepo: counts.FakeProductRepository(),
+      )
+        ..addItem(_unnumberedCountLine('s1'))
+        ..addItem(_unnumberedCountLine('s2'));
+      sl.registerFactory(() => count);
+      return const StockCountManagePage();
+    },
+    then: null,
+  ),
   'a product stock card': (
-    build: () => Scaffold(
-          body: ProductStockCard(
-            unit: _unit,
-            stocks: [_lot('s1', 'L2026A'), _lot('s2', 'L2026B')],
-            price: ProductPrice(
-                id: 'pr1',
-                unitId: 'u1',
-                productId: 'p1',
-                price: 10,
-                customerType: 'General'),
-            onSequence: () {},
-            onAdd: () {},
-            onEdit: (_) {},
-            onQuantity: (_) {},
-            onAdjust: (_) {},
-          ),
-        ),
+    build: () => _stockCard([_lot('s1', 'L2026A'), _lot('s2', 'L2026B')]),
     then: null,
   ),
 };

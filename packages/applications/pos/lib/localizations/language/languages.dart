@@ -134,6 +134,9 @@ abstract class Languages {
 
   String adjustLot(String lot);
 
+  /// A lot with no lot number, by its row (and import date when known).
+  String unnumberedLot(int row, {String importDate = ''});
+
   String get saveStockCount;
 
   String removeCountLine(String name);

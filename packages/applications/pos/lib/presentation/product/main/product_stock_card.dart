@@ -10,6 +10,7 @@ import 'package:design_system/theme/spacing.dart';
 // Project imports:
 import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/localizations/language/languages.dart';
+import 'package:pos/presentation/core/lot_name.dart';
 
 /// One unit's card on the product's stock tab: the total on hand, then a
 /// column per figure with one row per lot (its number included), and the
@@ -168,7 +169,8 @@ class ProductStockCard extends StatelessWidget {
           onTap: () => onEdit(stock),
           child: Text(
             'แก้ไข',
-            semanticsLabel: Languages.of(context).editLot(stock.lotNumber),
+            semanticsLabel:
+                Languages.of(context).editLot(_lotName(context, stock)),
             style: TextStyle(
               fontSize: 14.0,
               color: Theme.of(context).colorScheme.primary,
@@ -179,6 +181,14 @@ class ProductStockCard extends StatelessWidget {
       ],
     );
   }
+
+  /// The lot as its controls name it: a lot with no number by its row.
+  String _lotName(BuildContext context, ProductStock stock) => lotName(
+        Languages.of(context),
+        stock.lotNumber,
+        row: stocks.indexOf(stock) + 1,
+        importDate: stock.importDate.formatShortDate(),
+      );
 
   /// The lot's own amount, or the unit's (greyed) when the lot has none.
   Widget _amount(BuildContext context, double own, double fallback) {
@@ -198,7 +208,7 @@ class ProductStockCard extends StatelessWidget {
       child: Text(
         '${stock.quantity}x',
         semanticsLabel:
-            '${stock.quantity}x ${Languages.of(context).lotOnHand(stock.lotNumber)}',
+            '${stock.quantity}x ${Languages.of(context).lotOnHand(_lotName(context, stock))}',
         style: const TextStyle(
           fontSize: 16.0,
           fontWeight: FontWeight.bold,
@@ -221,7 +231,8 @@ class ProductStockCard extends StatelessWidget {
               padding: EdgeInsets.zero,
               splashRadius: 16,
               icon: const Icon(Icons.tune, size: 18),
-              tooltip: Languages.of(context).adjustLot(stock.lotNumber),
+              tooltip:
+                  Languages.of(context).adjustLot(_lotName(context, stock)),
               onPressed: () => onAdjust(stock),
             ),
           ),

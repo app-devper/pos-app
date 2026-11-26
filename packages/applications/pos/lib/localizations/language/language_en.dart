@@ -189,6 +189,11 @@ class LanguageEn extends Languages {
   String adjustLot(String lot) => "Adjust stock of lot $lot";
 
   @override
+  String unnumberedLot(int row, {String importDate = ''}) => importDate.isEmpty
+      ? "without a number, row $row"
+      : "without a number, row $row, imported $importDate";
+
+  @override
   String get saveStockCount => "Save stock count";
 
   @override
