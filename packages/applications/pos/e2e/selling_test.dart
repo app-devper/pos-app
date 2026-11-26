@@ -203,7 +203,7 @@ void main() {
 
       // Assert
       expect(cart.paymentDue('฿40.00'), findsOneWidget);
-      expect(cart.payButton('รับชำระพอดี ไม่มีเงินทอน'), findsOneWidget);
+      expect(cart.payButton('ชำระด้วยพร้อมเพย์ ฿40.00'), findsOneWidget);
 
       // Act
       await cart.submitPayment();

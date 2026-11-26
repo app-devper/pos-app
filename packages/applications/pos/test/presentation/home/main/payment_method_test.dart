@@ -130,4 +130,51 @@ void main() {
       expect(paid, [(70.0, 'Cash')]);
     });
   });
+
+  group('on a phone', () {
+    testWidgets('both methods show under the title without scrolling',
+        (tester) async {
+      // Arrange, Act
+      await _open(tester);
+
+      // Assert
+      final screen = Offset.zero & phoneSize;
+      final cash = tester.getRect(_option('เงินสด'));
+      final promptPay = tester.getRect(_option('พร้อมเพย์'));
+      for (final rect in [cash, promptPay]) {
+        expect(screen.contains(rect.bottomRight - const Offset(1, 1)), isTrue,
+            reason: '$rect is in view');
+        expect(rect.height, greaterThanOrEqualTo(48));
+      }
+      expect((cash.top - promptPay.top).abs(), lessThan(1), reason: 'one row');
+      expect(promptPay.left - cash.right, greaterThanOrEqualTo(8));
+      expect(cash.bottom,
+          lessThanOrEqualTo(tester.getRect(find.text('ยอดรับเงินรวม')).top),
+          reason: 'above the amounts');
+      expect(find.text('พร้อมเพย์').hitTestable(), findsOneWidget);
+    });
+
+    testWidgets('choosing พร้อมเพย์ says so on the pay button', (tester) async {
+      // Arrange
+      final paid = await _open(tester);
+
+      // Act
+      await tester.tap(find.text('พร้อมเพย์'));
+      await tester.pumpAndSettle();
+
+      // Assert
+      final pay = find.byType(ElevatedButton);
+      expect(
+          find.descendant(
+              of: pay, matching: find.text('ชำระด้วยพร้อมเพย์ ฿50.00')),
+          findsOneWidget);
+      await tester.tap(pay);
+      expect(paid, [(50.0, 'PromptPay')]);
+    });
+  });
 }
+
+/// The method option holding [label]: its tappable box.
+Finder _option(String label) => find
+    .ancestor(of: find.text(label), matching: find.byType(GestureDetector))
+    .first;

@@ -335,4 +335,7 @@ class LanguageTh extends Languages {
 
   @override
   String get noSearchResults => "ไม่พบรายการที่ค้นหา";
+
+  @override
+  String payByPromptPay(String amount) => "ชำระด้วยพร้อมเพย์ $amount";
 }

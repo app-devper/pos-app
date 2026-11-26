@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:common/core/ext/number_ext.dart';
 import 'package:design_system/widgets/dialogs.dart';
 import 'package:design_system/widgets/input_number.dart';
+import 'package:design_system/widgets/responsive.dart';
 import 'package:design_system/widgets/title_bar.dart';
 
 // Project imports:
@@ -102,9 +103,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Widget _buildBody() {
+    // On a phone the method is chosen first, in a row under the title where
+    // it is seen; on a wide screen it stays beside the keypad.
+    final narrow = Responsive.isMobile(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (narrow) ...[
+          _buildPaymentOptionsRow(),
+          const SizedBox(height: 16),
+        ],
         _buildInputSection('ยอดรับเงินรวม', _getNumberFormat(_number)),
         const SizedBox(height: 16),
         Row(
@@ -124,23 +132,54 @@ class _PaymentScreenState extends State<PaymentScreen> {
           QuickCashChips(total: widget.amount, onSelected: _receiveQuickCash),
         ],
         const SizedBox(height: 16),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Flexible(flex: 1, child: _buildPaymentOptions()),
-            const SizedBox(width: 16),
-            Flexible(
-              flex: 2,
-              child: SizedBox(
-                height: 250,
-                child: InputNumber(
-                  key: ValueKey(_keypadGeneration),
-                  onDone: (_) => _pay(),
-                  onChange: _calculate,
-                ),
-              ),
-            ),
-          ],
+        if (narrow)
+          _buildKeypad()
+        else
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Flexible(flex: 1, child: _buildPaymentOptions()),
+              const SizedBox(width: 16),
+              Flexible(flex: 2, child: _buildKeypad()),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Widget _buildKeypad() {
+    return SizedBox(
+      height: 250,
+      child: InputNumber(
+        key: ValueKey(_keypadGeneration),
+        onDone: (_) => _pay(),
+        onChange: _calculate,
+      ),
+    );
+  }
+
+  /// The phone's method choice: the two options side by side.
+  Widget _buildPaymentOptionsRow() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildPaymentOption(
+            "เงินสด",
+            iconData: Icons.money,
+            compact: true,
+            isSelected: _typeMode == "Cash",
+            onTap: () => _selectMethod("Cash"),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildPaymentOption(
+            "พร้อมเพย์",
+            iconData: Icons.qr_code_2,
+            compact: true,
+            isSelected: _isPromptPay,
+            onTap: () => _selectMethod("PromptPay"),
+          ),
         ),
       ],
     );
@@ -244,6 +283,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
   /// smaller ไม่มีเงินทอน, and is named as one phrase.
   Widget _payButtonLabel() {
     final strings = Languages.of(context);
+    if (_isPromptPay) {
+      return _oneLine(Text(
+          strings.payByPromptPay("฿${formatDouble(widget.amount)}"),
+          style: _payLabelStyle
+              .copyWith(fontFeatures: const [FontFeature.tabularFigures()])));
+    }
     if (_change == 0) {
       return Semantics(
         label: strings.exactPaymentName,
@@ -396,11 +441,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
+  /// A method option: a tall card beside the keypad, or, [compact], a
+  /// 56 px row (icon, name, check mark) on a phone. The check mark marks the
+  /// selected one, besides its border.
   Widget _buildPaymentOption(String title,
       {required IconData iconData,
       String? amount,
       bool isSelected = false,
+      bool compact = false,
       Function()? onTap}) {
+    if (compact) {
+      return _buildCompactOption(title,
+          iconData: iconData, isSelected: isSelected, onTap: onTap);
+    }
     return GestureDetector(
       onTap: () {
         onTap?.call();
@@ -450,6 +503,51 @@ class _PaymentScreenState extends State<PaymentScreen> {
             ),
             if (amount != null)
               Text(amount, maxLines: 1, overflow: TextOverflow.ellipsis),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static const _compactOptionHeight = 56.0;
+
+  Widget _buildCompactOption(String title,
+      {required IconData iconData,
+      required bool isSelected,
+      Function()? onTap}) {
+    final colors = AppColors.of(context);
+    return GestureDetector(
+      onTap: () => onTap?.call(),
+      child: Container(
+        height: _compactOptionHeight,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: colors.surfaceRaised,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: isSelected ? colors.textPrimary : colors.border, width: 2),
+        ),
+        child: Row(
+          children: [
+            Icon(iconData, color: colors.textPrimary, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(title,
+                    style: TextStyle(
+                        fontSize: 16,
+                        color: colors.textPrimary,
+                        fontWeight: FontWeight.w600)),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              isSelected ? Icons.check_circle_rounded : Icons.circle_outlined,
+              color: isSelected ? colors.textPrimary : colors.border,
+              size: 18,
+            ),
           ],
         ),
       ),

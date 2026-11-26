@@ -244,4 +244,8 @@ abstract class Languages {
 
   /// A searched list that matched nothing.
   String get noSearchResults;
+
+  /// The pay button while PromptPay is chosen: the total, [amount] already
+  /// formatted.
+  String payByPromptPay(String amount);
 }

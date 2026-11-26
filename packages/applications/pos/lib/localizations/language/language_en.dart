@@ -328,4 +328,7 @@ class LanguageEn extends Languages {
 
   @override
   String get noSearchResults => "Nothing matches the search";
+
+  @override
+  String payByPromptPay(String amount) => "Pay $amount by PromptPay";
 }
