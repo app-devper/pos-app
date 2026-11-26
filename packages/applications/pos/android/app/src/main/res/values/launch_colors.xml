@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The app's surface (design_system AppColors.light.surface): the
+         launch screen is the colour the first Flutter frame is drawn on. -->
+    <color name="launch_surface">#FFFFFF</color>
+</resources>

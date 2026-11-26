@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="LaunchTheme" parent="@android:style/Theme.Black.NoTitleBar">
-        <!-- Show a splash screen on the activity. Automatically removed when
-             Flutter draws its first frame -->
+    <!-- The window while the app starts: the app's light surface with its
+         mark centred, so the first frame is not black. Flutter removes it
+         when it draws its first frame. -->
+    <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
         <item name="android:windowBackground">@drawable/launch_background</item>
+        <!-- Android 12 and later draw their own splash on this colour. -->
+        <item name="android:colorBackground">@color/launch_surface</item>
     </style>
 </resources>
