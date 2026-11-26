@@ -73,11 +73,12 @@ CategoryViewModel buildViewModel(CategoryRepository repo) {
 }
 
 void main() {
-  test('initial state is empty and not loading', () {
+  test('initial state is empty and loading, before the first load answers',
+      () {
     final vm = buildViewModel(FakeCategoryRepository());
 
     expect(vm.state.value.items, isEmpty);
-    expect(vm.state.value.loading, isFalse);
+    expect(vm.state.value.loading, isTrue);
   });
 
   test('getCategories populates items and clears loading', () async {

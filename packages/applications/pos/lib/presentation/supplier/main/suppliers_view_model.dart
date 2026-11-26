@@ -18,7 +18,9 @@ class SuppliersViewModel {
     required this.supplierRepo,
   });
 
-  final _state = ViewState<SuppliersState>(const SuppliersState());
+  /// Loading from the start: the page's first frame comes before its first
+  /// load, and must not say the list is empty.
+  final _state = ViewState<SuppliersState>(const SuppliersState(loading: true));
 
   /// Shown as a snackbar and then gone. It never belonged in state: a message
   /// the view had to remember to clear is one it can forget to clear.

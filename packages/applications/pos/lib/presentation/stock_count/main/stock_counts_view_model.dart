@@ -17,7 +17,10 @@ class StockCountsViewModel {
     required this.stockCountRepo,
   });
 
-  final _state = ViewState<StockCountsState>(const StockCountsState());
+  /// Loading from the start: the page's first frame comes before its first
+  /// load, and must not say the list is empty.
+  final _state =
+      ViewState<StockCountsState>(const StockCountsState(loading: true));
 
   /// Shown as a snackbar and then gone. It never belonged in state: a message
   /// the view had to remember to clear is one it can forget to clear.
