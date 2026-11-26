@@ -76,6 +76,46 @@ class _StockCounts implements StockCountRepository {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
+/// Categories that answer each load from [outcomes] in turn: a list, or
+/// null for a failed load.
+class _ScriptedCategories implements CategoryRepository {
+  final List<List<Category>?> outcomes;
+  var calls = 0;
+
+  _ScriptedCategories(this.outcomes);
+
+  @override
+  Future<List<Category>> getCategories() async {
+    final outcome = outcomes[calls++];
+    if (outcome == null) throw const NetworkException(message: 'offline');
+    return outcome;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+/// The categories list over [repo]; a category opens a page that only
+/// goes back.
+Future<void> _showCategories(
+    WidgetTester tester, _ScriptedCategories repo) async {
+  sl.registerFactory(() => CategoryViewModel(categoryRepo: repo));
+  await tester.pumpWidget(MaterialApp(
+    localizationsDelegates: const [thaiLanguages],
+    onGenerateRoute: (settings) => MaterialPageRoute<void>(
+      settings: settings,
+      builder: (context) => Scaffold(
+        body: TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('back'),
+        ),
+      ),
+    ),
+    home: const CategoryPage(),
+  ));
+  await tester.pumpAndSettle();
+}
+
 typedef _List = ({
   Widget Function(_FailsFirst<Object>) build,
   _FailsFirst<Object> Function() loads,
@@ -142,4 +182,45 @@ void main() {
       }
     });
   }
+
+  group('the categories list', () {
+    testWidgets('a retry that fails again says so again', (tester) async {
+      // Arrange
+      final repo = _ScriptedCategories([null, null]);
+      await _showCategories(tester, repo);
+
+      // Act
+      await tester.tap(find.text('ลองใหม่'));
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(repo.calls, 2);
+      expect(find.byType(ErrorState), findsOneWidget);
+      expect(find.text('ลองใหม่'), findsOneWidget);
+      expect(find.textContaining('ยังไม่มี'), findsNothing);
+    });
+
+    testWidgets('a failed reload over the list keeps the list and says so once',
+        (tester) async {
+      // Arrange
+      final repo = _ScriptedCategories([
+        [categories.buildCategory('1')],
+        null,
+      ]);
+      await _showCategories(tester, repo);
+
+      // Act: back from a category, the list loads again, and fails
+      await tester.tap(find.text('name-1'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('back'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // Assert
+      expect(repo.calls, 2);
+      expect(find.text('name-1'), findsOneWidget);
+      expect(find.byType(ErrorState), findsNothing);
+      expect(find.byType(SnackBar), findsOneWidget);
+    });
+  });
 }

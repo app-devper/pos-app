@@ -25,6 +25,19 @@ void main() {
       expect(_english.shortDate(DateTime(2026, 1, 5)), 'Jan 05');
     });
 
+    test('every month has its Thai short name', () {
+      const months = [
+        'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', //
+        'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.',
+      ];
+      for (var month = 1; month <= 12; month++) {
+        expect(_thai.shortMonth(DateTime(2026, month, 1)), months[month - 1],
+            reason: 'month $month');
+        expect(_thai.shortDate(DateTime(2026, month, 9)),
+            '9 ${months[month - 1]}');
+      }
+    });
+
     test('a month alone is the Thai short month, or the English one', () {
       expect(_thai.shortMonth(DateTime(2026, 12, 1)), 'ธ.ค.');
       expect(_english.shortMonth(DateTime(2026, 12, 1)), 'Dec');

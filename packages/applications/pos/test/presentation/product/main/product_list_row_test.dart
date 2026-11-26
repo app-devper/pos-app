@@ -16,6 +16,7 @@ import 'package:pos/container.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/presentation/product/main/products_view_model.dart';
 import 'package:pos/presentation/product/main/products_widget.dart';
+import '../../../support/app_fonts.dart';
 import '../../../support/app_languages.dart';
 import '../product_navigation_test.dart' as products;
 
@@ -112,8 +113,71 @@ TextSpan _span(WidgetTester tester, String text) {
   return found ?? (throw StateError('no span reads "$text"'));
 }
 
+/// Paracetamol sold in four units, each with some on hand.
+Product _fourUnits() {
+  final product = products.paracetamol();
+  ProductUnit unit(String id, String name, int size) => ProductUnit(
+        id: id,
+        productId: product.id,
+        costPrice: 4.0 * size,
+        unit: name,
+        size: size,
+        barcode: 'b-$id',
+        volume: 0,
+        volumeUnit: '',
+      );
+  return Product(
+    id: product.id,
+    name: product.name,
+    status: product.status,
+    category: product.category,
+    createdDate: product.createdDate,
+    units: [
+      ...product.units,
+      unit('u-2', 'แผง', 10),
+      unit('u-3', 'กล่อง', 100),
+      unit('u-4', 'ลัง', 1000),
+    ],
+    prices: product.prices,
+    stocks: [
+      _stock(1234),
+      _stock(120, unitId: 'u-2'),
+      _stock(15, unitId: 'u-3'),
+      _stock(2, unitId: 'u-4'),
+    ],
+  );
+}
+
 void main() {
+  setUpAll(loadAppFonts);
   tearDown(() async => sl.reset());
+
+  testWidgets('a row of four units fits a 320 px phone at 1.3x text',
+      (tester) async {
+    // Arrange
+    useViewSize(tester, const Size(320, 640));
+    sl.registerFactory(() =>
+        ProductsViewModel(productRepo: products.Catalogue([_fourUnits()])));
+
+    // Act
+    await tester.pumpWidget(MaterialApp(
+      theme: CustomTheme.mainTheme,
+      localizationsDelegates: const [thaiLanguages],
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context)
+            .copyWith(textScaler: const TextScaler.linear(1.3)),
+        child: child!,
+      ),
+      home: Scaffold(
+        body: ProductsWidget(onSelected: (_) {}, onMenu: () {}, onAdd: () {}),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    // Assert: an overflow is reported as an exception
+    expect(tester.takeException(), isNull);
+    expect(find.textContaining('ลัง'), findsWidgets);
+  });
 
   testWidgets('a product row shows its price and what is on hand',
       (tester) async {
