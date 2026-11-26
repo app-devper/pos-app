@@ -34,6 +34,27 @@ if [ -f "$RES/values/launch_colors.xml" ]; then
   done
 fi
 
+# Transparency: a launcher icon's corners are clear, and the adaptive
+# foreground is the mark alone on a clear layer (an opaque one hides the
+# background colour and shows a blank white icon on Android 8+).
+alpha_of() { python3 "$HERE/png_alpha.py" range "$1" 2>/dev/null; }
+expect_clear_corner() { # expect_clear_corner <file>
+  local corner _min _max
+  read -r corner _min _max <<<"$(alpha_of "$1")"
+  [ "${corner:-255}" = 0 ] || fail "${1#"$APP"/} has an opaque corner (alpha ${corner:-?}), expected a clear one"
+}
+expect_mark_on_clear() { # expect_mark_on_clear <file>
+  local corner min max
+  read -r corner min max <<<"$(alpha_of "$1")"
+  [ "${corner:-255}" = 0 ] && [ "${max:-0}" = 255 ] || fail "${1#"$APP"/} is not a mark on a clear layer (corner ${corner:-?}, max ${max:-?})"
+}
+for density in mdpi xxxhdpi; do
+  expect_clear_corner "$RES/mipmap-$density/ic_launcher.png"
+  expect_mark_on_clear "$RES/mipmap-$density/ic_launcher_foreground.png"
+done
+expect_clear_corner "$APP/web/icons/Icon-512.png"
+expect_clear_corner "$APP/web/favicon.png"
+
 # every icon the web manifest names exists at the size it declares
 while IFS=' ' read -r src size; do
   expect_px "$APP/web/$src" "${size%%x*}"
