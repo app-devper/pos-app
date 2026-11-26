@@ -219,7 +219,13 @@ void main() {
       // Assert
       final tops = {
         for (final label in ['฿60', '฿100', '฿500', '฿1,000'])
-          tester.getRect(find.text(label)).top.round()
+          // The chip, not its label: an amount shrunk to fit sits a
+          // pixel lower in its chip.
+          tester
+              .getRect(find.ancestor(
+                  of: find.text(label), matching: find.byType(OutlinedButton)))
+              .top
+              .round()
       };
       expect(tops, hasLength(1), reason: 'the keypad stays in view below');
     });

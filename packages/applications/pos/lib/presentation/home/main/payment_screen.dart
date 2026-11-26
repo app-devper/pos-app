@@ -19,6 +19,20 @@ import 'package:pos/presentation/home/main/quick_cash_chips.dart';
 /// 90% of the screen; below that its content scrolls).
 const paymentDialogMaxHeight = 720.0;
 
+/// The height the phone layout needs at its roomy sizes. With less (most
+/// phones) it tightens — closer gaps, lower boxes, the keypad as tall as what
+/// is left — so the keypad's last row is not under the pay button.
+const _roomyPhoneHeight = 712.0;
+
+/// What the tightened phone layout takes besides its keypad: the method row,
+/// the amounts, one row of quick-cash chips and the pay button.
+const _tightRestHeight = 314.0;
+
+/// The keypad's height: four rows of at least a finger's target, at most the
+/// roomy 250 px.
+const _keypadMinHeight = 204.0;
+const _keypadMaxHeight = 250.0;
+
 /// The cart's ชำระเงิน dialog: a title bar over the [PaymentScreen], as tall
 /// as its content.
 void showPaymentDialog(
@@ -86,72 +100,92 @@ class _PaymentScreenState extends State<PaymentScreen> {
     // keypad are sized by their content and, where the dialog is lower than
     // that (a small phone, a phone held sideways), they scroll rather than
     // squeezing the amounts out of their boxes.
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Flexible(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: _buildBody(),
+    return LayoutBuilder(builder: (context, constraints) {
+      final tight = Responsive.isMobile(context) &&
+          constraints.maxHeight < _roomyPhoneHeight;
+      final gap = tight ? _tightGap : _roomyGap;
+      final keypadHeight = tight
+          ? (constraints.maxHeight - _tightRestHeight)
+              .clamp(_keypadMinHeight, _keypadMaxHeight)
+          : _keypadMaxHeight;
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(16, gap, 16, 0),
+              child: _buildBody(tight: tight, keypadHeight: keypadHeight),
+            ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: _buildPayButton(),
-        ),
-      ],
-    );
+          Padding(
+            padding: EdgeInsets.fromLTRB(16, gap, 16, tight ? 12 : 16),
+            child: _buildPayButton(tight: tight),
+          ),
+        ],
+      );
+    });
   }
 
-  Widget _buildBody() {
+  static const _roomyGap = 16.0;
+  static const _tightGap = 8.0;
+
+  Widget _buildBody({required bool tight, required double keypadHeight}) {
     // On a phone the method is chosen first, in a row under the title where
     // it is seen; on a wide screen it stays beside the keypad.
     final narrow = Responsive.isMobile(context);
+    final gap = SizedBox(height: tight ? _tightGap : _roomyGap);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (narrow) ...[
-          _buildPaymentOptionsRow(),
-          const SizedBox(height: 16),
+          _buildPaymentOptionsRow(tight: tight),
+          gap,
         ],
         _buildInputSection(
-            Languages.of(context).amountReceived, _getNumberFormat(_number)),
-        const SizedBox(height: 16),
+            Languages.of(context).amountReceived, _getNumberFormat(_number),
+            tight: tight),
+        gap,
         Row(
           children: [
             Expanded(
-              child: _buildAmountSection(Languages.of(context).amountDue,
-                  "฿${formatDouble(widget.amount)}"),
+              child: _buildAmountBox(Languages.of(context).amountDue,
+                  "฿${formatDouble(widget.amount)}",
+                  tight: tight),
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: _buildAmountChange(Languages.of(context).change, _change),
+              child: _buildAmountBox(Languages.of(context).change,
+                  _change > 0 ? "฿${formatDouble(_change)}" : "",
+                  tight: tight),
             ),
           ],
         ),
         if (_typeMode == "Cash") ...[
-          const SizedBox(height: 16),
-          QuickCashChips(total: widget.amount, onSelected: _receiveQuickCash),
+          gap,
+          QuickCashChips(
+              total: widget.amount,
+              onSelected: _receiveQuickCash,
+              singleRow: tight),
         ],
-        const SizedBox(height: 16),
+        gap,
         if (narrow)
-          _buildKeypad()
+          _buildKeypad(keypadHeight)
         else
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Flexible(flex: 1, child: _buildPaymentOptions()),
               const SizedBox(width: 16),
-              Flexible(flex: 2, child: _buildKeypad()),
+              Flexible(flex: 2, child: _buildKeypad(keypadHeight)),
             ],
           ),
       ],
     );
   }
 
-  Widget _buildKeypad() {
+  Widget _buildKeypad(double height) {
     return SizedBox(
-      height: 250,
+      height: height,
       child: InputNumber(
         key: ValueKey(_keypadGeneration),
         onDone: (_) => _pay(),
@@ -161,14 +195,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   /// The phone's method choice: the two options side by side.
-  Widget _buildPaymentOptionsRow() {
+  Widget _buildPaymentOptionsRow({required bool tight}) {
+    final height = tight ? _tightOptionHeight : _compactOptionHeight;
     return Row(
       children: [
         Expanded(
           child: _buildPaymentOption(
             Languages.of(context).cash,
             iconData: Icons.money,
-            compact: true,
+            compactHeight: height,
             isSelected: _typeMode == "Cash",
             onTap: () => _selectMethod("Cash"),
           ),
@@ -178,7 +213,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           child: _buildPaymentOption(
             Languages.of(context).promptPay,
             iconData: Icons.qr_code_2,
-            compact: true,
+            compactHeight: height,
             isSelected: _isPromptPay,
             onTap: () => _selectMethod("PromptPay"),
           ),
@@ -207,13 +242,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  Widget _buildPayButton() {
+  Widget _buildPayButton({required bool tight}) {
     return ElevatedButton(
       onPressed: _pay,
       style: ElevatedButton.styleFrom(
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        minimumSize: const Size(double.infinity, 64),
+        minimumSize: Size(double.infinity, tight ? 56 : 64),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
         ),
@@ -334,48 +369,62 @@ class _PaymentScreenState extends State<PaymentScreen> {
     return formatDecimal(double.parse(value));
   }
 
-  Widget _buildInputSection(String title, String amount) {
-    getAmount() {
-      if (!_isInput && amount.isEmpty) {
-        return Text("฿${formatDouble(widget.amount)}",
+  Widget _buildInputSection(String title, String amount,
+      {required bool tight}) {
+    final received = (!_isInput && amount.isEmpty)
+        ? Text("฿${formatDouble(widget.amount)}",
             style: AppText.money(TextStyle(
                 fontSize: 24,
                 color: AppColors.of(context).textSecondary,
-                fontWeight: FontWeight.bold)));
-      }
-      return Text("฿$amount",
-          style: AppText.money(
-              const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)));
-    }
+                fontWeight: FontWeight.bold)))
+        : Text("฿$amount",
+            style: AppText.money(
+                const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)));
+    final label = Text(title,
+        style:
+            TextStyle(fontSize: tight ? 16 : 20, fontWeight: FontWeight.bold));
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: tight ? 6 : 16),
       decoration: BoxDecoration(
         color: AppColors.of(context).surfaceRaised,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Text(title,
-              style:
-                  const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          getAmount(),
-        ],
-      ),
+      // Tightened, the title and the amount share one line.
+      child: tight
+          ? Row(
+              children: [
+                label,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: received,
+                  ),
+                ),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [label, received],
+            ),
     );
   }
 
   static const _amountBoxHeight = 80.0;
 
-  Widget _buildAmountSection(String title, String amount) {
+  /// A sunken box naming an amount: the amount due, or the change ([amount]
+  /// empty when there is none).
+  Widget _buildAmountBox(String title, String amount, {required bool tight}) {
     return Container(
-      // At least 80 px, taller when a larger system text size needs it.
-      constraints: const BoxConstraints(minHeight: _amountBoxHeight),
+      // Roomy: at least 80 px; either way taller when a larger system text
+      // size needs it.
+      constraints: BoxConstraints(minHeight: tight ? 0 : _amountBoxHeight),
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      padding: EdgeInsets.symmetric(vertical: tight ? 4 : 8, horizontal: 16),
       decoration: BoxDecoration(
         color: AppColors.of(context).surfaceSunken,
         borderRadius: BorderRadius.circular(16),
@@ -385,13 +434,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
         children: [
           Text(title,
               style: TextStyle(
-                  fontSize: 16, color: AppColors.of(context).textSecondary)),
+                  fontSize: tight ? 13 : 16,
+                  color: AppColors.of(context).textSecondary)),
           // One line, shrunk to the box on a narrow phone, never wrapped.
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(amount,
                 style: AppText.money(TextStyle(
-                    fontSize: 24,
+                    fontSize: tight ? 20 : 24,
                     color: AppColors.of(context).textPrimary,
                     fontWeight: FontWeight.bold))),
           ),
@@ -400,58 +450,25 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  Widget _buildAmountChange(String title, double change) {
-    getChange() {
-      if (change <= 0) {
-        return "";
-      }
-      return "฿${formatDouble(change)}";
-    }
-
-    return Container(
-      // At least 80 px, taller when a larger system text size needs it.
-      constraints: const BoxConstraints(minHeight: _amountBoxHeight),
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      decoration: BoxDecoration(
-        color: AppColors.of(context).surfaceSunken,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(title,
-              style: TextStyle(
-                  fontSize: 16, color: AppColors.of(context).textSecondary)),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(getChange(),
-                style: AppText.money(TextStyle(
-                    fontSize: 24,
-                    color: AppColors.of(context).textPrimary,
-                    fontWeight: FontWeight.bold))),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// A method option: a tall card beside the keypad, or, [compact], a
-  /// 56 px row (icon, name, check mark) on a phone. The check mark marks the
+  /// A method option: a tall card beside the keypad, or, with a
+  /// [compactHeight], a row that high (icon, name, check mark) on a phone. The check mark marks the
   /// selected one, besides its border.
   Widget _buildPaymentOption(String title,
       {required IconData iconData,
       bool isSelected = false,
-      bool compact = false,
+      double? compactHeight,
       Function()? onTap}) {
     // A screen reader hears a button, and which method is chosen; the
     // check icon alone said it only to the eye.
     return Semantics(
       button: true,
       selected: isSelected,
-      child: compact
+      child: compactHeight != null
           ? _buildCompactOption(title,
-              iconData: iconData, isSelected: isSelected, onTap: onTap)
+              height: compactHeight,
+              iconData: iconData,
+              isSelected: isSelected,
+              onTap: onTap)
           : _buildWideOption(title,
               iconData: iconData, isSelected: isSelected, onTap: onTap),
     );
@@ -516,15 +533,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   static const _compactOptionHeight = 56.0;
 
+  /// The tightened row: still a finger's target.
+  static const _tightOptionHeight = 48.0;
+
   Widget _buildCompactOption(String title,
-      {required IconData iconData,
+      {required double height,
+      required IconData iconData,
       required bool isSelected,
       Function()? onTap}) {
     final colors = AppColors.of(context);
     return GestureDetector(
       onTap: () => onTap?.call(),
       child: Container(
-        height: _compactOptionHeight,
+        height: height,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
           color: colors.surfaceRaised,
