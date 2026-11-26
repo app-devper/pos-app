@@ -176,6 +176,14 @@ Widget _billDetail(OrderDetail detail) {
   return const OrderDetailPage(orderId: 'order-1');
 }
 
+/// Opens the first (the bar's) or [last] (a line's) menu of [icon].
+Future<void> _openMenu(WidgetTester tester, IconData icon,
+    {required bool last}) async {
+  final menus = find.byIcon(icon);
+  await tester.tap(last ? menus.last : menus.first);
+  await tester.pumpAndSettle();
+}
+
 /// Puts the sale fakes' product in the cart and chooses a customer.
 Future<void> _fillCart(WidgetTester tester) async {
   final sale = sl<CartViewModel>();
@@ -268,6 +276,14 @@ final _morePages = <String, _Walked>{
   'the bill detail, for an admin': (
     build: () => _billDetail(_bill()),
     then: null,
+  ),
+  'the bill detail with a line\'s menu open, for an admin': (
+    build: () => _billDetail(_bill()),
+    then: (tester) => _openMenu(tester, Icons.more_vert, last: true),
+  ),
+  'the bill detail with the bill\'s menu open, for an admin': (
+    build: () => _billDetail(_bill()),
+    then: (tester) => _openMenu(tester, Icons.more_vert, last: false),
   ),
   'the receipt list': (
     build: () {

@@ -172,6 +172,18 @@ class LanguageTh extends Languages {
   String returnBillLine(String name) => "คืนสินค้า $name";
 
   @override
+  String billLineCommands(String name) => "คำสั่งเพิ่มเติมของ $name";
+
+  @override
+  String get billLineDelete => "ลบรายการ";
+
+  @override
+  String get billLineSales => "ประวัติการขาย";
+
+  @override
+  String get billLineReturn => "คืนสินค้า";
+
+  @override
   String oneLess(String name) => "ลดจำนวน $name";
 
   @override

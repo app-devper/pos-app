@@ -138,7 +138,7 @@ void main() {
       final orders = OrderRobot(shell);
       await orders.openList();
       await orders.openBill(_cashBill);
-      expect(orders.lineShows(_product, '3'), findsOneWidget);
+      expect(orders.lineShows(_product, '3×'), findsOneWidget);
       expect(orders.lineShows(_product, '75.00'), findsOneWidget);
       await orders.leaveBill();
     });
@@ -225,7 +225,7 @@ void main() {
       expect(await orders.listsBill(_cashBill), isTrue);
       await orders.chooseFilter('All');
       await orders.openBill(_promptPayBill);
-      expect(orders.lineShows(_product, '2'), findsOneWidget);
+      expect(orders.lineShows(_product, '2×'), findsOneWidget);
       expect(orders.lineShows(_product, '40.00'), findsOneWidget);
       await orders.leaveBill();
     });
@@ -338,14 +338,8 @@ void main() {
       // Assert
       expect(orders.lineShows(_product, 'ยกเลิกแล้ว'), findsOneWidget);
       expect(orders.detailTotal(), '฿ 0.00');
-      for (final action in [
-        Icons.delete,
-        Icons.history,
-        Icons.keyboard_return
-      ]) {
-        expect(orders.lineIcon(_product, action), findsNothing,
-            reason: 'a cancelled line offers no $action');
-      }
+      expect(orders.lineMenu(_product), findsNothing,
+          reason: 'a cancelled line offers no action');
     }, timeout: e2eTestTimeout);
   });
 

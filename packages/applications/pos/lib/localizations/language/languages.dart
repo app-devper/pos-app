@@ -119,6 +119,17 @@ abstract class Languages {
 
   String returnBillLine(String name);
 
+  /// A bill line's menu of its actions, named for the line [name].
+  String billLineCommands(String name);
+
+  /// The visible labels of a bill line's menu items; each item is named
+  /// in full by [deleteBillLine], [billLineHistory] and [returnBillLine].
+  String get billLineDelete;
+
+  String get billLineSales;
+
+  String get billLineReturn;
+
   String oneLess(String name);
 
   String oneMore(String name);

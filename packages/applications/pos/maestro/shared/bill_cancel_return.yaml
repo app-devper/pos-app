@@ -38,8 +38,9 @@ env:
 - extendedWaitUntil:
     visible: "2x ${PRODUCT_NAME} .*฿50\\.00"
     timeout: 15000
-# Return 1 from the line: its return button names the line (quantity,
-# product, unit, amount).
+# Return 1 from the line: its menu and its return item name the line
+# (quantity, product, unit, amount).
+- tapOn: "คำสั่งเพิ่มเติมของ 2x ${PRODUCT_NAME} ชิ้น ฿50\\.00"
 - tapOn: "คืนสินค้า 2x ${PRODUCT_NAME} ชิ้น ฿50\\.00"
 - extendedWaitUntil:
     visible: "รับคืนสินค้า"

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 // Project imports:
 import 'package:pos/domain/model/order/order_detail.dart';
 import 'package:pos/presentation/constants.dart';
+import 'package:pos/presentation/core/menu_entry.dart';
 import 'package:pos/presentation/order/cancelled_mark.dart';
 import 'package:pos/localizations/language/languages.dart';
 
@@ -110,13 +111,3 @@ class OrderDetailActions extends StatelessWidget {
         icon: Icon(icon),
       );
 }
-
-/// A command menu's item: its icon and its label, in [color] when given
-/// (a destructive command's error red).
-Widget menuEntry(IconData icon, String label, {Color? color}) => Row(
-      children: [
-        Icon(icon, color: color),
-        const SizedBox(width: 12),
-        Flexible(child: Text(label, style: TextStyle(color: color))),
-      ],
-    );

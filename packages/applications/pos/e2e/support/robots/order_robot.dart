@@ -199,8 +199,8 @@ class OrderRobot {
               (w) => w is OrderLineTile && w.line.product?.name == productName))
       .hitTestable();
 
-  /// [text] (exactly) on [productName]'s row: its quantity, paid amount or
-  /// a badge such as `คืน 1`.
+  /// [text] (exactly) on [productName]'s row: its quantity (`2×`), paid
+  /// amount or a badge such as `คืน 1`.
   Finder lineShows(String productName, String text) =>
       find.descendant(of: _line(productName), matching: find.text(text));
 
@@ -211,17 +211,32 @@ class OrderRobot {
   /// The amount the bill's foot reads next to ยอดรวม, `฿ #,##0.00`.
   String detailTotal() => _totalOn(_detail);
 
-  /// [icon] (an action such as delete or return) on [productName]'s row.
-  Finder lineIcon(String productName, IconData icon) =>
-      _inLine(productName, icon);
+  /// The menu of [productName]'s row, which holds its return, history and
+  /// delete; a cancelled line has none.
+  Finder lineMenu(String productName) => find.descendant(
+      of: _line(productName),
+      matching: find.byWidgetPredicate((w) => w is PopupMenuButton));
 
-  Finder _inLine(String productName, IconData icon) =>
-      find.descendant(of: _line(productName), matching: find.byIcon(icon));
-
-  /// The row's return icon opens 'รับคืนสินค้า'.
-  Future<void> openReturn(String productName) async {
-    await tester.tap(_inLine(productName, Icons.keyboard_return));
+  /// Opens [productName]'s row menu and chooses the item showing [item].
+  Future<void> _chooseFromLineMenu(String productName, String item) async {
+    await tester.tap(lineMenu(productName));
     await tester.pump();
+    final entry = _menuItem(item);
+    await pumpUntilFound(tester, entry);
+    await tester.tap(entry);
+    await tester.pump();
+  }
+
+  /// The open menu's item showing [item].
+  Finder _menuItem(String item) => find
+      .descendant(
+          of: find.byWidgetPredicate((w) => w is PopupMenuItem),
+          matching: find.text(item))
+      .hitTestable();
+
+  /// The row menu's คืนสินค้า opens 'รับคืนสินค้า'.
+  Future<void> openReturn(String productName) async {
+    await _chooseFromLineMenu(productName, 'คืนสินค้า');
     await pumpUntilFound(tester, _returnDialog.hitTestable());
   }
 
@@ -270,10 +285,10 @@ class OrderRobot {
   Finder historyShows(String text) =>
       find.descendant(of: _history, matching: find.text(text)).hitTestable();
 
-  /// The row's delete icon (not the AppBar's), confirmed; the bill reloads.
+  /// The row menu's ลบรายการ (not the bill's ลบบิล), confirmed; the bill
+  /// reloads.
   Future<void> cancelLine(String productName) async {
-    await tester.tap(_inLine(productName, Icons.delete));
-    await tester.pump();
+    await _chooseFromLineMenu(productName, 'ลบรายการ');
     await shell.confirm();
     await _awaitReload();
   }
@@ -291,11 +306,7 @@ class OrderRobot {
   Future<void> _chooseFromBillMenu(String item) async {
     await tester.tap(_billMenu);
     await tester.pump();
-    final entry = find
-        .descendant(
-            of: find.byWidgetPredicate((w) => w is PopupMenuItem),
-            matching: find.text(item))
-        .hitTestable();
+    final entry = _menuItem(item);
     await pumpUntilFound(tester, entry);
     await tester.tap(entry);
     await tester.pump();

@@ -165,6 +165,18 @@ class LanguageEn extends Languages {
   String returnBillLine(String name) => "Return $name";
 
   @override
+  String billLineCommands(String name) => "More commands for $name";
+
+  @override
+  String get billLineDelete => "Delete line";
+
+  @override
+  String get billLineSales => "Sales history";
+
+  @override
+  String get billLineReturn => "Return";
+
+  @override
   String oneLess(String name) => "One less $name";
 
   @override
