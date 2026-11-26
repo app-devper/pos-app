@@ -98,6 +98,6 @@ env:
 - assertVisible: ${NOTE}
 # The line is titled with the product's name (was finding 9).
 - extendedWaitUntil:
-    visible: "${PRODUCT_NAME}\n?ในระบบ 1000 / นับได้ 0\n?-1000"
+    visible: "${PRODUCT_NAME}\n?ในระบบ 1000 / นับได้ 0 .+ · ล็อต .+\n?-1000"
     timeout: 15000
 - takeScreenshot: stock-count

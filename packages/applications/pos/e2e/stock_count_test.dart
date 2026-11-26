@@ -95,7 +95,10 @@ void main() {
       await counts.open(_countNo);
       expect(counts.detailShows(_countNo), findsOneWidget);
       expect(counts.detailShows(_note), findsOneWidget);
-      expect(counts.detailShows('ในระบบ 10 / นับได้ 8'), findsOneWidget);
+      // The figures, then the unit and the lot pos-api names the line by.
+      expect(
+          counts.detailMatches(RegExp(r'^ในระบบ 10 / นับได้ 8 .+ · ล็อต .+$')),
+          findsOneWidget);
       expect(counts.detailShows('-2'), findsOneWidget);
       // The line is titled with the product's name (was finding #9).
       expect(counts.detailShows(_product), findsOneWidget,
