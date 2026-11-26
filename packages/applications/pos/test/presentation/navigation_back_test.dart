@@ -83,6 +83,9 @@ Future<void> _openSection(WidgetTester tester, String label) async {
   await _settle(tester);
 }
 
+/// The selling screen, recognised by its cart's title.
+final _sellingScreen = find.text('ตะกร้าสินค้า #1');
+
 Future<void> _systemBack(WidgetTester tester) async {
   await tester.binding.handlePopRoute();
   await _settle(tester);
@@ -124,5 +127,66 @@ void main() {
     // Assert
     expect(_managePage.hitTestable(), findsOneWidget);
     expect(find.text('ลูกค้าเดิม'), findsNothing);
+  });
+
+  testWidgets('system Back on จัดการ goes to the selling screen',
+      (tester) async {
+    // Arrange
+    await _openApp(tester);
+    await _openSection(tester, 'จัดการ');
+
+    // Act
+    final handled = await tester.binding.handlePopRoute();
+    await _settle(tester);
+
+    // Assert
+    expect(handled, isTrue);
+    expect(_sellingScreen.hitTestable(), findsOneWidget);
+  });
+
+  testWidgets('system Back on the selling screen leaves the app',
+      (tester) async {
+    // Arrange
+    await _openApp(tester);
+
+    // Act
+    final handled = await tester.binding.handlePopRoute();
+
+    // Assert
+    expect(handled, isFalse);
+  });
+
+  testWidgets('system Back with the drawer open closes only the drawer',
+      (tester) async {
+    // Arrange
+    await _openApp(tester);
+    await _openSection(tester, 'จัดการ');
+    await tester.tap(find.byTooltip('เมนู'));
+    await _settle(tester);
+
+    // Act
+    await _systemBack(tester);
+
+    // Assert
+    expect(_managePage.hitTestable(), findsOneWidget);
+  });
+
+  testWidgets('system Back with a dialog open closes only the dialog',
+      (tester) async {
+    // Arrange
+    await _openApp(tester);
+    await _openSection(tester, 'จัดการ');
+    await tester.tap(find.text('ใบรับสินค้า / Goods Receipt'));
+    await _settle(tester);
+    await tester.tap(find.byTooltip('เมนูใบรับสินค้า'));
+    await _settle(tester);
+    expect(find.text('เพิ่มใบรับสินค้า').hitTestable(), findsOneWidget);
+
+    // Act
+    await _systemBack(tester);
+
+    // Assert
+    expect(find.text('เพิ่มใบรับสินค้า'), findsNothing);
+    expect(find.text('RC-1').hitTestable(), findsOneWidget);
   });
 }

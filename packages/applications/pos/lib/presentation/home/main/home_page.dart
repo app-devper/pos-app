@@ -103,6 +103,8 @@ class _HomePageState extends State<HomePage> {
         items: _items,
         selectedId: _selectedId,
         onSelect: _onSelect,
+        // Back from another section goes to selling; from selling it leaves.
+        onBack: _menuEvent == MenuEvent.home ? null : () => _onSelect('home'),
         sidebarFooter: _buildFooter,
         child: _buildPage(),
       ),
