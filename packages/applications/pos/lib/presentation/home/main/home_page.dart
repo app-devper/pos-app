@@ -13,6 +13,7 @@ import 'package:pos/presentation/home/main/home_database_page.dart';
 import 'package:pos/presentation/home/main/home_view_model.dart';
 import 'package:pos/presentation/home/main/menu_event.dart';
 import 'package:pos/presentation/home/main/pos_shell.dart';
+import 'package:pos/presentation/home/main/section_switcher.dart';
 import 'package:pos/presentation/order/main/order_page.dart';
 import 'package:pos/presentation/product/main/product_page.dart';
 
@@ -107,7 +108,7 @@ class _HomePageState extends State<HomePage> {
         onSelect: _onSelect,
         onLogout: _viewModel.logout,
         onBack: _onBack,
-        child: _buildPage(),
+        child: SectionSwitcher(section: _menuEvent, child: _buildPage()),
       ),
     );
   }
