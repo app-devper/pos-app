@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:common/core/ext/widget_ext.dart';
-import 'package:design_system/widgets/app_bar.dart';
+import 'package:pos/presentation/core/page_bar.dart';
 import 'package:design_system/widgets/buttons.dart';
 import 'package:design_system/widgets/snack_bar.dart';
 
@@ -75,7 +75,8 @@ class _CategoryAddPageState extends State<CategoryAddPage> {
 
   void _onCreated(Category category) {
     _snackBar.hideAll();
-    _snackBar.showSnackBar(text: "Add ${category.name} success");
+    _snackBar.showSnackBar(
+        text: Languages.of(context).addedNamed(category.name));
     _nameEditingController.text = "";
     _valueEditingController.text = "";
     _descriptionEditingController.text = "";
@@ -99,7 +100,7 @@ class _CategoryAddPageState extends State<CategoryAddPage> {
     _snackBar = CustomSnackBar(key: const Key("snackbar"), context: context);
     return Scaffold(
       key: _scaffoldKey,
-      appBar: buildAppBar(Languages.of(context).categoryAddTitle),
+      appBar: buildPageBar(context, Languages.of(context).categoryAddTitle),
       body: _buildBody(context),
     );
   }

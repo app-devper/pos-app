@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:design_system/theme/app_colors.dart';
 
 // Package imports:
+import 'package:design_system/widgets/empty_state.dart';
 import 'package:design_system/widgets/responsive.dart';
 import 'package:design_system/widgets/title_bar.dart';
 import 'package:file_picker/file_picker.dart';
@@ -13,6 +14,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/domain/model/product/product_history.dart';
+import 'package:pos/localizations/language/languages.dart';
 import 'package:design_system/widgets/dialogs.dart';
 import 'package:pos/presentation/product/add/product_add_page.dart';
 import 'package:pos/presentation/product/edit/product_edit_page.dart';
@@ -26,7 +28,12 @@ import 'package:pos/presentation/product/main/products_widget.dart';
 class ProductsPage extends StatefulWidget {
   final String? mode;
 
-  const ProductsPage({super.key, this.mode});
+  /// Told how system Back leaves the page shown over the list (the detail,
+  /// the add or edit form), or null when the list itself is shown. The
+  /// shell owns Back, so the page reports rather than handling it.
+  final ValueChanged<VoidCallback?>? onBackChanged;
+
+  const ProductsPage({super.key, this.mode, this.onBackChanged});
 
   @override
   State<StatefulWidget> createState() => _ProductsPageState();
@@ -53,9 +60,23 @@ class _ProductsPageState extends State<ProductsPage> {
 
   void _onLoaded(Product data) {
     if (!mounted) return;
-    setState(() {
-      _pageState = InfoPage(data: data);
-    });
+    _show(InfoPage(data: data));
+  }
+
+  /// Shows [page] and tells the host where Back from it goes.
+  void _show(PageState page) {
+    setState(() => _pageState = page);
+    widget.onBackChanged?.call(_backFrom(page));
+  }
+
+  /// Back from [page]: a form returns to what it was opened from, the detail
+  /// to the list; the list has nothing to go back to here.
+  VoidCallback? _backFrom(PageState page) {
+    return switch (page) {
+      EditPage(:final data) => () => _show(InfoPage(data: data)),
+      InfoPage() || AddPage() => () => _show(MainPage()),
+      _ => null,
+    };
   }
 
   void _onImported(CSVImportResult result) {
@@ -102,6 +123,7 @@ class _ProductsPageState extends State<ProductsPage> {
         SizedBox(
           width: 320,
           child: ProductsWidget(
+            onAdd: () => _show(AddPage()),
             onMenu: () {
               _showProductMenuDialog();
             },
@@ -133,6 +155,7 @@ class _ProductsPageState extends State<ProductsPage> {
       final isMobile = Responsive.isMobile(context);
       if (isMobile) {
         return ProductsWidget(
+          onAdd: () => _show(AddPage()),
           onMenu: () {
             _showProductMenuDialog();
           },
@@ -141,18 +164,28 @@ class _ProductsPageState extends State<ProductsPage> {
           },
         );
       } else {
-        return ProductMenuWidget(
-          onAdd: () {
-            setState(() {
-              _pageState = AddPage();
-            });
-          },
-          onExport: () {
-            _viewModel.exportProducts();
-          },
-          onImportCsv: () {
-            _pickAndImportCSV();
-          },
+        // The menu keeps its add, export and import; under it the pane says
+        // what choosing a product does.
+        return Column(
+          children: [
+            ProductMenuWidget(
+              onAdd: () {
+                _show(AddPage());
+              },
+              onExport: () {
+                _viewModel.exportProducts();
+              },
+              onImportCsv: () {
+                _pickAndImportCSV();
+              },
+            ),
+            Expanded(
+              child: EmptyState(
+                icon: Icons.inventory_2_outlined,
+                title: Languages.of(context).chooseProductHint,
+              ),
+            ),
+          ],
         );
       }
     } else if (_pageState is InfoPage) {
@@ -163,14 +196,10 @@ class _ProductsPageState extends State<ProductsPage> {
         },
         product: product,
         onBack: () {
-          setState(() {
-            _pageState = MainPage();
-          });
+          _show(MainPage());
         },
         onClickEdit: () {
-          setState(() {
-            _pageState = EditPage(data: product);
-          });
+          _show(EditPage(data: product));
         },
         onClearSoldFirst: (productId) {
           _viewModel.clearSoldFirst(productId);
@@ -181,9 +210,7 @@ class _ProductsPageState extends State<ProductsPage> {
       return ProductEditPage(
         product: product,
         onBack: () {
-          setState(() {
-            _pageState = InfoPage(data: product);
-          });
+          _show(InfoPage(data: product));
         },
         onEdit: () {
           _viewModel.getProduct(product.id);
@@ -193,22 +220,16 @@ class _ProductsPageState extends State<ProductsPage> {
           // call getProduct(id), which failed, reported "Product not found",
           // and left the cashier on the edit form of what they had deleted —
           // with it still listed alongside on a wide screen.
-          setState(() {
-            _pageState = MainPage();
-          });
+          _show(MainPage());
         },
       );
     } else if (_pageState is AddPage) {
       return ProductAddPage(
         onBack: () {
-          setState(() {
-            _pageState = MainPage();
-          });
+          _show(MainPage());
         },
         onAdd: () {
-          setState(() {
-            _pageState = MainPage();
-          });
+          _show(MainPage());
         },
       );
     }
@@ -241,9 +262,7 @@ class _ProductsPageState extends State<ProductsPage> {
               child: ProductMenuWidget(
             onAdd: () {
               Navigator.pop(context);
-              setState(() {
-                _pageState = AddPage();
-              });
+              _show(AddPage());
             },
             onExport: () {
               Navigator.pop(context);

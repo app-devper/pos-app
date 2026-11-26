@@ -17,7 +17,7 @@ appId: app.devper.pos
     file: steps/open_screen.yaml
     env:
       SCREEN: "จัดการ"
-- tapOn: "ใบรับสินค้า / Goods Receipt"
+- tapOn: "ใบรับสินค้า"
 - extendedWaitUntil:
     visible: "ค้นหาเลขที่ใบรับสินค้า\\.\\.\\."
     timeout: 15000
@@ -26,7 +26,7 @@ appId: app.devper.pos
     when:
       true: ${LAYOUT == 'narrow'}
     commands:
-      - tapOn: "เมนูใบรับสินค้า"
+      - tapOn: "คำสั่งเพิ่มเติม"
 - tapOn: "เพิ่มใบรับสินค้า"
 - extendedWaitUntil:
     visible: "สร้างใบรับสินค้า"
@@ -79,11 +79,11 @@ appId: app.devper.pos
 - extendedWaitUntil:
     visible: "Name: ${PRODUCT_NAME}.*"
     timeout: 15000
-# The green "Update success" bar lies over the import button on a narrow
+# The green "บันทึกสำเร็จ" bar lies over the import button on a narrow
 # screen: the flow waits until it is gone. (It closes by itself after 4 s;
-# this wait does not time that, nor press its Clear.)
+# this wait does not time that, nor press its ปิด.)
 - extendedWaitUntil:
-    notVisible: ".*Update success.*"
+    notVisible: ".*บันทึกสำเร็จ.*"
     timeout: 10000
 - tapOn: "นำเข้าสต็อก"
 - tapOn: "ยืนยัน"

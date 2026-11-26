@@ -37,6 +37,13 @@ final _detail = find.byType(OrderDetailPage);
 final _returnDialog = find.byType(ProductReturnWidget);
 final _history = find.byType(ProductReturnsHistoryWidget);
 
+/// The bill's command menu in the AppBar, an admin's.
+final _billMenu = find
+    .descendant(
+        of: find.byType(AppBar),
+        matching: find.byTooltip('คำสั่งเพิ่มเติมของบิล'))
+    .hitTestable();
+
 class OrderRobot {
   OrderRobot(this.shell) : form = FormDriver(shell);
 
@@ -62,8 +69,9 @@ class OrderRobot {
     await _settleList();
   }
 
-  /// The rows showing [bill]'s number and total. The number is the row's
-  /// title, so this is one row; the detail's header still confirms it.
+  /// The rows showing [bill]'s number and total (`฿` before it). The
+  /// number is the row's title, so this is one row; the detail's header
+  /// still confirms it.
   Finder _rows(Bill bill) => find.descendant(
       of: _list,
       matching: find.byWidgetPredicate((w) =>
@@ -71,7 +79,7 @@ class OrderRobot {
           w.title is Text &&
           (w.title as Text).data == bill.code &&
           w.trailing is Text &&
-          (w.trailing as Text).data == bill.totalText));
+          (w.trailing as Text).data == '฿${bill.totalText}'));
 
   /// Whether a row with [bill]'s title and total is listed, scrolling the
   /// whole list (today's bills, in the server's order).
@@ -143,12 +151,9 @@ class OrderRobot {
   Future<void> _awaitDetail() async {
     await shell.expectScreenWithoutError(
         find.descendant(of: _detail, matching: find.text('ยอดรวม')));
-    // The header fills in once the bill has loaded; the admin icons once
+    // The header fills in once the bill has loaded; the admin's menu once
     // the role has been read.
-    await pumpUntilFound(
-        tester,
-        find.descendant(
-            of: find.byType(AppBar), matching: find.byIcon(Icons.delete)));
+    await pumpUntilFound(tester, _billMenu);
     await pumpUntilFound(
         tester, find.descendant(of: _detail, matching: find.byType(ListTile)));
     await shell.waitForSnackbarToClose();
@@ -194,8 +199,8 @@ class OrderRobot {
               (w) => w is OrderLineTile && w.line.product?.name == productName))
       .hitTestable();
 
-  /// [text] (exactly) on [productName]'s row: its quantity, paid amount or
-  /// a badge such as `คืน 1`.
+  /// [text] (exactly) on [productName]'s row: its quantity (`2×`), paid
+  /// amount or a badge such as `คืน 1`.
   Finder lineShows(String productName, String text) =>
       find.descendant(of: _line(productName), matching: find.text(text));
 
@@ -206,17 +211,32 @@ class OrderRobot {
   /// The amount the bill's foot reads next to ยอดรวม, `฿ #,##0.00`.
   String detailTotal() => _totalOn(_detail);
 
-  /// [icon] (an action such as delete or return) on [productName]'s row.
-  Finder lineIcon(String productName, IconData icon) =>
-      _inLine(productName, icon);
+  /// The menu of [productName]'s row, which holds its return, history and
+  /// delete; a cancelled line has none.
+  Finder lineMenu(String productName) => find.descendant(
+      of: _line(productName),
+      matching: find.byWidgetPredicate((w) => w is PopupMenuButton));
 
-  Finder _inLine(String productName, IconData icon) =>
-      find.descendant(of: _line(productName), matching: find.byIcon(icon));
-
-  /// The row's return icon opens 'รับคืนสินค้า'.
-  Future<void> openReturn(String productName) async {
-    await tester.tap(_inLine(productName, Icons.keyboard_return));
+  /// Opens [productName]'s row menu and chooses the item showing [item].
+  Future<void> _chooseFromLineMenu(String productName, String item) async {
+    await tester.tap(lineMenu(productName));
     await tester.pump();
+    final entry = _menuItem(item);
+    await pumpUntilFound(tester, entry);
+    await tester.tap(entry);
+    await tester.pump();
+  }
+
+  /// The open menu's item showing [item].
+  Finder _menuItem(String item) => find
+      .descendant(
+          of: find.byWidgetPredicate((w) => w is PopupMenuItem),
+          matching: find.text(item))
+      .hitTestable();
+
+  /// The row menu's คืนสินค้า opens 'รับคืนสินค้า'.
+  Future<void> openReturn(String productName) async {
+    await _chooseFromLineMenu(productName, 'คืนสินค้า');
     await pumpUntilFound(tester, _returnDialog.hitTestable());
   }
 
@@ -242,14 +262,9 @@ class OrderRobot {
     await shell.expectScreenWithoutError(_detail);
   }
 
-  /// The AppBar's returns-history icon opens 'ประวัติการคืนสินค้า'.
+  /// The bill menu's returns history opens 'ประวัติการคืนสินค้า'.
   Future<void> openReturnHistory() async {
-    await tester.tap(find
-        .descendant(
-            of: find.byType(AppBar),
-            matching: find.byIcon(Icons.assignment_return))
-        .hitTestable());
-    await tester.pump();
+    await _chooseFromBillMenu('ประวัติการคืนสินค้า');
     await pumpUntilFound(
         tester,
         find.descendant(
@@ -270,25 +285,31 @@ class OrderRobot {
   Finder historyShows(String text) =>
       find.descendant(of: _history, matching: find.text(text)).hitTestable();
 
-  /// The row's delete icon (not the AppBar's), confirmed; the bill reloads.
+  /// The row menu's ลบรายการ (not the bill's ลบบิล), confirmed; the bill
+  /// reloads.
   Future<void> cancelLine(String productName) async {
-    await tester.tap(_inLine(productName, Icons.delete));
-    await tester.pump();
+    await _chooseFromLineMenu(productName, 'ลบรายการ');
     await shell.confirm();
     await _awaitReload();
   }
 
-  /// The AppBar's delete icon, confirmed; the detail closes and the list
+  /// The bill menu's ลบบิล, confirmed; the detail closes and the list
   /// reloads.
   Future<void> cancelBill() async {
-    await tester.tap(find
-        .descendant(
-            of: find.byType(AppBar), matching: find.byIcon(Icons.delete))
-        .hitTestable());
-    await tester.pump();
+    await _chooseFromBillMenu('ลบบิล');
     await shell.confirm();
     await pumpUntilGone(tester, _detail, timeout: const Duration(seconds: 30));
     await _settleList();
+  }
+
+  /// Opens the bill's menu (an admin's, in the AppBar) and chooses [item].
+  Future<void> _chooseFromBillMenu(String item) async {
+    await tester.tap(_billMenu);
+    await tester.pump();
+    final entry = _menuItem(item);
+    await pumpUntilFound(tester, entry);
+    await tester.tap(entry);
+    await tester.pump();
   }
 
   /// The loading snackbar shows while the bill reloads; waits it out and

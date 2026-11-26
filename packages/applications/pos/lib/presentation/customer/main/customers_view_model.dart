@@ -45,6 +45,10 @@ class CustomersViewModel {
   /// What was typed in the search; a list built afresh shows it again.
   String get query => _query;
 
+  /// Whether the list is narrowed by a search: a query of only spaces is
+  /// none, as [search] trims it.
+  bool get isSearching => _query.trim().isNotEmpty;
+
   /// Lists the customers whose name, code or phone holds [query], ignoring
   /// case; an empty query lists them all.
   void search(String query) {

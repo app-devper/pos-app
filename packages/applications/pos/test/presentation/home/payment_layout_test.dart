@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:design_system/theme/theme.dart';
 import 'package:pos/presentation/home/main/payment_screen.dart';
+import '../../support/app_languages.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +22,7 @@ void main() {
         addTearDown(tester.view.resetDevicePixelRatio);
         await tester.pumpWidget(MaterialApp(
           theme: dark ? CustomTheme.darkTheme : CustomTheme.mainTheme,
+          localizationsDelegates: const [thaiLanguages],
           home: Scaffold(
               body: PaymentScreen(
                   amount: 1234.50, onCompleted: (_, __) {}, onError: () {})),
@@ -30,7 +32,8 @@ void main() {
       });
     }
   }
-  testWidgets('compact payment submits entered amount and selected method',
+  testWidgets(
+      'compact PromptPay payment submits the total, whatever is keyed in',
       (tester) async {
     tester.view.physicalSize = const Size(351, 600);
     tester.view.devicePixelRatio = 1;
@@ -40,6 +43,7 @@ void main() {
     String? method;
     await tester.pumpWidget(MaterialApp(
       theme: CustomTheme.darkTheme,
+      localizationsDelegates: const [thaiLanguages],
       home: Scaffold(
           body: PaymentScreen(
         amount: 1234.50,
@@ -57,7 +61,7 @@ void main() {
       await tester.pump();
     }
     await tester.tap(find.byType(ElevatedButton));
-    expect(received, 2000);
+    expect(received, 1234.50, reason: 'a QR payment has no tender');
     expect(method, 'PromptPay');
     expect(tester.takeException(), isNull);
   });

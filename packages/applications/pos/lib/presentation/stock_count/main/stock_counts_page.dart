@@ -4,13 +4,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 // Package imports:
-import 'package:design_system/widgets/app_bar.dart';
+import 'package:pos/presentation/core/page_bar.dart';
 import 'package:design_system/widgets/snack_bar.dart';
+import 'package:design_system/widgets/error_state.dart';
 
 // Project imports:
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/stock_count/stock_count.dart';
 import 'package:pos/localizations/language/languages.dart';
+import 'package:pos/presentation/core/list_empty_state.dart';
 import 'package:pos/presentation/constants.dart';
 import 'package:pos/presentation/stock_count/argument.dart';
 import 'package:pos/presentation/stock_count/main/stock_counts_state.dart';
@@ -58,7 +60,8 @@ class _StockCountsPageState extends State<StockCountsPage> {
     _snackBar = CustomSnackBar(key: const Key("snackbar"), context: context);
     return Scaffold(
       key: _scaffoldKey,
-      appBar: buildAppBar(
+      appBar: buildPageBar(
+        context,
         Languages.of(context).stockCountsTitle,
         actions: [
           IconButton(
@@ -79,6 +82,11 @@ class _StockCountsPageState extends State<StockCountsPage> {
     return ValueListenableBuilder<StockCountsState>(
       valueListenable: _viewModel.state,
       builder: (BuildContext context, StockCountsState state, _) {
+        // A failed load is not an empty shop: it says so, with a retry.
+        if (state.error != null && state.items.isEmpty) {
+          return ErrorState(
+              message: state.error!, onRetry: _viewModel.getStockCounts);
+        }
         if (state.loading && state.items.isEmpty) {
           return Center(
             child: CircularProgressIndicator(
@@ -89,12 +97,12 @@ class _StockCountsPageState extends State<StockCountsPage> {
           );
         }
         if (state.items.isEmpty) {
-          return Center(
-            child: Text(
-              'ยังไม่มีการนับสต็อก',
-              style: TextStyle(
-                  fontSize: 16, color: AppColors.of(context).textSecondary),
-            ),
+          return ListEmptyState(
+            searched: false,
+            icon: Icons.fact_check_outlined,
+            title: Languages.of(context).noStockCountsYet,
+            addLabel: Languages.of(context).addFirstStockCount,
+            onAdd: () => _nextToStockCountManage(context),
           );
         }
         return _buildStockCounts(state.items);

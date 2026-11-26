@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 
 // Package imports:
 import 'package:common/core/ext/widget_ext.dart';
-import 'package:design_system/widgets/app_bar.dart';
+import 'package:pos/presentation/core/page_bar.dart';
 import 'package:design_system/widgets/snack_bar.dart';
 import 'package:intl/intl.dart';
 
@@ -140,7 +140,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     _snackBar = CustomSnackBar(key: const Key("snackbar"), context: context);
     return Scaffold(
       key: _scaffoldKey,
-      appBar: buildAppBar(
+      appBar: buildPageBar(
+        context,
         Languages.of(context).orderDetailTitle,
         actions: _buildAction(context),
       ),
@@ -150,6 +151,12 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         ),
         child: _buildBody(context),
       ),
+      // The foot is the Scaffold's bottom bar, which a floating snack bar
+      // (success, loading, error) rises above instead of covering.
+      bottomNavigationBar: BillSummary(
+          total: _viewModel.state.value.total,
+          totalCost: _viewModel.state.value.totalCost,
+          showCost: isAdmin),
     );
   }
 
@@ -170,21 +177,12 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Widget _buildBody(BuildContext context) {
-    final Size size = MediaQuery.of(context).size;
-    return SizedBox(
-      height: size.height,
-      width: size.width,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          OrderDetailHeader(bill: order),
-          _buildOrderItem(context),
-          BillSummary(
-              total: _viewModel.state.value.total,
-              totalCost: _viewModel.state.value.totalCost,
-              showCost: isAdmin),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        OrderDetailHeader(bill: order),
+        _buildOrderItem(context),
+      ],
     );
   }
 

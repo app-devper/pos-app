@@ -10,7 +10,6 @@ import 'package:flutter/rendering.dart';
 
 // Package imports:
 import 'package:flutter_test/flutter_test.dart';
-import 'package:intl/intl.dart';
 import 'package:um/domain/usecase/auth_use_cases.dart';
 
 // Project imports:
@@ -176,6 +175,14 @@ Widget _billDetail(OrderDetail detail) {
   return const OrderDetailPage(orderId: 'order-1');
 }
 
+/// Opens the first (the bar's) or [last] (a line's) menu of [icon].
+Future<void> _openMenu(WidgetTester tester, IconData icon,
+    {required bool last}) async {
+  final menus = find.byIcon(icon);
+  await tester.tap(last ? menus.last : menus.first);
+  await tester.pumpAndSettle();
+}
+
 /// Puts the sale fakes' product in the cart and chooses a customer.
 Future<void> _fillCart(WidgetTester tester) async {
   final sale = sl<CartViewModel>();
@@ -269,6 +276,14 @@ final _morePages = <String, _Walked>{
     build: () => _billDetail(_bill()),
     then: null,
   ),
+  'the bill detail with a line\'s menu open, for an admin': (
+    build: () => _billDetail(_bill()),
+    then: (tester) => _openMenu(tester, Icons.more_vert, last: true),
+  ),
+  'the bill detail with the bill\'s menu open, for an admin': (
+    build: () => _billDetail(_bill()),
+    then: (tester) => _openMenu(tester, Icons.more_vert, last: false),
+  ),
   'the receipt list': (
     build: () {
       sl.registerFactory(() => ReceivesViewModel(
@@ -276,7 +291,9 @@ final _morePages = <String, _Walked>{
             receipts.buildReceive('1', 'RC-1'),
             receipts.buildReceive('2', 'RC-2'),
           ])));
-      return Scaffold(body: ReceivesWidget(onSelected: (_) {}, onMenu: () {}));
+      return Scaffold(
+          body:
+              ReceivesWidget(onSelected: (_) {}, onMenu: () {}, onAdd: () {}));
     },
     then: null,
   ),
@@ -331,22 +348,6 @@ final _screens = <String, (_Walked, bool)>{
   for (final MapEntry(:key, :value) in _morePages.entries) key: (value, false),
   for (final MapEntry(:key, :value) in manageScreens.entries)
     key: ((build: value, then: null), false),
-};
-
-/// Names an open finding leaves in English on a screen, each by its exact
-/// text: the walk visits the screen and fails every other fault on it, and
-/// any other English name.
-final _findings = <String, Set<String>>{
-  // FINDING 30 (docs/e2e-findings.md): the store filter chips, the date
-  // range and its date are named in English only; order_page.dart,
-  // order_view_model.dart:69. The date is today's, as the page formats it.
-  'the bills list, for an admin': {
-    'All',
-    'Store',
-    'Online',
-    'Today',
-    DateFormat('MMM dd').format(DateTime.now()),
-  },
 };
 
 bool _isTappable(Widget widget) =>
@@ -578,8 +579,7 @@ bool _isEnglishOnly(String name) =>
 /// Every control with no name, a name in English only, a control merged
 /// into another's node or kept from a screen reader, and every name two
 /// controls share.
-List<String> _faults(WidgetTester tester,
-    {Set<String> knownEnglish = const {}}) {
+List<String> _faults(WidgetTester tester) {
   final (controls, faults) = _controls(tester);
   final byName = <String, List<SemanticsNode>>{};
   for (final MapEntry(key: node, value: elements) in controls.entries) {
@@ -595,7 +595,7 @@ List<String> _faults(WidgetTester tester,
     }
     if (name.isEmpty) {
       faults.add('no name: ${_describe(elements.first)}');
-    } else if (_isEnglishOnly(name) && !knownEnglish.contains(name)) {
+    } else if (_isEnglishOnly(name)) {
       faults.add('English only: "$name": ${_describe(elements.first)}');
     } else {
       byName.putIfAbsent(name, () => []).add(node);
@@ -719,8 +719,7 @@ void main() {
         await screen.then?.call(tester);
 
         // Act
-        final faults =
-            _faults(tester, knownEnglish: _findings[name] ?? const {});
+        final faults = _faults(tester);
 
         // Assert
         expect(faults, isEmpty, reason: faults.join('\n'));

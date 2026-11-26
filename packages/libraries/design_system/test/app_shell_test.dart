@@ -112,4 +112,107 @@ void main() {
     // Logging out was meant to be red, and the colour never reached it.
     expect(tester.widget<Icon>(find.byIcon(Icons.logout)).color, Colors.red);
   });
+  group('system Back', () {
+    Widget shell({VoidCallback? onBack}) => MaterialApp(
+      home: AppShell(
+        title: 'Workspace',
+        brand: 'Devper',
+        selectedId: 'one',
+        items: const [
+          AppShellItem(id: 'one', label: 'Overview', icon: Icons.home),
+        ],
+        onSelect: (_) {},
+        onBack: onBack,
+        child: const Text('Content'),
+      ),
+    );
+
+    void usePhone(WidgetTester tester) {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+    }
+
+    testWidgets('with the drawer open closes only the drawer', (tester) async {
+      // Arrange
+      usePhone(tester);
+      var backs = 0;
+      await tester.pumpWidget(shell(onBack: () => backs++));
+      await tester.tap(find.byTooltip('เมนู'));
+      await tester.pumpAndSettle();
+
+      // Act
+      final handled = await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(handled, isTrue);
+      expect(tester.getTopLeft(find.text('Overview')).dx, lessThan(0));
+      expect(backs, 0);
+    });
+
+    testWidgets('goes to onBack when the shell has one', (tester) async {
+      // Arrange
+      usePhone(tester);
+      var backs = 0;
+      await tester.pumpWidget(shell(onBack: () => backs++));
+
+      // Act
+      final handled = await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(handled, isTrue);
+      expect(backs, 1);
+    });
+  });
+
+  group('a page pushed over the host (showDrawer: false)', () {
+    Widget pushed() => MaterialApp(
+          home: AppShell(
+            title: '',
+            brand: 'Devper',
+            selectedId: 'one',
+            showTopBar: false,
+            showDrawer: false,
+            items: const [
+              AppShellItem(id: 'one', label: 'Overview', icon: Icons.home)
+            ],
+            onSelect: (_) {},
+            child: const Text('Content'),
+          ),
+        );
+
+    testWidgets('shows only the page on a narrow screen', (tester) async {
+      // Arrange
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      // Act
+      await tester.pumpWidget(pushed());
+
+      // Assert
+      expect(find.text('Content'), findsOneWidget);
+      expect(find.byTooltip('เมนู'), findsNothing);
+      expect(find.text('Overview'), findsNothing);
+    });
+
+    testWidgets('keeps the side menu on a wide screen', (tester) async {
+      // Arrange
+      tester.view.physicalSize = const Size(1400, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      // Act
+      await tester.pumpWidget(pushed());
+
+      // Assert
+      expect(find.text('Content'), findsOneWidget);
+      expect(find.text('Overview').hitTestable(), findsOneWidget);
+    });
+  });
 }

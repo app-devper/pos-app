@@ -59,6 +59,7 @@ class _MyAppState extends State<DevperPos> {
       themeMode: ThemeMode.system,
       navigatorKey: appNavigatorKey,
       onGenerateRoute: RouterApp.generateRoute,
+      onGenerateInitialRoutes: RouterApp.generateInitialRoutes,
       initialRoute: um.routeSplash,
       locale: _locale,
       supportedLocales: const [

@@ -27,15 +27,19 @@ Widget _host(Widget child) => MaterialApp(
     localizationsDelegates: const [thaiLanguages],
     home: Scaffold(appBar: AppBar(), body: child));
 
-Widget _actions(OrderDetail? bill, {bool isAdmin = true}) => _host(Row(
+Widget _actions(OrderDetail? bill,
+        {bool isAdmin = true,
+        VoidCallback? onReturns,
+        VoidCallback? onDelete}) =>
+    _host(Row(
       children: [
         OrderDetailActions(
           bill: bill,
           isAdmin: isAdmin,
           onPrint: () {},
           onSync: () {},
-          onReturns: () {},
-          onDelete: () {},
+          onReturns: onReturns ?? () {},
+          onDelete: onDelete ?? () {},
         ),
       ],
     ));
@@ -63,34 +67,85 @@ void main() {
   });
 
   group('the bill detail actions', () {
-    testWidgets('an admin may delete a bill that is not cancelled',
-        (tester) async {
-      // Arrange / Act
+    /// The bill's command menu, by its name.
+    final menu = find.byTooltip('คำสั่งเพิ่มเติมของบิล');
+
+    testWidgets(
+        'an admin gets the receipt and reload as icons, and the returns '
+        'history and a red delete, apart, in the bill\'s menu', (tester) async {
+      // Arrange
       await tester.pumpWidget(_actions(_bill()));
+      expect(find.byIcon(Icons.picture_as_pdf), findsOneWidget);
+      expect(find.byIcon(Icons.sync), findsOneWidget);
+      expect(find.byIcon(Icons.delete), findsNothing);
+
+      // Act
+      await tester.tap(menu);
+      await tester.pumpAndSettle();
 
       // Assert
-      expect(find.byIcon(Icons.delete), findsOneWidget);
-      expect(find.byIcon(Icons.picture_as_pdf), findsOneWidget);
+      final items = tester
+          .widgetList<PopupMenuEntry<Object?>>(
+              find.byWidgetPredicate((w) => w is PopupMenuEntry))
+          .toList();
+      expect(items, hasLength(3));
+      expect(items[1], isA<PopupMenuDivider>());
+      expect(find.text('ประวัติการคืนสินค้า'), findsOneWidget);
+      final delete = tester.widget<Text>(find.text('ลบบิล'));
+      final error =
+          Theme.of(tester.element(find.text('ลบบิล'))).colorScheme.error;
+      expect(delete.style?.color, error);
+      final returnsTop = tester.getTopLeft(find.text('ประวัติการคืนสินค้า')).dy;
+      expect(tester.getTopLeft(find.text('ลบบิล')).dy, greaterThan(returnsTop));
     });
 
-    testWidgets('a cancelled bill offers no delete, even to an admin',
+    testWidgets('the menu\'s items call their actions', (tester) async {
+      // Arrange
+      var returns = 0;
+      var deletes = 0;
+      await tester.pumpWidget(_actions(_bill(),
+          onReturns: () => returns++, onDelete: () => deletes++));
+
+      // Act
+      await tester.tap(menu);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('ประวัติการคืนสินค้า'));
+      await tester.pumpAndSettle();
+      await tester.tap(menu);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('ลบบิล'));
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(returns, 1);
+      expect(deletes, 1);
+    });
+
+    testWidgets('a cancelled bill\'s menu offers no delete, even to an admin',
         (tester) async {
-      // Arrange / Act
+      // Arrange
       await tester.pumpWidget(_actions(_bill(status: 'CANCELLED')));
 
+      // Act
+      await tester.tap(menu);
+      await tester.pumpAndSettle();
+
       // Assert
-      expect(find.byIcon(Icons.delete), findsNothing);
-      expect(find.byIcon(Icons.picture_as_pdf), findsOneWidget);
+      expect(find.text('ประวัติการคืนสินค้า'), findsOneWidget);
+      expect(find.text('ลบบิล'), findsNothing);
+      expect(find.byType(PopupMenuDivider), findsNothing);
     });
 
-    testWidgets('a non-admin gets only the receipt', (tester) async {
+    testWidgets('a non-admin gets only the receipt, and no menu',
+        (tester) async {
       // Arrange / Act
       await tester.pumpWidget(_actions(_bill(), isAdmin: false));
 
       // Assert
       expect(find.byIcon(Icons.picture_as_pdf), findsOneWidget);
-      expect(find.byIcon(Icons.delete), findsNothing);
       expect(find.byIcon(Icons.sync), findsNothing);
+      expect(find.byIcon(Icons.more_vert), findsNothing);
+      expect(menu, findsNothing);
     });
   });
 }

@@ -13,9 +13,16 @@ import 'package:flutter/foundation.dart';
 class HomeState {
   final bool isAdmin;
 
-  const HomeState({this.isAdmin = false});
+  /// Whether the role has come back; until then [isAdmin] is only the safer
+  /// default.
+  final bool roleKnown;
 
-  HomeState copyWith({bool? isAdmin}) {
-    return HomeState(isAdmin: isAdmin ?? this.isAdmin);
+  const HomeState({this.isAdmin = false, this.roleKnown = false});
+
+  HomeState copyWith({bool? isAdmin, bool? roleKnown}) {
+    return HomeState(
+      isAdmin: isAdmin ?? this.isAdmin,
+      roleKnown: roleKnown ?? this.roleKnown,
+    );
   }
 }

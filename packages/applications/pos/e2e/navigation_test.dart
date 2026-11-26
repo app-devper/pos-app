@@ -17,7 +17,7 @@ const _manageTiles = [
   'ร้านค้าของฉัน',
   'จัดการลูกค้า',
   'จัดการผู้ใช้งาน',
-  'ใบรับสินค้า / Goods Receipt',
+  'ใบรับสินค้า',
   'นับสต็อก',
 ];
 
@@ -36,7 +36,7 @@ void main() {
 
     await shell.openOrders();
     await shell.expectScreenWithoutError(find.text('สรุปรายการ'));
-    expect(shell.choiceChip('All'), findsOneWidget);
+    expect(shell.choiceChip('ทั้งหมด'), findsOneWidget);
     expect(find.text('ต้นทุน').hitTestable(), findsOneWidget);
 
     await shell.openProducts();
@@ -102,9 +102,10 @@ void main() {
 }
 
 /// With no shop profile yet the form is empty and says so
-/// (`ยังไม่มีข้อมูลร้านค้า กรอกแล้วกดบันทึก`); it used to show a red
-/// "Error: ไม่พบข้อมูลที่ต้องการ [SY-404-002]" (was finding #14). No error is
-/// tolerated any more, on an empty or a populated database.
+/// (`ยังไม่มีข้อมูลร้านค้า กรอกแล้วกดบันทึก`); it used to show a red error
+/// bar, "ไม่พบข้อมูลที่ต้องการ [SY-404-002]" (was finding #14; error bars
+/// now start "ข้อผิดพลาด:"). No error is tolerated any more, on an empty
+/// or a populated database.
 const _noShopProfileHint = 'ยังไม่มีข้อมูลร้านค้า กรอกแล้วกดบันทึก';
 
 /// Opened and read only: the profile may be the shop's real one, so its
@@ -136,12 +137,13 @@ Future<void> _customersOpenAndReturn(ShellRobot shell) async {
   await pumpUntilFound(shell.tester, find.text('จัดการลูกค้า').hitTestable());
 }
 
-/// The goods-receipt list has no back control; the sidebar leaves it.
+/// The goods-receipt list is pushed over จัดการ; its back arrow returns.
 Future<void> _goodsReceiptsOpenAndReturn(ShellRobot shell) async {
-  await shell.openManageTile('ใบรับสินค้า / Goods Receipt');
+  await shell.openManageTile('ใบรับสินค้า');
   await shell
       .expectScreenWithoutError(shell.searchField('ค้นหาเลขที่ใบรับสินค้า...'));
-  await shell.openManage();
+  await shell.pageBack();
+  await pumpUntilFound(shell.tester, find.text('ร้านค้าของฉัน').hitTestable());
 }
 
 Future<void> _stockCountsOpenAndReturn(ShellRobot shell) async {
@@ -169,7 +171,7 @@ Future<void> _expectSellingAndBillsWithoutAdminTools(ShellRobot shell) async {
   expect(shell.sidebarItem('รายการขาย'), findsOneWidget);
   expect(shell.sidebarItem('สินค้า'), findsNothing);
   expect(shell.sidebarItem('จัดการ'), findsNothing);
-  expect(shell.choiceChip('All'), findsNothing);
+  expect(shell.choiceChip('ทั้งหมด'), findsNothing);
   expect(find.text('ต้นทุน'), findsNothing);
   expect(shell.rangeDropdown, findsNothing);
 }

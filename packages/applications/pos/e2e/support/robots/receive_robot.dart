@@ -17,7 +17,7 @@ import 'product_picker.dart';
 import 'shell_robot.dart';
 import 'package:pos/presentation/receive/manage/receive_line_tile.dart';
 
-const _manageTile = 'ใบรับสินค้า / Goods Receipt';
+const _manageTile = 'ใบรับสินค้า';
 const _searchHint = 'ค้นหาเลขที่ใบรับสินค้า...';
 const _supplierField = 'ร้านขายสินค้า';
 const _itemDialogTitle = 'เพิ่มรายการรับสินค้า';
@@ -26,7 +26,13 @@ const _itemDialogTitle = 'เพิ่มรายการรับสินค
 const _supplierAddress = 'E2E';
 
 final _list = find.byType(ReceivesWidget);
-final _addMenu = find.widgetWithText(ListTile, 'เพิ่มใบรับสินค้า');
+
+/// The add: the wide pane's button (with nothing chosen), or the narrow
+/// layout's menu entry.
+final _addMenu = find.ancestor(
+    of: find.text('เพิ่มใบรับสินค้า'),
+    matching:
+        find.byWidgetPredicate((w) => w is ListTile || w is ButtonStyleButton));
 final _createButton = find.byKey(const Key('add'));
 final _addItemButton = find.byKey(const Key('product'));
 final _importButton = find.byKey(const Key('import-receive'));
@@ -75,7 +81,7 @@ class ReceiveRobot {
     await shell.expectScreenWithoutError(shell.searchField(_searchHint));
     await pumpUntilGone(tester,
         find.descendant(of: _list, matching: find.byType(ProgressIndicator)));
-    expect(find.text('ลองอีกครั้ง'), findsNothing,
+    expect(find.text('ลองใหม่'), findsNothing,
         reason: 'the receipt list failed to load');
   }
 
@@ -129,7 +135,7 @@ class ReceiveRobot {
     await tester.tap(_createButton.hitTestable());
     await tester.pump();
     await form.awaitOutcome(_addItemButton);
-    await shell.expectSnackbar('Add success');
+    await shell.expectSnackbar('เพิ่มสำเร็จ');
   }
 
   /// The supplier names the picker offers.
@@ -154,7 +160,7 @@ class ReceiveRobot {
     await form.enter('Address*', _supplierAddress);
     await tester.tap(find.byKey(const Key('add')).hitTestable());
     await tester.pump();
-    await shell.expectSnackbar('Add $name success');
+    await shell.expectSnackbar('เพิ่ม $name สำเร็จ');
     await _back(page);
     await pumpUntil(tester, () => _supplierOptions().contains(name),
         'the supplier picker to offer $name');
@@ -163,7 +169,7 @@ class ReceiveRobot {
   /// Taps the top page's back arrow and waits for [page] to leave (the page
   /// under it has a back arrow too).
   Future<void> _back(Finder page) async {
-    await tester.tap(find.byType(BackButton).hitTestable().last);
+    await tester.tap(ShellRobot.backArrow.hitTestable().last);
     await tester.pump();
     await pumpUntilGone(tester, page);
   }
@@ -211,7 +217,7 @@ class ReceiveRobot {
 
   /// 'นำเข้าสต็อก' and its confirm; returns once the page says it imported.
   Future<void> import() async {
-    // The 'Update success' bar from adding the line covers this button
+    // The 'บันทึกสำเร็จ' bar from adding the line covers this button
     // until it closes by itself.
     await shell.waitForSnackbarToClose();
     await pumpUntilFound(tester, _importButton.hitTestable());

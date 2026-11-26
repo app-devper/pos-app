@@ -85,7 +85,7 @@ class StockCountRobot {
   /// The AppBar back arrow: the form or detail back to the list, or the
   /// list back to จัดการ.
   Future<void> leave() async {
-    final back = find.byType(BackButton).hitTestable().last;
+    final back = ShellRobot.backArrow.hitTestable().last;
     final page = find.ancestor(of: back, matching: find.byType(Scaffold));
     final leaving = page.evaluate().first;
     await tester.tap(back);

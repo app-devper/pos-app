@@ -40,7 +40,7 @@ class LanguageTh extends Languages {
   String get orderSelectStartDate => "เลือกวันที่เริ่มต้น";
 
   @override
-  String get orderDetailTitle => "รายละเอียดรายการ";
+  String get orderDetailTitle => "รายละเอียดบิล";
 
   @override
   String get orderHistoryTitle => "ประวัติรายการ";
@@ -127,9 +127,6 @@ class LanguageTh extends Languages {
   String get sortByName => "เรียงตามชื่อ";
 
   @override
-  String get productMenu => "เมนูสินค้า";
-
-  @override
   String get addSupplier => "เพิ่มร้านขายสินค้า";
 
   @override
@@ -139,7 +136,7 @@ class LanguageTh extends Languages {
   String removeCustomer(String name) => "นำลูกค้า $name ออก";
 
   @override
-  String get receiveMenu => "เมนูใบรับสินค้า";
+  String get moreCommands => "คำสั่งเพิ่มเติม";
 
   @override
   String get deleteReceive => "ลบใบรับสินค้า";
@@ -163,6 +160,9 @@ class LanguageTh extends Languages {
   String get billDelete => "ลบบิล";
 
   @override
+  String get billCommands => "คำสั่งเพิ่มเติมของบิล";
+
+  @override
   String deleteBillLine(String name) => "ลบรายการ $name";
 
   @override
@@ -170,6 +170,18 @@ class LanguageTh extends Languages {
 
   @override
   String returnBillLine(String name) => "คืนสินค้า $name";
+
+  @override
+  String billLineCommands(String name) => "คำสั่งเพิ่มเติมของ $name";
+
+  @override
+  String get billLineDelete => "ลบรายการ";
+
+  @override
+  String get billLineSales => "ประวัติการขาย";
+
+  @override
+  String get billLineReturn => "คืนสินค้า";
 
   @override
   String oneLess(String name) => "ลดจำนวน $name";
@@ -244,4 +256,194 @@ class LanguageTh extends Languages {
 
   @override
   String get requireCustomerOrder => "ต้องระบุลูกค้าเมื่อขาย";
+
+  @override
+  String receiveCash(String amount) => "รับเงิน $amount";
+
+  @override
+  String get exactPayment => "รับชำระพอดี";
+
+  @override
+  String get exactPaymentNoChange => "ไม่มีเงินทอน";
+
+  @override
+  String get exactPaymentName => "รับชำระพอดี ไม่มีเงินทอน";
+
+  @override
+  String get enterAmountReceived => "โปรดระบุยอดที่ต้องชำระ";
+
+  @override
+  String payWithChange(String amount) => "เงินทอน $amount";
+
+  @override
+  String productOnHand(String quantity, String unit) =>
+      "คงเหลือ $quantity $unit";
+
+  @override
+  String get outOfStock => "หมด";
+
+  @override
+  String get lowStock => "ใกล้หมด";
+
+  @override
+  String get chooseProductHint => "เลือกสินค้าเพื่อดูรายละเอียด";
+
+  @override
+  String get chooseCustomerHint => "เลือกลูกค้าเพื่อดูรายละเอียด";
+
+  @override
+  String get chooseReceiveHint => "เลือกใบรับสินค้าเพื่อดูรายละเอียด";
+
+  @override
+  String get addReceive => "เพิ่มใบรับสินค้า";
+
+  @override
+  String get noProductsYet => "ยังไม่มีสินค้า";
+
+  @override
+  String get addFirstProduct => "เพิ่มสินค้ารายการแรก";
+
+  @override
+  String get noCustomersYet => "ยังไม่มีลูกค้า";
+
+  @override
+  String get addFirstCustomer => "เพิ่มลูกค้าคนแรก";
+
+  @override
+  String get noReceivesYet => "ยังไม่มีใบรับสินค้า";
+
+  @override
+  String get addFirstReceive => "เพิ่มใบรับสินค้าใบแรก";
+
+  @override
+  String get noStockCountsYet => "ยังไม่มีการนับสต็อก";
+
+  @override
+  String get addFirstStockCount => "เริ่มนับสต็อกครั้งแรก";
+
+  @override
+  String get noCategoriesYet => "ยังไม่มีหมวดหมู่";
+
+  @override
+  String get addFirstCategory => "เพิ่มหมวดหมู่แรก";
+
+  @override
+  String get noSuppliersYet => "ยังไม่มีร้านขายสินค้า";
+
+  @override
+  String get addFirstSupplier => "เพิ่มร้านขายสินค้าร้านแรก";
+
+  @override
+  String get noSearchResults => "ไม่พบรายการที่ค้นหา";
+
+  @override
+  String payByPromptPay(String amount) => "ชำระด้วยพร้อมเพย์ $amount";
+
+  @override
+  String get billFilterAll => "ทั้งหมด";
+
+  @override
+  String get billFilterStore => "หน้าร้าน";
+
+  @override
+  String get billFilterOnline => "ออนไลน์";
+
+  @override
+  String get rangeToday => "วันนี้";
+
+  @override
+  String get rangeYesterday => "เมื่อวาน";
+
+  @override
+  String get rangeDate => "เลือกวัน";
+
+  @override
+  String get rangeDateRange => "ช่วงวันที่";
+
+  @override
+  String get rangeCurrentMonth => "เดือนนี้";
+
+  @override
+  String get rangeLastMonth => "เดือนที่แล้ว";
+
+  @override
+  String get dateRangeDone => "ตกลง";
+
+  static const _shortMonths = [
+    "ม.ค.",
+    "ก.พ.",
+    "มี.ค.",
+    "เม.ย.",
+    "พ.ค.",
+    "มิ.ย.",
+    "ก.ค.",
+    "ส.ค.",
+    "ก.ย.",
+    "ต.ค.",
+    "พ.ย.",
+    "ธ.ค.",
+  ];
+
+  @override
+  String shortDate(DateTime date) => "${date.day} ${shortMonth(date)}";
+
+  @override
+  String shortMonth(DateTime date) => _shortMonths[date.month - 1];
+
+  @override
+  String get added => "เพิ่มสำเร็จ";
+
+  @override
+  String get saved => "บันทึกสำเร็จ";
+
+  @override
+  String addedNamed(String name) => "เพิ่ม $name สำเร็จ";
+
+  @override
+  String savedNamed(String name) => "บันทึก $name สำเร็จ";
+
+  @override
+  String get stockImported => "นำเข้าสต็อกสำเร็จ";
+
+  @override
+  String get noCameraPermission => "ไม่ได้รับอนุญาตให้ใช้กล้อง";
+
+  @override
+  String get paymentTitle => "ชำระเงิน";
+
+  @override
+  String get amountReceived => "ยอดรับเงินรวม";
+
+  @override
+  String get amountDue => "ยอดที่ต้องชำระ";
+
+  @override
+  String get change => "เงินทอน";
+
+  @override
+  String get cash => "เงินสด";
+
+  @override
+  String get promptPay => "พร้อมเพย์";
+
+  @override
+  String customerNamed(String name) => "ลูกค้า: $name";
+
+  @override
+  String get totalCost => "ต้นทุนรวม";
+
+  @override
+  String get manageStore => "ร้านค้าของฉัน";
+
+  @override
+  String get manageCustomers => "จัดการลูกค้า";
+
+  @override
+  String get manageUsers => "จัดการผู้ใช้งาน";
+
+  @override
+  String get manageReceipts => "ใบรับสินค้า";
+
+  @override
+  String get manageStockCounts => "นับสต็อก";
 }

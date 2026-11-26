@@ -3,6 +3,7 @@ import 'package:common/core/ext/date_ext.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
+import 'package:design_system/widgets/error_state.dart';
 import 'package:design_system/widgets/responsive.dart';
 
 // Project imports:
@@ -11,17 +12,22 @@ import 'package:pos/domain/model/receive/receive.dart';
 import 'package:pos/presentation/receive/main/receive_state.dart';
 import 'package:pos/presentation/receive/main/receives_view_model.dart';
 import 'package:design_system/theme/app_colors.dart';
-import 'package:pos/presentation/receive/main/receive_menu_button.dart';
+import 'package:pos/presentation/core/list_empty_state.dart';
+import 'package:pos/presentation/core/more_commands_button.dart';
 import 'package:pos/localizations/language/languages.dart';
 
 class ReceivesWidget extends StatefulWidget {
   final Function(Receive) onSelected;
   final Function() onMenu;
 
+  /// Adds the first one, offered while the list is empty.
+  final VoidCallback onAdd;
+
   const ReceivesWidget({
     super.key,
     required this.onSelected,
     required this.onMenu,
+    required this.onAdd,
   });
 
   @override
@@ -99,7 +105,7 @@ class _ReceivesWidgetState extends State<ReceivesWidget> {
               ),
             ),
             if (isMobile) ...[
-              ReceiveMenuButton(onPressed: () => widget.onMenu()),
+              MoreCommandsButton(onPressed: () => widget.onMenu()),
               const SizedBox(width: 8),
             ]
           ],
@@ -127,13 +133,20 @@ class _ReceivesWidgetState extends State<ReceivesWidget> {
         }
         if (state.error != null) {
           return Expanded(
-              child: Center(
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Text(state.error!),
-            TextButton(
-                onPressed: _viewModel.getReceives,
-                child: const Text('ลองอีกครั้ง')),
-          ])));
+            child: ErrorState(
+                message: state.error!, onRetry: _viewModel.getReceives),
+          );
+        }
+        if (state.items.isEmpty) {
+          return Expanded(
+            child: ListEmptyState(
+              searched: _searchEditingController.text.isNotEmpty,
+              icon: Icons.receipt_long_outlined,
+              title: Languages.of(context).noReceivesYet,
+              addLabel: Languages.of(context).addFirstReceive,
+              onAdd: widget.onAdd,
+            ),
+          );
         }
         return _buildReceives(state.items);
       },

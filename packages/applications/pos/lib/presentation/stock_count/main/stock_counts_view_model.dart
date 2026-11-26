@@ -17,7 +17,10 @@ class StockCountsViewModel {
     required this.stockCountRepo,
   });
 
-  final _state = ViewState<StockCountsState>(const StockCountsState());
+  /// Loading from the start: the page's first frame comes before its first
+  /// load, and must not say the list is empty.
+  final _state =
+      ViewState<StockCountsState>(const StockCountsState(loading: true));
 
   /// Shown as a snackbar and then gone. It never belonged in state: a message
   /// the view had to remember to clear is one it can forget to clear.
@@ -28,14 +31,21 @@ class StockCountsViewModel {
   Stream<String> get errors => _errors.stream;
 
   Future<void> getStockCounts() async {
-    _state.value = _state.value.copyWith(loading: true);
+    _state.value = _state.value.copyWith(loading: true, clearError: true);
     try {
       final items = await stockCountRepo.getStockCounts();
       _state.value = _state.value.copyWith(loading: false, items: items);
     } on Exception catch (e) {
-      _state.value = _state.value.copyWith(loading: false);
-      _errors.emit(toFailure(e).getMessage());
+      _failLoad(toFailure(e).getMessage());
     }
+  }
+
+  /// A failed load: with nothing listed the page shows [message] with a
+  /// retry instead of an empty list; over a list it is a snackbar.
+  void _failLoad(String message) {
+    final hadItems = _state.value.items.isNotEmpty;
+    _state.value = _state.value.copyWith(loading: false, error: message);
+    if (hadItems) _errors.emit(message);
   }
 
   void dispose() {

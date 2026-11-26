@@ -10,6 +10,7 @@ import 'package:design_system/widgets/title_bar.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // Project imports:
+import 'package:pos/presentation/core/page_bar.dart';
 import '../env.dart';
 import '../pump.dart';
 
@@ -26,7 +27,7 @@ const _step = Duration(milliseconds: 100);
 
 final _snackbar = find.byKey(const Key('snackbar'));
 
-/// CustomSnackBar.showErrorSnackBar: red, text "Error: …".
+/// CustomSnackBar.showErrorSnackBar: red, text "ข้อผิดพลาด: …".
 final _errorRed = Colors.red[400];
 final _errorAlertTitle = find.text('พบข้อผิดพลาด').hitTestable();
 final _confirmTitle = find.text('แจ้งเตือน').hitTestable();
@@ -73,17 +74,22 @@ class ShellRobot {
 
   // --- Leaving a screen -----------------------------------------------------
 
-  /// The AppBar back arrow of a pushed page; returns once the page has
-  /// finished animating out (the shell itself has no back arrow).
+  /// A pushed page's back arrow: the app's own (named ย้อนกลับ) or, on the
+  /// user pages, Material's. The shell itself has none.
+  static final backArrow =
+      find.byWidgetPredicate((w) => w is PageBackButton || w is BackButton);
+
+  /// The back arrow of a pushed page; returns once the page has finished
+  /// animating out.
   Future<void> pageBack() async {
-    await tester.tap(find.byType(BackButton).hitTestable());
+    await tester.tap(backArrow.hitTestable());
     await tester.pump();
-    await pumpUntilGone(tester, find.byType(BackButton));
+    await pumpUntilGone(tester, backArrow);
   }
 
-  /// The customer list is embedded in the shell; its arrow returns to จัดการ.
+  /// The customer list is pushed over จัดการ; its arrow returns there.
   Future<void> backFromCustomers() async {
-    await tester.tap(find.byIcon(Icons.arrow_back_ios).hitTestable());
+    await tester.tap(find.byTooltip('ย้อนกลับ').hitTestable().last);
     await tester.pump();
   }
 

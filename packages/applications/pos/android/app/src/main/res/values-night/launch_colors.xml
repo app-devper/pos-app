@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- AppColors.dark.surface, for the OS's dark mode. -->
+    <color name="launch_surface">#212121</color>
+</resources>

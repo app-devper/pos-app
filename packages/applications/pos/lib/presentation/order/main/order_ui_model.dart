@@ -15,13 +15,3 @@ enum Filter {
   cash,
   online,
 }
-
-class ListItem {
-  Range value;
-  String name;
-
-  ListItem(
-    this.value,
-    this.name,
-  );
-}

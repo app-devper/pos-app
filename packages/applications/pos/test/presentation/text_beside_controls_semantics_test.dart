@@ -196,11 +196,13 @@ void main() {
     )));
 
     // Assert
-    _expectRowNode(tester, '2x $_product ต้นทุน: 16.00 กำไร: 24.00 ฿40.00', [
-      'ลบรายการ 2x $_product ฿40.00',
-      'ประวัติการขาย 2x $_product ฿40.00',
-      'คืนสินค้า 2x $_product ฿40.00',
-    ]);
+    _expectRowNode(
+        tester, '2x $_product ต้นทุน: 16.00 กำไร: 24.00 ฿40.00', const []);
+    final row = _node(tester, '2x $_product ต้นทุน: 16.00 กำไร: 24.00 ฿40.00');
+    final menu = tester
+        .getSemantics(find.byTooltip('คำสั่งเพิ่มเติมของ 2x $_product ฿40.00'));
+    expect(_isInside(menu, row), isFalse, reason: 'the menu is beside it');
+    expect(menu.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
     semantics.dispose();
   });
 

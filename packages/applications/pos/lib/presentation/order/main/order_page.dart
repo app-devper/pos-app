@@ -5,9 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 // Package imports:
-import 'package:design_system/widgets/app_bar.dart';
+import 'package:pos/presentation/core/page_bar.dart';
 import 'package:design_system/widgets/snack_bar.dart';
-import 'package:intl/intl.dart';
 
 // Project imports:
 import 'package:pos/container.dart';
@@ -34,10 +33,9 @@ class OrderPage extends StatefulWidget {
 class _OrderPageState extends State<OrderPage> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  final _dateFormat = DateFormat("MMM dd");
-  final _mountFormat = DateFormat("MMM");
-
-  final _choices = ['All', 'Store', 'Online'];
+  /// The filter's keys, as the view model takes them; the chips name them
+  /// in the page's language ([_choiceName]).
+  static const _choices = ['All', 'Store', 'Online'];
   int _defaultChoiceIndex = 0;
 
   final _viewNode = FocusNode();
@@ -114,36 +112,41 @@ class _OrderPageState extends State<OrderPage> {
 
   @override
   Widget build(BuildContext context) {
-    _snackBar = CustomSnackBar(key: const Key("snackbar"), context: context);
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).requestFocus(_viewNode),
-      child: Scaffold(
-        key: _scaffoldKey,
-        appBar: buildAppBar(
-          Languages.of(context).ordersTitle,
-        ),
-        body: AnnotatedRegion<SystemUiOverlayStyle>(
-          value: SystemUiOverlayStyle.dark.copyWith(
-            statusBarColor: CustomColor.statusBarColor,
+    // The list sits inside the shell's Scaffold, which would float this
+    // page's bars over its foot. Its own messenger shows them on this
+    // page's Scaffold instead, whose bottom bar, the foot, they rise above.
+    return ScaffoldMessenger(
+      child: Builder(builder: (pageContext) {
+        _snackBar =
+            CustomSnackBar(key: const Key("snackbar"), context: pageContext);
+        return GestureDetector(
+          onTap: () => FocusScope.of(context).requestFocus(_viewNode),
+          child: Scaffold(
+            key: _scaffoldKey,
+            appBar: buildPageBar(
+              context,
+              Languages.of(context).ordersTitle,
+            ),
+            body: AnnotatedRegion<SystemUiOverlayStyle>(
+              value: SystemUiOverlayStyle.dark.copyWith(
+                statusBarColor: CustomColor.statusBarColor,
+              ),
+              child: _buildBody(context),
+            ),
+            bottomNavigationBar: BillSummary(
+                total: _total, totalCost: _totalCost, showCost: _isAdmin),
           ),
-          child: _buildBody(context),
-        ),
-      ),
+        );
+      }),
     );
   }
 
-  SizedBox _buildBody(BuildContext context) {
-    final Size size = MediaQuery.of(context).size;
-    return SizedBox(
-      height: size.height,
-      width: size.width,
-      child: Column(
-        children: <Widget>[
-          _buildMenu(context),
-          _buildOrderList(),
-          BillSummary(total: _total, totalCost: _totalCost, showCost: _isAdmin),
-        ],
-      ),
+  Widget _buildBody(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        _buildMenu(context),
+        _buildOrderList(),
+      ],
     );
   }
 
@@ -165,11 +168,11 @@ class _OrderPageState extends State<OrderPage> {
                     fontSize: 14.0,
                     color: AppColors.of(context).textPrimary,
                   ),
-                  items: data.map((ListItem item) {
+                  items: data.map((Range range) {
                     return DropdownMenuItem<Range>(
-                      value: item.value,
+                      value: range,
                       child: Text(
-                        item.name,
+                        _rangeName(Languages.of(context), range),
                         style: TextStyle(
                           fontSize: 14.0,
                           color: AppColors.of(context).textPrimary,
@@ -221,7 +224,7 @@ class _OrderPageState extends State<OrderPage> {
       return Row(
         children: <Widget>[
           Text(
-            _dateFormat.format(_startDate),
+            Languages.of(context).shortDate(_startDate),
             style: TextStyle(
                 fontSize: 14.0, color: AppColors.of(context).textPrimary),
           ),
@@ -233,7 +236,7 @@ class _OrderPageState extends State<OrderPage> {
       return Row(
         children: <Widget>[
           Text(
-            _mountFormat.format(_startDate),
+            Languages.of(context).shortMonth(_startDate),
             style: TextStyle(
                 fontSize: 14.0, color: AppColors.of(context).textPrimary),
           ),
@@ -243,7 +246,7 @@ class _OrderPageState extends State<OrderPage> {
       return Row(
         children: <Widget>[
           Text(
-            _dateFormat.format(_startDate),
+            Languages.of(context).shortDate(_startDate),
             style: TextStyle(
                 fontSize: 14.0, color: AppColors.of(context).textPrimary),
           ),
@@ -253,7 +256,8 @@ class _OrderPageState extends State<OrderPage> {
                 fontSize: 14.0, color: AppColors.of(context).textPrimary),
           ),
           Text(
-            _dateFormat.format(_endDate.subtract(const Duration(days: 1))),
+            Languages.of(context)
+                .shortDate(_endDate.subtract(const Duration(days: 1))),
             style: TextStyle(
                 fontSize: 14.0, color: AppColors.of(context).textPrimary),
           ),
@@ -267,7 +271,7 @@ class _OrderPageState extends State<OrderPage> {
       spacing: 8,
       children: List.generate(_choices.length, (index) {
         return ChoiceChip(
-          label: Text(_choices[index]),
+          label: Text(_choiceName(Languages.of(context), index)),
           labelStyle: TextStyle(
               color: _defaultChoiceIndex == index
                   ? Theme.of(context).colorScheme.onPrimary
@@ -289,6 +293,24 @@ class _OrderPageState extends State<OrderPage> {
     );
   }
 
+  static String _choiceName(Languages languages, int index) =>
+      switch (_choices[index]) {
+        'Store' => languages.billFilterStore,
+        'Online' => languages.billFilterOnline,
+        _ => languages.billFilterAll,
+      };
+
+  static String _rangeName(Languages languages, Range range) => switch (range) {
+        Range.today => languages.rangeToday,
+        Range.yesterday => languages.rangeYesterday,
+        Range.date => languages.rangeDate,
+        Range.dateRange => languages.rangeDateRange,
+        Range.currentMonth => languages.rangeCurrentMonth,
+        Range.lastMonth => languages.rangeLastMonth,
+        // Not offered by the view model; named for completeness.
+        Range.last7Days || Range.last30Days || Range.month => range.name,
+      };
+
   ValueListenableBuilder<OrderState> _buildOrderList() {
     return ValueListenableBuilder<OrderState>(
       valueListenable: _viewModel.state,
@@ -296,8 +318,9 @@ class _OrderPageState extends State<OrderPage> {
         final orders = state.orders;
         if (orders != null) {
           return Expanded(
-            child: ListView.builder(
+            child: ListView.separated(
               itemCount: orders.length,
+              separatorBuilder: (_, __) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final item = orders[index];
                 return OrderListTile(
@@ -332,7 +355,7 @@ class _OrderPageState extends State<OrderPage> {
       firstDate: DateTime(2021, 1, 1),
       lastDate: currentDate,
       currentDate: currentDate,
-      saveText: 'Done',
+      saveText: Languages.of(context).dateRangeDone,
       initialEntryMode: DatePickerEntryMode.calendarOnly,
     );
 

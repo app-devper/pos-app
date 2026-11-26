@@ -4,10 +4,14 @@ import 'package:design_system/widgets/title_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:design_system/theme/app_colors.dart';
 
+import 'package:pos/presentation/core/page_bar.dart';
+
 // Project imports:
+import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/constants.dart';
 import 'package:pos/presentation/receive/argument.dart';
 import 'package:design_system/widgets/dialogs.dart';
+import 'package:design_system/widgets/empty_state.dart';
 import 'package:pos/presentation/receive/main/receive_menu_widget.dart';
 import 'package:pos/presentation/receive/main/receives_widget.dart';
 
@@ -20,11 +24,16 @@ class ReceivePage extends StatefulWidget {
 
 class _ReceivePageState extends State<ReceivePage> {
   int _revision = 0;
+
+  /// A page of its own, pushed over จัดการ: its bar carries the way back.
   @override
   Widget build(BuildContext context) {
-    return Responsive(
-      mobile: _buildMobile(),
-      desktop: _buildDesktop(),
+    return Scaffold(
+      appBar: buildPageBar(context, Languages.of(context).receivesTitle),
+      body: Responsive(
+        mobile: _buildMobile(),
+        desktop: _buildDesktop(),
+      ),
     );
   }
 
@@ -35,6 +44,7 @@ class _ReceivePageState extends State<ReceivePage> {
           width: 320,
           child: ReceivesWidget(
             key: ValueKey(_revision),
+            onAdd: _nextToReceiveManage,
             onMenu: () {
               _showProductMenuDialog();
             },
@@ -43,10 +53,11 @@ class _ReceivePageState extends State<ReceivePage> {
         ),
         Container(width: 1, color: AppColors.of(context).border),
         Expanded(
-          child: ReceiveMenuWidget(
-            onAdd: () {
-              _nextToReceiveManage();
-            },
+          child: EmptyState(
+            icon: Icons.receipt_long_outlined,
+            title: Languages.of(context).chooseReceiveHint,
+            actionLabel: Languages.of(context).addReceive,
+            onAction: _nextToReceiveManage,
           ),
         ),
       ],
@@ -59,6 +70,7 @@ class _ReceivePageState extends State<ReceivePage> {
         Expanded(
           child: ReceivesWidget(
             key: ValueKey(_revision),
+            onAdd: _nextToReceiveManage,
             onMenu: () {
               _showProductMenuDialog();
             },

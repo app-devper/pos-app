@@ -2,8 +2,10 @@ library;
 
 export 'theme/color.dart';
 export 'theme/theme.dart';
+export 'theme/motion.dart';
 export 'theme/spacing.dart';
 export 'theme/radius.dart';
+export 'theme/text_styles.dart';
 
 export 'widgets/dropdown_input.dart';
 export 'widgets/title_bar.dart';

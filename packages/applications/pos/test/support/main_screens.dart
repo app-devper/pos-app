@@ -35,6 +35,7 @@ import 'package:pos/presentation/product/stock/product_stock_quantity_widget.dar
 import 'package:pos/presentation/receive/manage/receive_item_dialog.dart';
 import 'package:pos/presentation/stock_count/manage/stock_count_item_picker_view_model.dart';
 import 'app_languages.dart';
+import 'empty_repositories.dart';
 import '../presentation/customer/edit/customer_edit_page_test.dart'
     as customer_edit;
 import '../presentation/customer/main/customer_page_test.dart' as customers;
@@ -74,6 +75,39 @@ ProductStock _stock() => ProductStock(
       importDate: '2026-11-26T00:00:00Z',
     );
 
+/// Paracetamol as product [id] named [name], with [onHand] in its one
+/// unit and a minimum of [minStock]: a row that says หมด or ใกล้หมด.
+Product _stocked(String id, String name,
+    {required int onHand, int minStock = 0}) {
+  final product = products.paracetamol();
+  return Product(
+    id: id,
+    name: name,
+    status: product.status,
+    category: product.category,
+    createdDate: product.createdDate,
+    minStock: minStock,
+    units: product.units,
+    prices: product.prices,
+    stocks: [
+      ProductStock(
+        id: 's-$id',
+        unitId: 'u-1',
+        productId: id,
+        receiveCode: '',
+        sequence: 1,
+        lotNumber: 'L-$id',
+        costPrice: 4,
+        price: 10,
+        import: onHand,
+        quantity: onHand,
+        expireDate: '',
+        importDate: '',
+      ),
+    ],
+  );
+}
+
 void _registerProducts() {
   final catalogue = products.Catalogue([products.paracetamol()]);
   sl.registerFactory(() => ProductViewModel(productRepo: catalogue));
@@ -112,6 +146,28 @@ final mainPages = <String, Screen>{
   'the product list': () {
     _registerProducts();
     return const Scaffold(body: ProductsPage());
+  },
+  'the product list with low and no stock': () {
+    final catalogue = products.Catalogue([
+      _stocked('p-out', 'Paracetamol none left', onHand: 0),
+      _stocked('p-low', 'Paracetamol nearly out', onHand: 3, minStock: 5),
+    ]);
+    sl.registerFactory(() => ProductViewModel(productRepo: catalogue));
+    sl.registerFactory(() => ProductsViewModel(productRepo: catalogue));
+    return const Scaffold(body: ProductsPage());
+  },
+  'the product list with no products': () {
+    final catalogue = products.Catalogue([]);
+    sl.registerFactory(() => ProductViewModel(productRepo: catalogue));
+    sl.registerFactory(() => ProductsViewModel(productRepo: catalogue));
+    return const Scaffold(body: ProductsPage());
+  },
+  'the customer list with no customers': () {
+    final repo = NoCustomers();
+    sl.registerFactory(() => CustomersViewModel(customerRepo: repo));
+    sl.registerFactory(() => CustomerViewModel(customerRepo: repo));
+    sl.registerFactory(() => CustomerAddViewModel(customerRepo: repo));
+    return Scaffold(body: CustomerPage(onBack: () {}));
   },
   'the product edit form': () {
     _registerProducts();

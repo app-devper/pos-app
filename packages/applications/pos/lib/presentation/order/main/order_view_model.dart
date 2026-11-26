@@ -77,13 +77,13 @@ class OrderViewModel {
   }
 
   void initData() {
-    final ranges = [
-      ListItem(Range.today, "Today"),
-      ListItem(Range.yesterday, "Yesterday"),
-      ListItem(Range.date, "Date"),
-      ListItem(Range.dateRange, "Date Range"),
-      ListItem(Range.currentMonth, "Current Month"),
-      ListItem(Range.lastMonth, "Last Month"),
+    const ranges = [
+      Range.today,
+      Range.yesterday,
+      Range.date,
+      Range.dateRange,
+      Range.currentMonth,
+      Range.lastMonth,
     ];
     _state.value = _state.value.copyWith(ranges: ranges);
   }

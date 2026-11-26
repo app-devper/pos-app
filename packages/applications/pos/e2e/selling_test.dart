@@ -81,7 +81,7 @@ void main() {
       await cart.addByBarcode(_unknownBarcode, found: false);
 
       // Assert
-      await shell.expectSnackbar('Error: ไม่พบสินค้า');
+      await shell.expectSnackbar('ข้อผิดพลาด: ไม่พบสินค้า');
       await shell.waitForSnackbarToClose();
       expect(cart.line(_product), findsOneWidget,
           reason: 'the unknown barcode leaves the sale as it was');
@@ -138,7 +138,7 @@ void main() {
       final orders = OrderRobot(shell);
       await orders.openList();
       await orders.openBill(_cashBill);
-      expect(orders.lineShows(_product, '3'), findsOneWidget);
+      expect(orders.lineShows(_product, '3×'), findsOneWidget);
       expect(orders.lineShows(_product, '75.00'), findsOneWidget);
       await orders.leaveBill();
     });
@@ -165,7 +165,7 @@ void main() {
       await cart.submitPayment();
 
       // Assert
-      await cart.expectRefused('Error: คุณรับเงินน้อยกว่ายอดราคาสินค้า');
+      await cart.expectRefused('ข้อผิดพลาด: คุณรับเงินน้อยกว่ายอดราคาสินค้า');
       expect(cart.paymentDue('฿75.00'), findsOneWidget,
           reason: 'the payment stays open');
       await cart.closePayment();
@@ -176,8 +176,8 @@ void main() {
   }, timeout: e2eTestTimeout);
 
   testWidgets(
-      'a PromptPay sale with a customer and a line discount shows the '
-      'discounted total and change', (tester) async {
+      'a PromptPay sale with a customer and a line discount is paid at '
+      'exactly the discounted total', (tester) async {
     await _step('PromptPay sale of 2', () async {
       // Arrange
       final shell = await _signedInShell(tester);
@@ -198,12 +198,12 @@ void main() {
       expect(cart.total(), '฿40.00');
       final before = await _bills.beforeSale();
 
-      // Act
-      await cart.openPayment(promptPay: true, tendered: '100');
+      // Act: a QR payment takes no tender and gives no change
+      await cart.openPayment(promptPay: true);
 
       // Assert
       expect(cart.paymentDue('฿40.00'), findsOneWidget);
-      expect(cart.payButton('เงินทอน ฿60.00'), findsOneWidget);
+      expect(cart.payButton('ชำระด้วยพร้อมเพย์ ฿40.00'), findsOneWidget);
 
       // Act
       await cart.submitPayment();
@@ -211,21 +211,21 @@ void main() {
       // Assert
       await cart.expectSold();
       _promptPayBill = await _bills.recordNew(before);
-      expect(_promptPayBill.rowTitle, endsWith(' Name: ${customer.name}'));
+      expect(_promptPayBill.rowTitle, endsWith(' ลูกค้า: ${customer.name}'));
       await _expectOnHand(shell, 5);
       final orders = OrderRobot(shell);
       await orders.openList();
       expect(await orders.isListed(_promptPayBill), isTrue,
           reason: 'All lists the PromptPay bill');
-      await orders.chooseFilter('Store');
+      await orders.chooseFilter('หน้าร้าน');
       // By code, not by the row's minute and total: another bill of the
       // same minute and amount must not make this pass or fail.
       expect(await orders.listsBill(_promptPayBill), isFalse,
           reason: 'Store keeps only cash bills');
       expect(await orders.listsBill(_cashBill), isTrue);
-      await orders.chooseFilter('All');
+      await orders.chooseFilter('ทั้งหมด');
       await orders.openBill(_promptPayBill);
-      expect(orders.lineShows(_product, '2'), findsOneWidget);
+      expect(orders.lineShows(_product, '2×'), findsOneWidget);
       expect(orders.lineShows(_product, '40.00'), findsOneWidget);
       await orders.leaveBill();
     });
@@ -338,14 +338,8 @@ void main() {
       // Assert
       expect(orders.lineShows(_product, 'ยกเลิกแล้ว'), findsOneWidget);
       expect(orders.detailTotal(), '฿ 0.00');
-      for (final action in [
-        Icons.delete,
-        Icons.history,
-        Icons.keyboard_return
-      ]) {
-        expect(orders.lineIcon(_product, action), findsNothing,
-            reason: 'a cancelled line offers no $action');
-      }
+      expect(orders.lineMenu(_product), findsNothing,
+          reason: 'a cancelled line offers no action');
     }, timeout: e2eTestTimeout);
   });
 

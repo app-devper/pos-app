@@ -188,9 +188,16 @@ class CartRobot {
           matching: find.text(amount))
       .hitTestable();
 
-  /// The payment dialog's one ElevatedButton, labelled [label].
-  Finder payButton(String label) =>
-      _inPayment(find.widgetWithText(ElevatedButton, label));
+  /// The payment dialog's one ElevatedButton, named [label]: its text, or
+  /// the name it gives a label laid out on two lines. Matched on the widgets,
+  /// not the semantics tree, which this run does not build.
+  Finder payButton(String label) => _inPayment(find.ancestor(
+      of: find.byWidgetPredicate((widget) => switch (widget) {
+            Text(:final data) => data == label,
+            Semantics(:final properties) => properties.label == label,
+            _ => false,
+          }),
+      matching: find.byType(ElevatedButton)));
 
   Future<void> submitPayment() async {
     await tester.tap(_inPayment(find.byType(ElevatedButton)));

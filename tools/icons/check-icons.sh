@@ -25,6 +25,35 @@ for spec in mdpi:48:108 hdpi:72:162 xhdpi:96:216 xxhdpi:144:324 xxxhdpi:192:432;
   expect_px "$RES/mipmap-$density/ic_launcher_foreground.png" "$adaptive"
 done
 expect_px "$APP/web/favicon.png" 32
+# the launch screen's mark, light and dark, where the app has a launch surface
+if [ -f "$RES/values/launch_colors.xml" ]; then
+  for spec in mdpi:108 hdpi:162 xhdpi:216 xxhdpi:324 xxxhdpi:432; do
+    IFS=: read -r density px <<<"$spec"
+    expect_px "$RES/drawable-$density/launch_mark.png" "$px"
+    expect_px "$RES/drawable-night-$density/launch_mark.png" "$px"
+  done
+fi
+
+# Transparency: a launcher icon's corners are clear, and the adaptive
+# foreground is the mark alone on a clear layer (an opaque one hides the
+# background colour and shows a blank white icon on Android 8+).
+alpha_of() { python3 "$HERE/png_alpha.py" range "$1" 2>/dev/null; }
+expect_clear_corner() { # expect_clear_corner <file>
+  local corner _min _max
+  read -r corner _min _max <<<"$(alpha_of "$1")"
+  [ "${corner:-255}" = 0 ] || fail "${1#"$APP"/} has an opaque corner (alpha ${corner:-?}), expected a clear one"
+}
+expect_mark_on_clear() { # expect_mark_on_clear <file>
+  local corner min max
+  read -r corner min max <<<"$(alpha_of "$1")"
+  [ "${corner:-255}" = 0 ] && [ "${max:-0}" = 255 ] || fail "${1#"$APP"/} is not a mark on a clear layer (corner ${corner:-?}, max ${max:-?})"
+}
+for density in mdpi xxxhdpi; do
+  expect_clear_corner "$RES/mipmap-$density/ic_launcher.png"
+  expect_mark_on_clear "$RES/mipmap-$density/ic_launcher_foreground.png"
+done
+expect_clear_corner "$APP/web/icons/Icon-512.png"
+expect_clear_corner "$APP/web/favicon.png"
 
 # every icon the web manifest names exists at the size it declares
 while IFS=' ' read -r src size; do

@@ -47,6 +47,17 @@ class AppShell extends StatefulWidget {
   /// on a narrow viewport, where it is the only way to reach the drawer.
   final bool showTopBar;
 
+  /// What system Back (Android's button, the browser's) does once the drawer
+  /// is closed, such as going to the host's first section. Null leaves Back
+  /// to the route: it pops, or on the first route leaves the app. An open
+  /// drawer is always closed first, and nothing else happens.
+  final VoidCallback? onBack;
+
+  /// False for a page pushed over the host's own: a narrow viewport then
+  /// shows the page alone, with no menu bar or drawer (its own bar leads
+  /// back), while a wide one keeps the side menu beside it.
+  final bool showDrawer;
+
   const AppShell({
     super.key,
     required this.title,
@@ -60,6 +71,8 @@ class AppShell extends StatefulWidget {
     this.floatingActionButton,
     this.initiallyExpanded,
     this.showTopBar = true,
+    this.onBack,
+    this.showDrawer = true,
   });
 
   @override
@@ -86,9 +99,20 @@ class _AppShellState extends State<AppShell>
 
   @override
   Widget build(BuildContext context) {
-    return Responsive.isMobile(context)
-        ? _buildMobile(context)
-        : _buildDesktop(context);
+    final isMobile = Responsive.isMobile(context);
+    final drawerOpen = isMobile && widget.showDrawer && _isOpen(true);
+    return PopScope<Object?>(
+      canPop: !drawerOpen && widget.onBack == null,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (drawerOpen) {
+          _toggle(true);
+        } else {
+          widget.onBack?.call();
+        }
+      },
+      child: isMobile ? _buildMobile(context) : _buildDesktop(context),
+    );
   }
 
   Widget _buildDesktop(BuildContext context) {
@@ -131,6 +155,7 @@ class _AppShellState extends State<AppShell>
   }
 
   Widget _buildMobile(BuildContext context) {
+    if (!widget.showDrawer) return widget.child;
     final open = _isOpen(true);
     final colors = AppColors.of(context);
     return Scaffold(

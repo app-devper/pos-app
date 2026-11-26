@@ -150,7 +150,9 @@ void main() {
 
       expect(vm.state.value.loading, isFalse);
       expect(vm.state.value.items, isEmpty);
-      expect(errors, hasLength(1));
+      expect(vm.state.value.error, isNotNull,
+          reason: 'the page shows the failure with a retry');
+      expect(errors, isEmpty, reason: 'no snackbar over the error state');
     });
   });
 

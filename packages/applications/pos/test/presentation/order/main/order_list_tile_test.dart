@@ -1,18 +1,25 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 // Package imports:
+import 'package:design_system/theme/text_styles.dart';
+import 'package:design_system/theme/app_colors.dart';
+import 'package:design_system/theme/theme.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // Project imports:
 import 'package:pos/domain/model/order/order_summary.dart';
 import 'package:pos/presentation/order/main/order_list_tile.dart';
+import '../../../support/app_fonts.dart';
+import '../../../support/app_languages.dart';
 
-OrderSummary _order({String status = 'CONFIRMED'}) => OrderSummary(
+OrderSummary _order({String status = 'CONFIRMED', String customerName = ''}) =>
+    OrderSummary(
       id: 'o1',
       code: 'OD_202611250007',
       customerCode: '',
-      customerName: '',
+      customerName: customerName,
       createdDate: '2026-11-25T10:00:00Z',
       total: 50,
       totalCost: 20,
@@ -21,9 +28,45 @@ OrderSummary _order({String status = 'CONFIRMED'}) => OrderSummary(
       status: status,
     );
 
-Widget _host(Widget child) => MaterialApp(home: Scaffold(body: child));
+Widget _host(Widget child, {bool thai = true}) => MaterialApp(
+    localizationsDelegates: [thai ? thaiLanguages : englishLanguages],
+    home: Scaffold(body: child));
+
+/// In the app's theme and fonts, so sizes and colours are the user's.
+Widget _appHost(Widget child) => MaterialApp(
+    theme: CustomTheme.mainTheme,
+    localizationsDelegates: const [thaiLanguages],
+    home: Scaffold(body: child));
 
 void main() {
+  testWidgets('a bill row names its customer in Thai', (tester) async {
+    // Arrange
+    final order = _order(customerName: 'สมชาย');
+
+    // Act
+    await tester.pumpWidget(_host(
+        OrderListTile(index: 0, order: order, showCost: false, onTap: () {})));
+
+    // Assert
+    expect(
+        find.text('${order.getCreatedDate()} ลูกค้า: สมชาย'), findsOneWidget);
+    expect(find.textContaining('Name:'), findsNothing);
+  });
+
+  testWidgets('a bill row names its customer in English', (tester) async {
+    // Arrange
+    final order = _order(customerName: 'Somchai');
+
+    // Act
+    await tester.pumpWidget(_host(
+        OrderListTile(index: 0, order: order, showCost: false, onTap: () {}),
+        thai: false));
+
+    // Assert
+    expect(find.text('${order.getCreatedDate()} Customer: Somchai'),
+        findsOneWidget);
+  });
+
   testWidgets('a bill row shows its bill number above its time',
       (tester) async {
     // Arrange / Act
@@ -36,7 +79,7 @@ void main() {
     expect(code, findsOneWidget);
     expect(time, findsOneWidget);
     expect(tester.getTopLeft(code).dy, lessThan(tester.getTopLeft(time).dy));
-    expect(find.text('50.00'), findsOneWidget);
+    expect(find.text('฿50.00'), findsOneWidget);
     expect(find.text('ต้นทุน: 20.00  กำไร: 30.00'), findsOneWidget);
   });
 
@@ -77,7 +120,7 @@ void main() {
 
     // Assert
     expect(find.text('ยกเลิกแล้ว'), findsOneWidget);
-    final amount = tester.widget<Text>(find.text('50.00'));
+    final amount = tester.widget<Text>(find.text('฿50.00'));
     expect(amount.style?.decoration, TextDecoration.lineThrough);
   });
 
@@ -89,8 +132,83 @@ void main() {
 
     // Assert
     expect(find.text('ยกเลิกแล้ว'), findsNothing);
-    final amount = tester.widget<Text>(find.text('50.00'));
+    final amount = tester.widget<Text>(find.text('฿50.00'));
     expect(amount.style?.decoration, isNot(TextDecoration.lineThrough));
+  });
+
+  group('the bill row\'s look', () {
+    setUpAll(loadAppFonts);
+
+    double fontSizeOf(WidgetTester tester, Finder text) =>
+        tester.renderObject<RenderParagraph>(text).text.style!.fontSize!;
+
+    testWidgets('the amount is the row\'s largest text, after a ฿',
+        (tester) async {
+      // Arrange / Act
+      await tester.pumpWidget(_appHost(OrderListTile(
+          index: 0, order: _order(), showCost: true, onTap: () {})));
+
+      // Assert
+      final amount = fontSizeOf(tester, find.text('฿50.00'));
+      expect(
+          amount,
+          greaterThan(
+              fontSizeOf(tester, find.text('ต้นทุน: 20.00  กำไร: 30.00'))));
+      expect(amount,
+          greaterThan(fontSizeOf(tester, find.text('OD_202611250007'))));
+      final style = tester.widget<Text>(find.text('฿50.00')).style!;
+      expect(style.fontWeight, FontWeight.bold);
+      expect(style.fontFeatures, contains(const FontFeature.tabularFigures()));
+      expect(style.fontFeatures, AppText.money(null).fontFeatures,
+          reason: 'the one money style of design_system');
+    });
+
+    testWidgets('the row number is a muted label of at least 12 sp',
+        (tester) async {
+      // Arrange / Act
+      await tester.pumpWidget(_appHost(OrderListTile(
+          index: 0, order: _order(), showCost: true, onTap: () {})));
+
+      // Assert
+      final number = find.text('1');
+      expect(fontSizeOf(tester, number), greaterThanOrEqualTo(12));
+      final colour =
+          tester.renderObject<RenderParagraph>(number).text.style!.color;
+      expect(colour, AppColors.light.textSecondary);
+    });
+
+    testWidgets(
+        'a million-baht row fits 320 px at 1.3× text, cost and profit shown',
+        (tester) async {
+      // Arrange
+      useViewSize(tester, const Size(320, 640));
+      final big = OrderSummary(
+        id: 'o1',
+        code: 'OD_202611250007',
+        customerCode: 'C1',
+        customerName: 'สมชาย ใจดี',
+        createdDate: '2026-11-25T10:00:00Z',
+        total: 1234567,
+        totalCost: 1000000,
+        discount: 0,
+        type: 'Store',
+        status: 'CANCELLED',
+      );
+
+      // Act
+      tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await tester.pumpWidget(_appHost(ListView(children: [
+        OrderListTile(index: 99, order: big, showCost: true, onTap: () {}),
+      ])));
+
+      // Assert
+      expect(tester.takeException(), isNull);
+      expect(find.text('฿1,234,567.00'), findsOneWidget);
+      final amount =
+          tester.renderObject<RenderParagraph>(find.text('฿1,234,567.00'));
+      expect(amount.didExceedMaxLines, isFalse);
+    });
   });
 
   testWidgets('tapping a bill row opens that bill', (tester) async {

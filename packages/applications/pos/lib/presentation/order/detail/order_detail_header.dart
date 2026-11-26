@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 // Project imports:
 import 'package:pos/domain/model/order/order_detail.dart';
 import 'package:pos/presentation/constants.dart';
+import 'package:pos/presentation/core/menu_entry.dart';
 import 'package:pos/presentation/order/cancelled_mark.dart';
 import 'package:pos/localizations/language/languages.dart';
 
@@ -37,9 +38,12 @@ class OrderDetailHeader extends StatelessWidget {
   }
 }
 
+/// The bill's less common commands, in its menu.
+enum _BillCommand { returns, delete }
+
 /// The bill's app bar actions: the receipt for everyone; for an admin also
-/// sync, the returns history and, unless the bill is already cancelled,
-/// delete.
+/// reload, and a menu with the returns history and, unless the bill is
+/// already cancelled, delete (red, apart from the rest).
 class OrderDetailActions extends StatelessWidget {
   final OrderDetail? bill;
   final bool isAdmin;
@@ -67,9 +71,38 @@ class OrderDetailActions extends StatelessWidget {
         _button(Icons.picture_as_pdf, names.billReceipt, onPrint),
         if (isAdmin) ...[
           _button(Icons.sync, names.billReload, onSync),
-          _button(Icons.assignment_return, names.billReturns, onReturns),
-          if (!(bill?.isCancelled ?? false))
-            _button(Icons.delete, names.billDelete, onDelete),
+          _buildMenu(context, names),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildMenu(BuildContext context, Languages names) {
+    final canDelete = !(bill?.isCancelled ?? false);
+    final error = Theme.of(context).colorScheme.error;
+    return PopupMenuButton<_BillCommand>(
+      tooltip: names.billCommands,
+      icon: const Icon(Icons.more_vert),
+      onSelected: (command) => switch (command) {
+        _BillCommand.returns => onReturns(),
+        _BillCommand.delete => onDelete(),
+      },
+      itemBuilder: (_) => [
+        commandMenuItem(
+          value: _BillCommand.returns,
+          icon: Icons.assignment_return,
+          text: names.billReturns,
+          name: names.billReturns,
+        ),
+        if (canDelete) ...[
+          const PopupMenuDivider(),
+          commandMenuItem(
+            value: _BillCommand.delete,
+            icon: Icons.delete,
+            text: names.billDelete,
+            name: names.billDelete,
+            color: error,
+          ),
         ],
       ],
     );

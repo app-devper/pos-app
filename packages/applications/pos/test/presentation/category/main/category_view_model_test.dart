@@ -73,11 +73,12 @@ CategoryViewModel buildViewModel(CategoryRepository repo) {
 }
 
 void main() {
-  test('initial state is empty and not loading', () {
+  test('initial state is empty and loading, before the first load answers',
+      () {
     final vm = buildViewModel(FakeCategoryRepository());
 
     expect(vm.state.value.items, isEmpty);
-    expect(vm.state.value.loading, isFalse);
+    expect(vm.state.value.loading, isTrue);
   });
 
   test('getCategories populates items and clears loading', () async {
@@ -92,7 +93,8 @@ void main() {
     expect(vm.state.value.items, hasLength(2));
   });
 
-  test('getCategories a failure is emitted once on the error channel',
+  test(
+      'getCategories a failure with nothing listed is held as the page\'s error',
       () async {
     final vm = buildViewModel(
       FakeCategoryRepository(
@@ -106,8 +108,9 @@ void main() {
     await Future<void>.delayed(Duration.zero);
 
     expect(vm.state.value.loading, isFalse);
-    expect(errors, hasLength(1),
-        reason: 'the message goes out once, with nothing left to clear');
+    expect(vm.state.value.error, isNotNull,
+        reason: 'the page shows the failure with a retry, not an empty list');
+    expect(errors, isEmpty, reason: 'no snackbar over the error state');
     expect(vm.state.value.items, isEmpty);
   });
 
