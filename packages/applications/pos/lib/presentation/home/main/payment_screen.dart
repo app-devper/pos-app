@@ -10,6 +10,7 @@ import 'package:design_system/widgets/title_bar.dart';
 // Project imports:
 import 'package:design_system/theme/app_colors.dart';
 import 'package:pos/domain/model/sale/money.dart';
+import 'package:pos/presentation/home/main/quick_cash_chips.dart';
 
 /// The most the payment dialog grows to fit its content (it is never above
 /// 90% of the screen; below that its content scrolls).
@@ -72,6 +73,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
   double _change = 0;
   bool _isInput = false;
 
+  /// Bumped when a quick-cash chip sets the amount, so the keypad forgets
+  /// what was typed before it and the next key starts a new amount.
+  int _keypadGeneration = 0;
+
   @override
   Widget build(BuildContext context) {
     // Sized by its content; where the dialog is lower than that (a small
@@ -95,6 +100,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
               ),
             ],
           ),
+          if (_typeMode == "Cash") ...[
+            const SizedBox(height: 16),
+            QuickCashChips(total: widget.amount, onSelected: _receiveQuickCash),
+          ],
           const SizedBox(height: 16),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,6 +144,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     SizedBox(
                       height: 250,
                       child: InputNumber(
+                        key: ValueKey(_keypadGeneration),
                         onDone: (value) {
                           if (!_isInput) {
                             widget.onCompleted(widget.amount, _typeMode);
@@ -184,6 +194,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
         ],
       ),
     );
+  }
+
+  /// A quick-cash chip: receives [amount], a whole number of baht.
+  void _receiveQuickCash(double amount) {
+    setState(() => _keypadGeneration++);
+    _calculate(amount.toInt().toString());
   }
 
   void _calculate(String value) {

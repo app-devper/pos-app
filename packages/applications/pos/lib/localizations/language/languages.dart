@@ -178,4 +178,7 @@ abstract class Languages {
   String get addButton;
 
   String get requireCustomerOrder;
+
+  /// A quick-cash chip's name: receive [amount] (already formatted, ฿100).
+  String receiveCash(String amount);
 }

@@ -249,4 +249,7 @@ class LanguageEn extends Languages {
 
   @override
   String get requireCustomerOrder => "Require customer order";
+
+  @override
+  String receiveCash(String amount) => "Receive $amount";
 }

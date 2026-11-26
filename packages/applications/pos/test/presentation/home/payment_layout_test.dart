@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:design_system/theme/theme.dart';
 import 'package:pos/presentation/home/main/payment_screen.dart';
+import '../../support/app_languages.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +22,7 @@ void main() {
         addTearDown(tester.view.resetDevicePixelRatio);
         await tester.pumpWidget(MaterialApp(
           theme: dark ? CustomTheme.darkTheme : CustomTheme.mainTheme,
+          localizationsDelegates: const [thaiLanguages],
           home: Scaffold(
               body: PaymentScreen(
                   amount: 1234.50, onCompleted: (_, __) {}, onError: () {})),
@@ -40,6 +42,7 @@ void main() {
     String? method;
     await tester.pumpWidget(MaterialApp(
       theme: CustomTheme.darkTheme,
+      localizationsDelegates: const [thaiLanguages],
       home: Scaffold(
           body: PaymentScreen(
         amount: 1234.50,

@@ -256,4 +256,7 @@ class LanguageTh extends Languages {
 
   @override
   String get requireCustomerOrder => "ต้องระบุลูกค้าเมื่อขาย";
+
+  @override
+  String receiveCash(String amount) => "รับเงิน $amount";
 }
