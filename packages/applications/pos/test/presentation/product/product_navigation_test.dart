@@ -4,6 +4,8 @@ import 'package:common/localizations/localizations_delegate.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pos/container.dart';
+import 'package:pos/presentation/home/main/home_view_model.dart';
+import 'package:um/domain/usecase/auth_use_cases.dart';
 import 'package:pos/domain/model/core/core.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/domain/repositories/product_repository.dart';
@@ -16,6 +18,7 @@ import 'package:pos/presentation/product/main/product_view_model.dart';
 import 'package:pos/presentation/product/main/products_view_model.dart';
 import 'package:pos/presentation/router.dart';
 import '../../support/app_languages.dart';
+import '../home/main/home_view_model_test.dart' as home;
 
 /// The shop's catalogue, in memory. Removing a Product takes it out and says
 /// the catalogue changed, the way the real repository does with its cache.
@@ -92,6 +95,12 @@ void main() {
         ));
     sl.registerFactory<ProductEditViewModel>(() => ProductEditViewModel(
           productRepo: catalogue,
+        ));
+    // The edit form is an admin's page.
+    final admin = home.FakeLoginRepository(role: 'ADMIN');
+    sl.registerFactory(() => HomeViewModel(
+          getRoleUseCase: GetRoleUseCase(admin),
+          logoutUseCase: LogoutUseCase(admin),
         ));
   });
 

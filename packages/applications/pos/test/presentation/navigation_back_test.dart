@@ -570,7 +570,7 @@ void main() {
   });
 
   testWidgets(
-      'a list from จัดการ waits for the role, the shell showing progress',
+      'a list from จัดการ waits for the role on a page showing progress',
       (tester) async {
     // Arrange
     useViewSize(tester, desktopSize);
@@ -592,10 +592,14 @@ void main() {
     ));
     await _settle(tester);
 
-    // Assert: not yet built, the shell and a progress indicator instead
+    // Assert: not yet built, a page of progress instead (no admin menu)
     expect(find.text('page'), findsNothing);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    expect(find.text('ขายสินค้า').hitTestable(), findsOneWidget);
+    expect(
+        find.descendant(
+            of: find.byType(Scaffold),
+            matching: find.byType(CircularProgressIndicator)),
+        findsOneWidget);
+    expect(find.text('ขายสินค้า'), findsNothing);
 
     // Act
     role.complete('ADMIN');
@@ -603,6 +607,7 @@ void main() {
 
     // Assert
     expect(find.text('page').hitTestable(), findsOneWidget);
+    expect(find.text('ขายสินค้า').hitTestable(), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 

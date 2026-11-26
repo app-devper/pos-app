@@ -4,13 +4,11 @@ const double defaultPagePadding = 20;
 const String rootRoute = '/';
 const String homeRoute = '/home';
 
-const String productsRoute = '/products';
 const String productAddRoute = '/product-add';
 const String productEditRoute = '/product-edit';
 const String productExpiredRoute = '/product-expired';
 const String productLotEditRoute = '/product-lot-edit';
 
-const String ordersRoute = '/orders';
 const String orderDetailRoute = '/order-detail';
 const String orderHistoryRoute = '/order-history';
 
