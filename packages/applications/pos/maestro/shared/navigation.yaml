@@ -38,6 +38,21 @@ appId: app.devper.pos
 - assertVisible: "จัดการผู้ใช้งาน"
 - assertVisible: "ใบรับสินค้า / Goods Receipt"
 - assertVisible: "นับสต็อก"
+# Android's Back on a page opened from จัดการ returns to จัดการ; it used to
+# leave the app. (The web's Back is the browser's, not driven here.)
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - tapOn: "ใบรับสินค้า / Goods Receipt"
+      - extendedWaitUntil:
+          visible: "ค้นหาเลขที่ใบรับสินค้า\\.\\.\\."
+          timeout: 15000
+      - back
+      - extendedWaitUntil:
+          visible: "ร้านค้าของฉัน"
+          timeout: 15000
+      - assertVisible: "จัดการลูกค้า"
 - runFlow:
     file: steps/open_screen.yaml
     env:
