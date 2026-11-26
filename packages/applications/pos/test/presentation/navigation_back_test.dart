@@ -353,6 +353,25 @@ void main() {
     });
   }
 
+  testWidgets(
+      'choosing สินค้า again on a product detail keeps Back to the list',
+      (tester) async {
+    // Arrange
+    await _openApp(tester);
+    await _openSection(tester, 'สินค้า');
+    await tester.tap(find.text('Paracetamol').hitTestable().first);
+    await _settle(tester);
+    await _openSection(tester, 'สินค้า');
+    expect(find.text('ข้อมูลทั่วไป').hitTestable(), findsWidgets);
+
+    // Act
+    await _systemBack(tester);
+
+    // Assert
+    expect(_sellingScreen, findsNothing);
+    expect(find.text('Paracetamol').hitTestable(), findsOneWidget);
+  });
+
   testWidgets('system Back on the add-customer form returns to the list',
       (tester) async {
     // Arrange

@@ -86,7 +86,10 @@ class _HomePageState extends State<HomePage> {
 
   String get _selectedId => _menuEvent.name;
 
+  /// Opens the section [id]; the one already shown stays as it is, its
+  /// inner page and Back target with it.
   void _onSelect(String id) {
+    if (_pendingSection == null && menuEventOf(id) == _menuEvent) return;
     setState(() {
       _pendingSection = null;
       _sectionBack = null;
