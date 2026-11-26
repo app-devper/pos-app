@@ -12,6 +12,7 @@ import 'package:design_system/widgets/title_bar.dart';
 import 'package:design_system/widgets/page_container.dart';
 
 // Project imports:
+import 'package:pos/presentation/core/readable_option.dart';
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/core/core.dart';
 import 'package:pos/domain/model/product/param.dart';
@@ -355,10 +356,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
             });
           },
           items: _categories.map((ItemType value) {
-            return DropdownMenuItem<ItemType>(
-              value: value,
-              child: Text(value.name),
-            );
+            return readableOption(value, value.name);
           }).toList(),
         ),
         const SizedBox(height: 16),
@@ -420,10 +418,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
             });
           },
           items: _productStatus.map((ItemType value) {
-            return DropdownMenuItem<ItemType>(
-              value: value,
-              child: Text(value.name),
-            );
+            return readableOption(value, value.name);
           }).toList(),
         ),
       ],

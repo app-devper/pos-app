@@ -12,6 +12,7 @@ import 'package:design_system/widgets/title_bar.dart';
 import 'package:design_system/widgets/page_container.dart';
 
 // Project imports:
+import 'package:pos/presentation/core/readable_option.dart';
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/customer/customer.dart';
 import 'package:pos/domain/model/core/core.dart';
@@ -189,10 +190,7 @@ class _CustomerAddPageState extends State<CustomerAddPage> {
               });
             },
             items: _customers.map((ItemType value) {
-              return DropdownMenuItem<ItemType>(
-                value: value,
-                child: Text(value.name),
-              );
+              return readableOption(value, value.name);
             }).toList(),
           ),
           const SizedBox(height: 16),

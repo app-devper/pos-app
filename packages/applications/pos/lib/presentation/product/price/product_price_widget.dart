@@ -9,6 +9,7 @@ import 'package:common/core/ext/widget_ext.dart';
 import 'package:design_system/widgets/title_bar.dart';
 
 // Project imports:
+import 'package:pos/presentation/core/readable_option.dart';
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/core/core.dart';
 import 'package:pos/domain/model/product/param.dart';
@@ -210,10 +211,7 @@ class _ProductPriceWidgetState extends State<ProductPriceWidget> {
                           autovalidateMode: AutovalidateMode.onUserInteraction,
                           items: customers.map<DropdownMenuItem<ItemType>>(
                               (ItemType value) {
-                            return DropdownMenuItem<ItemType>(
-                              value: value,
-                              child: Text(value.name),
-                            );
+                            return readableOption(value, value.name);
                           }).toList(),
                           onChanged: (ItemType? newValue) {
                             setState(() {
