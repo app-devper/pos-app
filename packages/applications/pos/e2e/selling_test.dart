@@ -217,13 +217,13 @@ void main() {
       await orders.openList();
       expect(await orders.isListed(_promptPayBill), isTrue,
           reason: 'All lists the PromptPay bill');
-      await orders.chooseFilter('Store');
+      await orders.chooseFilter('หน้าร้าน');
       // By code, not by the row's minute and total: another bill of the
       // same minute and amount must not make this pass or fail.
       expect(await orders.listsBill(_promptPayBill), isFalse,
           reason: 'Store keeps only cash bills');
       expect(await orders.listsBill(_cashBill), isTrue);
-      await orders.chooseFilter('All');
+      await orders.chooseFilter('ทั้งหมด');
       await orders.openBill(_promptPayBill);
       expect(orders.lineShows(_product, '2×'), findsOneWidget);
       expect(orders.lineShows(_product, '40.00'), findsOneWidget);

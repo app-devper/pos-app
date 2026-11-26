@@ -91,7 +91,7 @@ function stockCount() {
   output.countLines = count ? String((count.items || []).length) : '';
 }
 
-// The bills of the local day, as the bills list's "Today" asks for them.
+// The bills of the local day, as the bills list's "วันนี้" asks for them.
 function todaysBills() {
   const start = new Date();
   start.setHours(0, 0, 0, 0);

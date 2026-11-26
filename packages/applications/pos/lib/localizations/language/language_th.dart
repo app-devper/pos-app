@@ -338,4 +338,55 @@ class LanguageTh extends Languages {
 
   @override
   String payByPromptPay(String amount) => "ชำระด้วยพร้อมเพย์ $amount";
+
+  @override
+  String get billFilterAll => "ทั้งหมด";
+
+  @override
+  String get billFilterStore => "หน้าร้าน";
+
+  @override
+  String get billFilterOnline => "ออนไลน์";
+
+  @override
+  String get rangeToday => "วันนี้";
+
+  @override
+  String get rangeYesterday => "เมื่อวาน";
+
+  @override
+  String get rangeDate => "เลือกวัน";
+
+  @override
+  String get rangeDateRange => "ช่วงวันที่";
+
+  @override
+  String get rangeCurrentMonth => "เดือนนี้";
+
+  @override
+  String get rangeLastMonth => "เดือนที่แล้ว";
+
+  @override
+  String get dateRangeDone => "ตกลง";
+
+  static const _shortMonths = [
+    "ม.ค.",
+    "ก.พ.",
+    "มี.ค.",
+    "เม.ย.",
+    "พ.ค.",
+    "มิ.ย.",
+    "ก.ค.",
+    "ส.ค.",
+    "ก.ย.",
+    "ต.ค.",
+    "พ.ย.",
+    "ธ.ค.",
+  ];
+
+  @override
+  String shortDate(DateTime date) => "${date.day} ${shortMonth(date)}";
+
+  @override
+  String shortMonth(DateTime date) => _shortMonths[date.month - 1];
 }

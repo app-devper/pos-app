@@ -248,4 +248,33 @@ abstract class Languages {
   /// The pay button while PromptPay is chosen: the total, [amount] already
   /// formatted.
   String payByPromptPay(String amount);
+
+  /// The bills list's store filter chips.
+  String get billFilterAll;
+
+  String get billFilterStore;
+
+  String get billFilterOnline;
+
+  /// The bills list's date ranges.
+  String get rangeToday;
+
+  String get rangeYesterday;
+
+  String get rangeDate;
+
+  String get rangeDateRange;
+
+  String get rangeCurrentMonth;
+
+  String get rangeLastMonth;
+
+  /// The date range picker's confirm.
+  String get dateRangeDone;
+
+  /// A day as the bills list shows it: `26 พ.ย.`, `Nov 26`.
+  String shortDate(DateTime date);
+
+  /// A month as the bills list shows it: `พ.ย.`, `Nov`.
+  String shortMonth(DateTime date);
 }

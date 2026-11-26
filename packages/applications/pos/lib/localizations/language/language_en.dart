@@ -1,3 +1,6 @@
+// Package imports:
+import 'package:intl/intl.dart';
+
 // Project imports:
 import 'languages.dart';
 
@@ -331,4 +334,43 @@ class LanguageEn extends Languages {
 
   @override
   String payByPromptPay(String amount) => "Pay $amount by PromptPay";
+
+  @override
+  String get billFilterAll => "All";
+
+  @override
+  String get billFilterStore => "Store";
+
+  @override
+  String get billFilterOnline => "Online";
+
+  @override
+  String get rangeToday => "Today";
+
+  @override
+  String get rangeYesterday => "Yesterday";
+
+  @override
+  String get rangeDate => "Date";
+
+  @override
+  String get rangeDateRange => "Date Range";
+
+  @override
+  String get rangeCurrentMonth => "Current Month";
+
+  @override
+  String get rangeLastMonth => "Last Month";
+
+  @override
+  String get dateRangeDone => "Done";
+
+  static final _shortDate = DateFormat("MMM dd", "en_US");
+  static final _shortMonth = DateFormat("MMM", "en_US");
+
+  @override
+  String shortDate(DateTime date) => _shortDate.format(date);
+
+  @override
+  String shortMonth(DateTime date) => _shortMonth.format(date);
 }
