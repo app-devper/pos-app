@@ -1,10 +1,13 @@
 #!/bin/bash
-# Checks that every icon the POS app references exists at the size its slot needs.
-# Reads only; run after tools/icons/make-pos-icons.sh. Exit 0 = all good.
+# Checks that every icon an app references exists at the size its slot needs.
+# Reads only; run after tools/icons/make-icons.sh <app>. Exit 0 = all good.
+# Usage: tools/icons/check-icons.sh <pos|sm>
 set -uo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-APP="$HERE/../../packages/applications/pos"
+NAME="${1:-}"
+[ -n "$NAME" ] && [ -d "$HERE/../../packages/applications/$NAME" ] || { echo "usage: check-icons.sh <app>" >&2; exit 2; }
+APP="$HERE/../../packages/applications/$NAME"
 RES="$APP/android/app/src/main/res"
 failures=0
 
@@ -40,9 +43,13 @@ done
 # the adaptive icon's drawables resolve
 ADAPTIVE="$RES/mipmap-anydpi-v26/ic_launcher.xml"
 [ -f "$ADAPTIVE" ] || fail "missing mipmap-anydpi-v26/ic_launcher.xml"
-grep -q 'name="ic_launcher_background"' "$RES/values/colors.xml" 2>/dev/null || fail "colors.xml has no ic_launcher_background"
+BRAND="$(tr -d '[:space:]' < "$HERE/$NAME/brand" 2>/dev/null)"
+grep -qi "name=\"ic_launcher_background\">$BRAND<" "$RES/values/ic_launcher_background.xml" 2>/dev/null \
+  || fail "values/ic_launcher_background.xml does not set ic_launcher_background to ${BRAND:-the brand colour}"
+grep -qi "\"theme_color\": \"$BRAND\"" "$APP/web/manifest.json" || fail "manifest theme_color is not ${BRAND:-the brand colour}"
 
 # the Flutter template icon is gone (its 512 px web icon is this exact size)
-[ "$(wc -c < "$APP/web/icons/Icon-512.png" | tr -d ' ')" != "8252" ] || fail "web/icons/Icon-512.png is still the Flutter template icon"
+TEMPLATE_512_BYTES=8252
+[ "$(wc -c < "$APP/web/icons/Icon-512.png" | tr -d ' ')" != "$TEMPLATE_512_BYTES" ] || fail "web/icons/Icon-512.png is still the Flutter template icon"
 
-[ "$failures" -eq 0 ] && echo "check-pos-icons: all good" || { echo "check-pos-icons: $failures failure(s)"; exit 1; }
+[ "$failures" -eq 0 ] && echo "check-icons: $NAME all good" || { echo "check-icons: $NAME $failures failure(s)"; exit 1; }
