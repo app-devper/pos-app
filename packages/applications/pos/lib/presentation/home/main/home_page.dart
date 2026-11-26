@@ -40,6 +40,11 @@ class _HomePageState extends State<HomePage> {
 
   late MenuEvent _menuEvent =
       _pendingSection == null ? menuEventOf(widget.section) : MenuEvent.home;
+
+  /// The page the shown section was built as: renewed whenever the section
+  /// changes, so a page still fading out (or one gone since) cannot set
+  /// [_sectionBack].
+  Object _shownPage = Object();
   bool _isAdmin = false;
 
   /// Back within the current section (a product's detail to the list), or
@@ -66,9 +71,9 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _isAdmin = _viewModel.state.value.isAdmin;
       final pending = _pendingSection;
-      if (_isAdmin && pending != null) _menuEvent = pending;
+      if (_isAdmin && pending != null) _show(pending);
       _pendingSection = null;
-      if (!_isAdmin && isAdminOnly(_menuEvent)) _menuEvent = MenuEvent.home;
+      if (!_isAdmin && isAdminOnly(_menuEvent)) _show(MenuEvent.home);
     });
   }
 
@@ -93,9 +98,17 @@ class _HomePageState extends State<HomePage> {
     if (_pendingSection == null && menuEventOf(id) == _menuEvent) return;
     setState(() {
       _pendingSection = null;
-      _sectionBack = null;
-      _menuEvent = menuEventOf(id);
+      _show(menuEventOf(id));
     });
+  }
+
+  /// Shows [section] from its first page, as a new page with no Back of
+  /// its own yet. Call inside setState.
+  void _show(MenuEvent section) {
+    if (section == _menuEvent) return;
+    _menuEvent = section;
+    _shownPage = Object();
+    _sectionBack = null;
   }
 
   @override
@@ -121,8 +134,10 @@ class _HomePageState extends State<HomePage> {
     return () => _onSelect('home');
   }
 
-  void _onSectionBackChanged(VoidCallback? back) {
-    if (mounted) setState(() => _sectionBack = back);
+  /// A Back target reported by [page]; only the page shown now may set it.
+  void _onSectionBackChanged(Object page, VoidCallback? back) {
+    if (!mounted || !identical(page, _shownPage)) return;
+    setState(() => _sectionBack = back);
   }
 
   Widget _buildPage() {
@@ -132,7 +147,9 @@ class _HomePageState extends State<HomePage> {
       case MenuEvent.order:
         return const OrderPage();
       case MenuEvent.product:
-        return ProductsPage(onBackChanged: _onSectionBackChanged);
+        final page = _shownPage;
+        return ProductsPage(
+            onBackChanged: (back) => _onSectionBackChanged(page, back));
       case MenuEvent.database:
         return const HomeDatabasePage();
     }
