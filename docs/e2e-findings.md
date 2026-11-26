@@ -101,6 +101,18 @@ watched by a test on the app side. Order of work there: 1, 2 (figures a shop
 relies on) → 7, 8 → 6 → 9, 16, 26. Releases of pos-api go only to
 `pos-dev-api`; never `pos-002-api` / `pos-003-api`.
 
+**2026-11-27:** all eight are fixed in pos-api `develop` (app-devper/pos-api#52,
+not yet released). The app now uses them: the customer list asks
+`excludeArchived=true` and the receipt list `excludeCancelled=true`
+(`pos_service_filters_test.dart`; the app-side filters stay, for a pos-api
+from before the parameters, which ignores them); a bill still names an
+archived customer, looked up by code (`order_detail_view_model_test.dart`);
+a stock count line shows the server's `productName`, `unit` and `lotNumber`
+(`stock_count_mapper_test.dart`, `stock_count_detail_line_test.dart`); the
+product delete question says the stock goes to 0 in every branch
+(`product_delete_question_test.dart`). The bills list keeps listing cancelled
+bills on purpose (marked, not counted), so it does not ask `excludeCancelled`.
+
 | # | What the server does | Fix in pos-api (later) | The automated test that proves it |
 |---|---|---|---|
 | 1 | `GetOrderRange` returns cancelled bills with no way to leave them out | a status filter (default: confirmed only) and the status in the row | pos-api handler test + `selling_test.dart` "the bills list" / "a cancelled bill is marked and not counted", with the app-side filter (`order_view_model.dart`) removed; Maestro `bill_cancel_return` (`api.js dayTotal` then equals `dayTotalAll`, and its `!=` check is turned round) |

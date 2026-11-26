@@ -31,8 +31,9 @@ class CustomersViewModel {
     _state.value = _state.value.copyWith(loading: true, clearError: true);
     try {
       final customers = await customerRepo.getLocalCustomers();
-      // A removed customer is only archived by pos-api, which still returns
-      // it; the repository keeps it (an old bill still names it).
+      // The list asks pos-api to leave archived customers out; a pos-api
+      // from before that filter still returns them, so they are dropped
+      // here too.
       _all = List<Customer>.unmodifiable(
           customers.where((customer) => !customer.isArchived));
       _state.value = _state.value.copyWith(loading: false, items: _filter());

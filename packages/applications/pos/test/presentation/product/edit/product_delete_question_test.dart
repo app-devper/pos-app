@@ -91,22 +91,29 @@ Future<void> _askToDelete(WidgetTester tester, Product product) async {
 void main() {
   tearDown(() async => sl.reset());
 
-  testWidgets('deleting a product that has stock says how much is left',
-      (tester) async {
+  testWidgets(
+      'deleting a product that has stock says how much is left, and that '
+      'every branch\'s stock goes', (tester) async {
     // Arrange / Act
     await _askToDelete(tester, _product(onHand: 10));
 
     // Assert
-    expect(find.text('สินค้านี้มีสต็อกคงเหลือ 10 ชิ้น ต้องการลบใช่หรือไม่?'),
+    expect(
+        find.text('สินค้านี้มีสต็อกคงเหลือ 10 ชิ้น '
+            'การลบจะปรับสต็อกของสินค้านี้เป็น 0 ในทุกสาขา ต้องการลบใช่หรือไม่?'),
         findsOneWidget);
   });
 
-  testWidgets('deleting a product with no stock asks as before',
-      (tester) async {
+  testWidgets(
+      'deleting a product with no stock here still says other branches\' '
+      'stock goes', (tester) async {
     // Arrange / Act
     await _askToDelete(tester, _product(onHand: 0));
 
     // Assert
-    expect(find.text('ต้องการลบสินค้าใช่หรือไม่'), findsOneWidget);
+    expect(
+        find.text('ต้องการลบสินค้าใช่หรือไม่? '
+            'สต็อกของสินค้านี้ในสาขาอื่น (ถ้ามี) จะถูกปรับเป็น 0'),
+        findsOneWidget);
   });
 }

@@ -113,7 +113,7 @@ env:
     env:
       NAME: ${ADDED}
 - extendedWaitUntil:
-    visible: "ต้องการลบสินค้าใช่หรือไม่"
+    visible: "ต้องการลบสินค้าใช่หรือไม่.*"
     timeout: 10000
 - tapOn: "ยืนยัน"
 - repeat:

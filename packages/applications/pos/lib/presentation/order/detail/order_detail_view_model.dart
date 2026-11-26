@@ -108,12 +108,7 @@ class OrderDetailViewModel {
   /// them to the same form, where they would find their profile already filled
   /// in and no explanation.
   Future<void> getSupplier(String customerCode) async {
-    Customer? customer;
-    try {
-      final result = await customerRepo.getLocalCustomers();
-      customer =
-          result.where((element) => element.code == customerCode).firstOrNull;
-    } on Exception catch (_) {}
+    final customer = await _findCustomer(customerCode);
     try {
       final supplier = await supplierRepo.getSupplierInfo();
       _receipts.emit(SupplierResult(supplier: supplier, customer: customer));
@@ -121,6 +116,21 @@ class OrderDetailViewModel {
       _supplierSetups.emit(null);
     } on Exception catch (e) {
       _errors.emit(toFailure(e).getMessage());
+    }
+  }
+
+  /// The customer a bill names by [customerCode], or none: from the listed
+  /// customers, else asked of pos-api by code — an archived customer is left
+  /// out of the list, and an old bill still names it.
+  Future<Customer?> _findCustomer(String customerCode) async {
+    if (customerCode.isEmpty) return null;
+    try {
+      final listed = await customerRepo.getLocalCustomers();
+      final found =
+          listed.where((element) => element.code == customerCode).firstOrNull;
+      return found ?? await customerRepo.getCustomerByCode(customerCode);
+    } on Exception catch (_) {
+      return null;
     }
   }
 
