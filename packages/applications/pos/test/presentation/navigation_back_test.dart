@@ -4,6 +4,7 @@
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 // Package imports:
 import 'package:common/localizations/localizations_delegate.dart';
@@ -27,6 +28,7 @@ import 'package:pos/presentation/product/edit/product_edit_view_model.dart';
 import 'package:pos/presentation/product/main/product_view_model.dart';
 import 'package:pos/presentation/product/main/products_view_model.dart';
 import 'package:pos/presentation/stock_count/main/stock_counts_view_model.dart';
+import 'package:pos/presentation/supplier/info/supplier_info_view_model.dart';
 import 'package:pos/presentation/receive/main/receives_view_model.dart';
 import 'package:pos/presentation/router.dart';
 import '../support/app_fonts.dart';
@@ -38,6 +40,7 @@ import 'order/detail/order_detail_view_model_test.dart' as bill;
 import 'order/main/order_view_model_test.dart' as bills;
 import 'product/product_navigation_test.dart' as products;
 import 'stock_count/manage/stock_count_manage_view_model_test.dart' as counts;
+import 'supplier/info/supplier_info_view_model_test.dart' as shop;
 import 'receive/main/receives_view_model_test.dart' as receipts;
 
 /// The จัดการ landing page, recognised by a tile only it shows.
@@ -57,6 +60,7 @@ void _registerApp() {
   _registerBills(login);
   sl.registerFactory(() =>
       StockCountsViewModel(stockCountRepo: counts.FakeStockCountRepository()));
+  sl.registerFactory(() => shop.buildViewModel(shop.FakeSupplierRepository()));
   final people = customers.ServerCustomers();
   sl.registerFactory(() => CustomersViewModel(customerRepo: people));
   sl.registerFactory(() => CustomerViewModel(customerRepo: people));
@@ -138,6 +142,22 @@ Future<void> _openSection(WidgetTester tester, String label) async {
 
 /// The selling screen, recognised by its cart's title.
 final _sellingScreen = find.text('ตะกร้าสินค้า #1');
+
+/// The addresses the app reports to the browser, in order.
+List<String> _watchAddress(WidgetTester tester) {
+  final addresses = <String>[];
+  tester.binding.defaultBinaryMessenger
+      .setMockMethodCallHandler(SystemChannels.navigation, (call) async {
+    if (call.method == 'routeInformationUpdated') {
+      final args = call.arguments as Map<Object?, Object?>;
+      addresses.add('${args['uri'] ?? args['location']}');
+    }
+    return null;
+  });
+  addTearDown(() => tester.binding.defaultBinaryMessenger
+      .setMockMethodCallHandler(SystemChannels.navigation, null));
+  return addresses;
+}
 
 Future<void> _systemBack(WidgetTester tester) async {
   await tester.binding.handlePopRoute();
@@ -390,6 +410,31 @@ void main() {
 
       // Assert
       expect(find.textContaining('เพิ่ม').hitTestable(), findsWidgets);
+    });
+  }
+
+  for (final (tile, address) in [
+    ('ใบรับสินค้า / Goods Receipt', '/receives'),
+    ('จัดการลูกค้า', '/customers'),
+    ('นับสต็อก', '/stock-counts'),
+    ('ร้านค้าของฉัน', '/supplier'),
+  ]) {
+    testWidgets('$tile puts $address in the address bar, and Back takes it off',
+        (tester) async {
+      // Arrange
+      final addresses = _watchAddress(tester);
+      await _openApp(tester);
+      await _openSection(tester, 'จัดการ');
+
+      // Act
+      await tester.tap(find.text(tile));
+      await _settle(tester);
+      final opened = addresses.isEmpty ? null : addresses.last;
+      await _systemBack(tester);
+
+      // Assert
+      expect(opened, address);
+      expect(addresses.last, isNot(address));
     });
   }
 }

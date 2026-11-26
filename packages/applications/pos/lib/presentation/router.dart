@@ -40,11 +40,15 @@ import 'package:pos/presentation/supplier/main/suppliers_page.dart';
 class RouterApp {
   /// A page opened from จัดการ (or from one of its pages): pushed over it,
   /// with the side menu kept beside it on a wide screen.
-  static Route<dynamic> _managePage({required WidgetBuilder builder}) {
+  static Route<dynamic> _managePage(RouteSettings settings,
+      {required WidgetBuilder builder}) {
     return MaterialPageRoute(
+        settings: settings,
         builder: (context) => InnerPageFrame(child: builder(context)));
   }
 
+  /// Every route carries the name it was asked for, so the browser's
+  /// address follows the page shown (and a refresh can find it again).
   static Route<dynamic> generateRoute(RouteSettings settings) {
     if (settings.name?.startsWith('/um') ?? false) {
       return RouterUm.generateRoute(settings);
@@ -52,10 +56,12 @@ class RouterApp {
       switch (settings.name) {
         case homeRoute:
           final section = settings.arguments as String?;
-          return MaterialPageRoute(builder: (_) => HomePage(section: section));
+          return MaterialPageRoute(
+              settings: settings, builder: (_) => HomePage(section: section));
         case productsRoute:
           final args = settings.arguments as ProductsArgument?;
           return MaterialPageRoute(
+              settings: settings,
               builder: (_) => ProductsPage(mode: args?.mode));
         case productEditRoute:
           // Pushed from an Order's lines (an Admin taps one) and from the
@@ -64,6 +70,7 @@ class RouterApp {
           // changed and it should reload.
           final args = settings.arguments as ProductArgument;
           return MaterialPageRoute<bool>(
+            settings: settings,
             builder: (context) => Scaffold(
               body: SafeArea(
                 child: ProductEditPage(
@@ -76,42 +83,49 @@ class RouterApp {
             ),
           );
         case productExpiredRoute:
-          return MaterialPageRoute(builder: (_) => const ProductsExpiredPage());
+          return MaterialPageRoute(
+              settings: settings, builder: (_) => const ProductsExpiredPage());
         case productLotEditRoute:
           final args = settings.arguments as ProductLotArgument;
           return MaterialPageRoute(
+              settings: settings,
               builder: (_) => ProductLotEditPage(productLot: args.productLot));
         case ordersRoute:
-          return MaterialPageRoute(builder: (_) => const OrderPage());
+          return MaterialPageRoute(
+              settings: settings, builder: (_) => const OrderPage());
         case orderDetailRoute:
           final args = settings.arguments as OrderArgument;
           return MaterialPageRoute(
+              settings: settings,
               builder: (_) => OrderDetailPage(orderId: args.orderId));
         case orderHistoryRoute:
           final args = settings.arguments as OrderHistoryArgument;
           return MaterialPageRoute(
+              settings: settings,
               builder: (_) => OrderHistoryPage(product: args.product));
         case categoriesRoute:
-          return _managePage(builder: (_) => const CategoryPage());
+          return _managePage(settings, builder: (_) => const CategoryPage());
         case categoryAddRoute:
-          return _managePage(builder: (_) => const CategoryAddPage());
+          return _managePage(settings, builder: (_) => const CategoryAddPage());
         case categoryEditRoute:
           final args = settings.arguments as CategoryArgument;
-          return _managePage(
+          return _managePage(settings,
               builder: (_) => CategoryEditPage(category: args.category));
         case supplierRoute:
-          return _managePage(builder: (_) => const SupplierInfoPage());
+          return _managePage(settings,
+              builder: (_) => const SupplierInfoPage());
         case suppliersRoute:
-          return _managePage(builder: (_) => const SuppliersPage());
+          return _managePage(settings, builder: (_) => const SuppliersPage());
         case supplierAddRoute:
-          return _managePage(builder: (_) => const SupplierAddPage());
+          return _managePage(settings, builder: (_) => const SupplierAddPage());
         case supplierEditRoute:
           final args = settings.arguments as SupplierArgument;
-          return _managePage(
+          return _managePage(settings,
               builder: (_) => SupplierEditPage(supplier: args.supplier));
         case customersRoute:
           // The list draws its own header (title and back arrow).
           return _managePage(
+            settings,
             builder: (context) => Scaffold(
               body: SafeArea(
                 child: CustomerPage(onBack: () => Navigator.maybePop(context)),
@@ -119,21 +133,22 @@ class RouterApp {
             ),
           );
         case receivesRoute:
-          return _managePage(builder: (_) => const ReceivePage());
+          return _managePage(settings, builder: (_) => const ReceivePage());
         case receiveManageRoute:
           final args = settings.arguments as ReceiveManageArgument?;
-          return _managePage(
+          return _managePage(settings,
               builder: (_) => ReceiveManagePage(receiveId: args?.receiveId));
         case stockCountsRoute:
-          return _managePage(builder: (_) => const StockCountsPage());
+          return _managePage(settings, builder: (_) => const StockCountsPage());
         case stockCountManageRoute:
           final args = settings.arguments as StockCountManageArgument?;
-          return _managePage(
+          return _managePage(settings,
               builder: (_) =>
                   StockCountManagePage(stockCountId: args?.stockCountId));
         case scanRoute:
           if (kIsWeb) {
             return MaterialPageRoute(
+              settings: settings,
               builder: (_) => Scaffold(
                 appBar: AppBar(
                   title: const Text('Scanner'),
@@ -145,12 +160,14 @@ class RouterApp {
             );
           }
           return MaterialPageRoute(
+              settings: settings,
               builder: (_) => const ScannerPage(mode: "SCAN"));
         case rootRoute:
           return RouterUm.generateRoute(
               RouteSettings(name: routeSplash, arguments: settings.arguments));
         default:
           return MaterialPageRoute(
+            settings: settings,
             builder: (_) => Scaffold(
               appBar: AppBar(
                 title: const Text('Error'),
