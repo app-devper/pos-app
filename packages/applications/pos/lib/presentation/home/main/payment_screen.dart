@@ -441,14 +441,26 @@ class _PaymentScreenState extends State<PaymentScreen> {
   /// selected one, besides its border.
   Widget _buildPaymentOption(String title,
       {required IconData iconData,
-      String? amount,
       bool isSelected = false,
       bool compact = false,
       Function()? onTap}) {
-    if (compact) {
-      return _buildCompactOption(title,
-          iconData: iconData, isSelected: isSelected, onTap: onTap);
-    }
+    // A screen reader hears a button, and which method is chosen; the
+    // check icon alone said it only to the eye.
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      child: compact
+          ? _buildCompactOption(title,
+              iconData: iconData, isSelected: isSelected, onTap: onTap)
+          : _buildWideOption(title,
+              iconData: iconData, isSelected: isSelected, onTap: onTap),
+    );
+  }
+
+  Widget _buildWideOption(String title,
+      {required IconData iconData,
+      required bool isSelected,
+      Function()? onTap}) {
     return GestureDetector(
       onTap: () {
         onTap?.call();
@@ -496,8 +508,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         fontWeight: FontWeight.w600)),
               ),
             ),
-            if (amount != null)
-              Text(amount, maxLines: 1, overflow: TextOverflow.ellipsis),
           ],
         ),
       ),

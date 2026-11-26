@@ -64,6 +64,32 @@ void main() {
   setUpAll(loadAppFonts);
 
   for (final size in [phoneSize, desktopSize]) {
+    testWidgets(
+        'a screen reader hears each method as a button, and which is chosen, '
+        'at $size', (tester) async {
+      // Arrange
+      final semantics = tester.ensureSemantics();
+      await _open(tester, size: size);
+
+      // Assert: cash is chosen at the start
+      expect(tester.getSemantics(find.text('เงินสด')),
+          containsSemantics(isButton: true, isSelected: true));
+      expect(tester.getSemantics(find.text('พร้อมเพย์')),
+          containsSemantics(isButton: true, isSelected: false));
+
+      // Act
+      await _tap(tester, find.text('พร้อมเพย์'));
+
+      // Assert
+      expect(tester.getSemantics(find.text('พร้อมเพย์')),
+          containsSemantics(isButton: true, isSelected: true));
+      expect(tester.getSemantics(find.text('เงินสด')),
+          containsSemantics(isButton: true, isSelected: false));
+      semantics.dispose();
+    });
+  }
+
+  for (final size in [phoneSize, desktopSize]) {
     testWidgets('its labels come from the language in use at $size',
         (tester) async {
       // Arrange / Act
