@@ -276,10 +276,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
             style: TextStyle(
                 fontSize: 24,
                 color: AppColors.of(context).textSecondary,
-                fontWeight: FontWeight.bold));
+                fontWeight: FontWeight.bold,
+                fontFeatures: const [FontFeature.tabularFigures()]));
       }
       return Text("฿$amount",
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold));
+          style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              fontFeatures: [FontFeature.tabularFigures()]));
     }
 
     return Container(
@@ -327,7 +331,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 style: TextStyle(
                     fontSize: 24,
                     color: AppColors.of(context).textPrimary,
-                    fontWeight: FontWeight.bold)),
+                    fontWeight: FontWeight.bold,
+                    fontFeatures: const [FontFeature.tabularFigures()])),
           ),
         ],
       ),
@@ -363,7 +368,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 style: TextStyle(
                     fontSize: 24,
                     color: AppColors.of(context).textPrimary,
-                    fontWeight: FontWeight.bold)),
+                    fontWeight: FontWeight.bold,
+                    fontFeatures: const [FontFeature.tabularFigures()])),
           ),
         ],
       ),

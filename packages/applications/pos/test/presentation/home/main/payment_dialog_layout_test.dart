@@ -342,4 +342,26 @@ void main() {
       }
     }
   });
+
+  testWidgets('the amounts use tabular figures', (tester) async {
+    // Arrange
+    useViewSize(tester, desktopSize);
+    await tester.pumpWidget(_host(amount: 50));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    // Act
+    await tester.tap(find.text('฿100'));
+    await tester.pumpAndSettle();
+
+    // Assert: received, due, change, chips and the pay button
+    for (final amount in ['฿100', '฿50.00', 'เงินทอน ฿50.00', '฿1,000']) {
+      for (final text in tester.widgetList<Text>(find.text(amount))) {
+        expect(text.style?.fontFeatures,
+            contains(const FontFeature.tabularFigures()),
+            reason: amount);
+      }
+    }
+    expect(find.text('฿50.00'), findsNWidgets(2), reason: 'due and change');
+  });
 }
