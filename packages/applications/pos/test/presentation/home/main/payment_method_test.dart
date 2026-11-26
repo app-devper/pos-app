@@ -18,12 +18,14 @@ import '../../../support/app_languages.dart';
 typedef _Paid = (double, String);
 
 Future<List<_Paid>> _open(WidgetTester tester,
-    {double amount = 50, Size size = phoneSize}) async {
+    {double amount = 50,
+    Size size = phoneSize,
+    TestLanguages languages = thaiLanguages}) async {
   useViewSize(tester, size);
   final paid = <_Paid>[];
   await tester.pumpWidget(MaterialApp(
     theme: CustomTheme.mainTheme,
-    localizationsDelegates: const [thaiLanguages],
+    localizationsDelegates: [languages],
     home: Scaffold(
       body: Builder(
         builder: (context) => TextButton(
@@ -60,6 +62,36 @@ Finder _box(String title) =>
 
 void main() {
   setUpAll(loadAppFonts);
+
+  for (final size in [phoneSize, desktopSize]) {
+    testWidgets('its labels come from the language in use at $size',
+        (tester) async {
+      // Arrange / Act
+      await _open(tester, size: size, languages: englishLanguages);
+
+      // Assert: every label in English, none of the Thai left
+      for (final label in [
+        'Payment',
+        'Amount received',
+        'Amount due',
+        'Change',
+        'Cash',
+        'PromptPay',
+      ]) {
+        expect(find.text(label), findsWidgets, reason: label);
+      }
+      for (final thai in [
+        'ชำระเงิน',
+        'ยอดรับเงินรวม',
+        'ยอดที่ต้องชำระ',
+        'เงินทอน',
+        'เงินสด',
+        'พร้อมเพย์',
+      ]) {
+        expect(find.text(thai), findsNothing, reason: thai);
+      }
+    });
+  }
 
   group('PromptPay', () {
     testWidgets('after a chip, PromptPay pays exactly the total',

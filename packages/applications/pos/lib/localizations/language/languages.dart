@@ -292,4 +292,17 @@ abstract class Languages {
 
   /// The scanner was refused the camera.
   String get noCameraPermission;
+
+  /// The payment dialog: its title, its boxes and its methods.
+  String get paymentTitle;
+
+  String get amountReceived;
+
+  String get amountDue;
+
+  String get change;
+
+  String get cash;
+
+  String get promptPay;
 }

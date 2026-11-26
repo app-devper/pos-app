@@ -35,7 +35,7 @@ void showPaymentDialog(
       mainAxisSize: MainAxisSize.min,
       children: [
         TitleBar(
-          title: "ชำระเงิน",
+          title: Languages.of(dialogContext).paymentTitle,
           onBack: () {
             Navigator.pop(dialogContext);
           },
@@ -113,17 +113,18 @@ class _PaymentScreenState extends State<PaymentScreen> {
           _buildPaymentOptionsRow(),
           const SizedBox(height: 16),
         ],
-        _buildInputSection('ยอดรับเงินรวม', _getNumberFormat(_number)),
+        _buildInputSection(
+            Languages.of(context).amountReceived, _getNumberFormat(_number)),
         const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
-              child: _buildAmountSection(
-                  'ยอดที่ต้องชำระ', "฿${formatDouble(widget.amount)}"),
+              child: _buildAmountSection(Languages.of(context).amountDue,
+                  "฿${formatDouble(widget.amount)}"),
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: _buildAmountChange("เงินทอน", _change),
+              child: _buildAmountChange(Languages.of(context).change, _change),
             ),
           ],
         ),
@@ -164,7 +165,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       children: [
         Expanded(
           child: _buildPaymentOption(
-            "เงินสด",
+            Languages.of(context).cash,
             iconData: Icons.money,
             compact: true,
             isSelected: _typeMode == "Cash",
@@ -174,7 +175,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         const SizedBox(width: 8),
         Expanded(
           child: _buildPaymentOption(
-            "พร้อมเพย์",
+            Languages.of(context).promptPay,
             iconData: Icons.qr_code_2,
             compact: true,
             isSelected: _isPromptPay,
@@ -189,14 +190,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
     return Column(
       children: [
         _buildPaymentOption(
-          "เงินสด",
+          Languages.of(context).cash,
           iconData: Icons.money,
           isSelected: _typeMode == "Cash",
           onTap: () => _selectMethod("Cash"),
         ),
         const SizedBox(height: 16),
         _buildPaymentOption(
-          "พร้อมเพย์",
+          Languages.of(context).promptPay,
           iconData: Icons.qr_code_2,
           isSelected: _typeMode == "PromptPay",
           onTap: () => _selectMethod("PromptPay"),

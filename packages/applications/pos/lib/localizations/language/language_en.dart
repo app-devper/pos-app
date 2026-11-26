@@ -391,4 +391,22 @@ class LanguageEn extends Languages {
 
   @override
   String get noCameraPermission => "No permission to use the camera";
+
+  @override
+  String get paymentTitle => "Payment";
+
+  @override
+  String get amountReceived => "Amount received";
+
+  @override
+  String get amountDue => "Amount due";
+
+  @override
+  String get change => "Change";
+
+  @override
+  String get cash => "Cash";
+
+  @override
+  String get promptPay => "PromptPay";
 }

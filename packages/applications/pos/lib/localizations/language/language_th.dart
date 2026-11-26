@@ -407,4 +407,22 @@ class LanguageTh extends Languages {
 
   @override
   String get noCameraPermission => "ไม่ได้รับอนุญาตให้ใช้กล้อง";
+
+  @override
+  String get paymentTitle => "ชำระเงิน";
+
+  @override
+  String get amountReceived => "ยอดรับเงินรวม";
+
+  @override
+  String get amountDue => "ยอดที่ต้องชำระ";
+
+  @override
+  String get change => "เงินทอน";
+
+  @override
+  String get cash => "เงินสด";
+
+  @override
+  String get promptPay => "พร้อมเพย์";
 }
