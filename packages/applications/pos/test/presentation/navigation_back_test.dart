@@ -295,4 +295,22 @@ void main() {
       expect(find.text('Paracetamol').hitTestable(), findsOneWidget);
     });
   }
+
+  testWidgets('system Back on the add-customer form returns to the list',
+      (tester) async {
+    // Arrange
+    await _openApp(tester);
+    await _openSection(tester, 'จัดการ');
+    await tester.tap(find.text('จัดการลูกค้า'));
+    await _settle(tester);
+    await tester.tap(find.byIcon(Icons.add).hitTestable());
+    await _settle(tester);
+    expect(find.text('ลูกค้าเดิม').hitTestable(), findsNothing);
+
+    // Act
+    await _systemBack(tester);
+
+    // Assert
+    expect(find.text('ลูกค้าเดิม').hitTestable(), findsOneWidget);
+  });
 }

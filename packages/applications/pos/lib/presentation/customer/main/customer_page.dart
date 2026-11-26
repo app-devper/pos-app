@@ -45,9 +45,20 @@ class _CustomerPageState extends State<CustomerPage> {
   }
 
   void _onLoaded(Customer customer) {
-    setState(() {
-      _pageState = InfoPage(data: customer);
-    });
+    if (!mounted) return;
+    _show(InfoPage(data: customer));
+  }
+
+  void _show(PageState page) => setState(() => _pageState = page);
+
+  /// System Back from [page]: a form returns to what it was opened from, the
+  /// detail to the list; on the list Back leaves the page (null).
+  VoidCallback? _backFrom(PageState page) {
+    return switch (page) {
+      EditPage(:final data) => () => _show(InfoPage(data: data)),
+      InfoPage() || AddPage() => () => _show(MainPage()),
+      _ => null,
+    };
   }
 
   /// The failure used to go nowhere: the panel simply did not change, so a
@@ -67,7 +78,14 @@ class _CustomerPageState extends State<CustomerPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Responsive(mobile: _buildMobile(), desktop: _buildDesktop());
+    final back = _backFrom(_pageState);
+    return PopScope<Object?>(
+      canPop: back == null,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) back?.call();
+      },
+      child: Responsive(mobile: _buildMobile(), desktop: _buildDesktop()),
+    );
   }
 
   Row _buildDesktop() {
@@ -78,9 +96,7 @@ class _CustomerPageState extends State<CustomerPage> {
           child: CustomersWidget(
             viewModel: _customers,
             onAdd: () {
-              setState(() {
-                _pageState = AddPage();
-              });
+              _show(AddPage());
             },
             onSelected: (value) {
               _viewModel.getCustomerById(value.id);
@@ -115,9 +131,7 @@ class _CustomerPageState extends State<CustomerPage> {
         return CustomersWidget(
           viewModel: _customers,
           onAdd: () {
-            setState(() {
-              _pageState = AddPage();
-            });
+            _show(AddPage());
           },
           onSelected: (value) {
             _viewModel.getCustomerById(value.id);
@@ -129,9 +143,7 @@ class _CustomerPageState extends State<CustomerPage> {
       } else {
         return CustomerMenuWidget(
           onAdd: () {
-            setState(() {
-              _pageState = AddPage();
-            });
+            _show(AddPage());
           },
           onExport: () {},
         );
@@ -144,14 +156,10 @@ class _CustomerPageState extends State<CustomerPage> {
         },
         customer: customer,
         onBack: () {
-          setState(() {
-            _pageState = MainPage();
-          });
+          _show(MainPage());
         },
         onClickEdit: () {
-          setState(() {
-            _pageState = EditPage(data: customer);
-          });
+          _show(EditPage(data: customer));
         },
       );
     } else if (_pageState is EditPage) {
@@ -159,9 +167,7 @@ class _CustomerPageState extends State<CustomerPage> {
       return CustomerEditPage(
         customer: customer,
         onBack: () {
-          setState(() {
-            _pageState = InfoPage(data: customer);
-          });
+          _show(InfoPage(data: customer));
         },
         onEdit: () {
           _customers.reload();
@@ -169,23 +175,17 @@ class _CustomerPageState extends State<CustomerPage> {
         },
         onRemove: () {
           _customers.reload();
-          setState(() {
-            _pageState = MainPage();
-          });
+          _show(MainPage());
         },
       );
     } else if (_pageState is AddPage) {
       return CustomerAddPage(
         onBack: () {
-          setState(() {
-            _pageState = MainPage();
-          });
+          _show(MainPage());
         },
         onAdd: () {
           _customers.reload();
-          setState(() {
-            _pageState = MainPage();
-          });
+          _show(MainPage());
         },
       );
     }
