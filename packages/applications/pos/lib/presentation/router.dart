@@ -14,6 +14,7 @@ import 'package:pos/presentation/category/main/category_page.dart';
 import 'package:pos/presentation/constants.dart';
 import 'package:pos/presentation/customer/main/customer_page.dart';
 import 'package:pos/presentation/home/main/home_page.dart';
+import 'package:pos/presentation/home/main/inner_page_frame.dart';
 import 'package:pos/presentation/home/scanner/scanner_page.dart';
 import 'package:pos/presentation/order/argument.dart';
 import 'package:pos/presentation/order/detail/order_detail_page.dart';
@@ -37,13 +38,21 @@ import 'package:pos/presentation/supplier/info/supplier_info_page.dart';
 import 'package:pos/presentation/supplier/main/suppliers_page.dart';
 
 class RouterApp {
+  /// A page opened from จัดการ (or from one of its pages): pushed over it,
+  /// with the side menu kept beside it on a wide screen.
+  static Route<dynamic> _managePage({required WidgetBuilder builder}) {
+    return MaterialPageRoute(
+        builder: (context) => InnerPageFrame(child: builder(context)));
+  }
+
   static Route<dynamic> generateRoute(RouteSettings settings) {
     if (settings.name?.startsWith('/um') ?? false) {
       return RouterUm.generateRoute(settings);
     } else {
       switch (settings.name) {
         case homeRoute:
-          return MaterialPageRoute(builder: (_) => const HomePage());
+          final section = settings.arguments as String?;
+          return MaterialPageRoute(builder: (_) => HomePage(section: section));
         case productsRoute:
           final args = settings.arguments as ProductsArgument?;
           return MaterialPageRoute(
@@ -83,26 +92,26 @@ class RouterApp {
           return MaterialPageRoute(
               builder: (_) => OrderHistoryPage(product: args.product));
         case categoriesRoute:
-          return MaterialPageRoute(builder: (_) => const CategoryPage());
+          return _managePage(builder: (_) => const CategoryPage());
         case categoryAddRoute:
-          return MaterialPageRoute(builder: (_) => const CategoryAddPage());
+          return _managePage(builder: (_) => const CategoryAddPage());
         case categoryEditRoute:
           final args = settings.arguments as CategoryArgument;
-          return MaterialPageRoute(
+          return _managePage(
               builder: (_) => CategoryEditPage(category: args.category));
         case supplierRoute:
-          return MaterialPageRoute(builder: (_) => const SupplierInfoPage());
+          return _managePage(builder: (_) => const SupplierInfoPage());
         case suppliersRoute:
-          return MaterialPageRoute(builder: (_) => const SuppliersPage());
+          return _managePage(builder: (_) => const SuppliersPage());
         case supplierAddRoute:
-          return MaterialPageRoute(builder: (_) => const SupplierAddPage());
+          return _managePage(builder: (_) => const SupplierAddPage());
         case supplierEditRoute:
           final args = settings.arguments as SupplierArgument;
-          return MaterialPageRoute(
+          return _managePage(
               builder: (_) => SupplierEditPage(supplier: args.supplier));
         case customersRoute:
           // The list draws its own header (title and back arrow).
-          return MaterialPageRoute(
+          return _managePage(
             builder: (context) => Scaffold(
               body: SafeArea(
                 child: CustomerPage(onBack: () => Navigator.maybePop(context)),
@@ -110,16 +119,16 @@ class RouterApp {
             ),
           );
         case receivesRoute:
-          return MaterialPageRoute(builder: (_) => const ReceivePage());
+          return _managePage(builder: (_) => const ReceivePage());
         case receiveManageRoute:
           final args = settings.arguments as ReceiveManageArgument?;
-          return MaterialPageRoute(
+          return _managePage(
               builder: (_) => ReceiveManagePage(receiveId: args?.receiveId));
         case stockCountsRoute:
-          return MaterialPageRoute(builder: (_) => const StockCountsPage());
+          return _managePage(builder: (_) => const StockCountsPage());
         case stockCountManageRoute:
           final args = settings.arguments as StockCountManageArgument?;
-          return MaterialPageRoute(
+          return _managePage(
               builder: (_) =>
                   StockCountManagePage(stockCountId: args?.stockCountId));
         case scanRoute:

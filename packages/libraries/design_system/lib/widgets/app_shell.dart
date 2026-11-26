@@ -53,6 +53,11 @@ class AppShell extends StatefulWidget {
   /// drawer is always closed first, and nothing else happens.
   final VoidCallback? onBack;
 
+  /// False for a page pushed over the host's own: a narrow viewport then
+  /// shows the page alone, with no menu bar or drawer (its own bar leads
+  /// back), while a wide one keeps the side menu beside it.
+  final bool showDrawer;
+
   const AppShell({
     super.key,
     required this.title,
@@ -67,6 +72,7 @@ class AppShell extends StatefulWidget {
     this.initiallyExpanded,
     this.showTopBar = true,
     this.onBack,
+    this.showDrawer = true,
   });
 
   @override
@@ -94,7 +100,7 @@ class _AppShellState extends State<AppShell>
   @override
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
-    final drawerOpen = isMobile && _isOpen(true);
+    final drawerOpen = isMobile && widget.showDrawer && _isOpen(true);
     return PopScope<Object?>(
       canPop: !drawerOpen && widget.onBack == null,
       onPopInvokedWithResult: (didPop, _) {
@@ -149,6 +155,7 @@ class _AppShellState extends State<AppShell>
   }
 
   Widget _buildMobile(BuildContext context) {
+    if (!widget.showDrawer) return widget.child;
     final open = _isOpen(true);
     final colors = AppColors.of(context);
     return Scaffold(

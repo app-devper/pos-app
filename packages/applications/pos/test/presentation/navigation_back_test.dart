@@ -347,4 +347,22 @@ void main() {
       });
     }
   }
+
+  testWidgets(
+      'on a wide screen the side menu stays beside a page opened from '
+      'จัดการ and still leads to every section', (tester) async {
+    // Arrange
+    await _openApp(tester, size: desktopSize);
+    await _openSection(tester, 'จัดการ');
+    await tester.tap(find.text('ใบรับสินค้า / Goods Receipt'));
+    await _settle(tester);
+    expect(find.text('RC-1').hitTestable(), findsOneWidget);
+
+    // Act
+    await _openSection(tester, 'ขายสินค้า');
+
+    // Assert
+    expect(_sellingScreen.hitTestable(), findsOneWidget);
+    expect(find.text('RC-1'), findsNothing);
+  });
 }

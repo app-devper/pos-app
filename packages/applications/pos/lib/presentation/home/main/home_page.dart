@@ -19,7 +19,11 @@ import 'package:pos/presentation/order/main/order_page.dart';
 import 'package:pos/presentation/product/main/product_page.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  /// The side-menu entry to open first (see [posMenuItems]); null opens
+  /// selling.
+  final String? section;
+
+  const HomePage({super.key, this.section});
 
   @override
   State<StatefulWidget> createState() => _HomePageState();
@@ -31,7 +35,7 @@ class _HomePageState extends State<HomePage> {
   late HomeViewModel _viewModel;
   late StreamSubscription<void> _loggedOut;
 
-  MenuEvent _menuEvent = MenuEvent.home;
+  late MenuEvent _menuEvent = menuEventOf(widget.section);
   bool _isAdmin = false;
 
   /// Back within the current section (a product's detail to the list), or
@@ -64,33 +68,12 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  /// Cashiers only sell and review sales; the rest is admin territory.
-  List<AppShellItem> get _items {
-    return [
-      const AppShellItem(
-          id: 'home', label: 'ขายสินค้า', icon: Icons.shopping_cart_outlined),
-      const AppShellItem(
-          id: 'order', label: 'รายการขาย', icon: Icons.receipt_long_outlined),
-      if (_isAdmin) ...[
-        const AppShellItem(
-            id: 'product', label: 'สินค้า', icon: Icons.inventory_2_outlined),
-        const AppShellItem(
-            id: 'database', label: 'จัดการ', icon: Icons.storage),
-      ],
-    ];
-  }
-
   String get _selectedId => _menuEvent.name;
 
   void _onSelect(String id) {
     setState(() {
       _sectionBack = null;
-      _menuEvent = switch (id) {
-        'order' => MenuEvent.order,
-        'product' => MenuEvent.product,
-        'database' => MenuEvent.database,
-        _ => MenuEvent.home,
-      };
+      _menuEvent = menuEventOf(id);
     });
   }
 
@@ -99,13 +82,13 @@ class _HomePageState extends State<HomePage> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).requestFocus(_viewNode),
       child: AppShell(
-        brand: 'Devper POS',
+        brand: posBrand,
         title: '',
         // Each section draws its own header already.
         showTopBar: false,
         // Keep room for the product picker on shop tablets.
         initiallyExpanded: MediaQuery.sizeOf(context).width >= 1280,
-        items: _items,
+        items: posMenuItems(isAdmin: _isAdmin),
         selectedId: _selectedId,
         onSelect: _onSelect,
         onBack: _onBack,

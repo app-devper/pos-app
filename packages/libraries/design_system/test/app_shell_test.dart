@@ -167,4 +167,52 @@ void main() {
       expect(backs, 1);
     });
   });
+
+  group('a page pushed over the host (showDrawer: false)', () {
+    Widget pushed() => MaterialApp(
+          home: AppShell(
+            title: '',
+            brand: 'Devper',
+            selectedId: 'one',
+            showTopBar: false,
+            showDrawer: false,
+            items: const [
+              AppShellItem(id: 'one', label: 'Overview', icon: Icons.home)
+            ],
+            onSelect: (_) {},
+            child: const Text('Content'),
+          ),
+        );
+
+    testWidgets('shows only the page on a narrow screen', (tester) async {
+      // Arrange
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      // Act
+      await tester.pumpWidget(pushed());
+
+      // Assert
+      expect(find.text('Content'), findsOneWidget);
+      expect(find.byTooltip('เมนู'), findsNothing);
+      expect(find.text('Overview'), findsNothing);
+    });
+
+    testWidgets('keeps the side menu on a wide screen', (tester) async {
+      // Arrange
+      tester.view.physicalSize = const Size(1400, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      // Act
+      await tester.pumpWidget(pushed());
+
+      // Assert
+      expect(find.text('Content'), findsOneWidget);
+      expect(find.text('Overview').hitTestable(), findsOneWidget);
+    });
+  });
 }
