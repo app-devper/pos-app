@@ -32,7 +32,8 @@ void main() {
       });
     }
   }
-  testWidgets('compact payment submits entered amount and selected method',
+  testWidgets(
+      'compact PromptPay payment submits the total, whatever is keyed in',
       (tester) async {
     tester.view.physicalSize = const Size(351, 600);
     tester.view.devicePixelRatio = 1;
@@ -60,7 +61,7 @@ void main() {
       await tester.pump();
     }
     await tester.tap(find.byType(ElevatedButton));
-    expect(received, 2000);
+    expect(received, 1234.50, reason: 'a QR payment has no tender');
     expect(method, 'PromptPay');
     expect(tester.takeException(), isNull);
   });

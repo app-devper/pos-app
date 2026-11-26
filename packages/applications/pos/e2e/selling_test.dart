@@ -176,8 +176,8 @@ void main() {
   }, timeout: e2eTestTimeout);
 
   testWidgets(
-      'a PromptPay sale with a customer and a line discount shows the '
-      'discounted total and change', (tester) async {
+      'a PromptPay sale with a customer and a line discount is paid at '
+      'exactly the discounted total', (tester) async {
     await _step('PromptPay sale of 2', () async {
       // Arrange
       final shell = await _signedInShell(tester);
@@ -198,12 +198,12 @@ void main() {
       expect(cart.total(), '฿40.00');
       final before = await _bills.beforeSale();
 
-      // Act
-      await cart.openPayment(promptPay: true, tendered: '100');
+      // Act: a QR payment takes no tender and gives no change
+      await cart.openPayment(promptPay: true);
 
       // Assert
       expect(cart.paymentDue('฿40.00'), findsOneWidget);
-      expect(cart.payButton('เงินทอน ฿60.00'), findsOneWidget);
+      expect(cart.payButton('รับชำระพอดี ไม่มีเงินทอน'), findsOneWidget);
 
       // Act
       await cart.submitPayment();

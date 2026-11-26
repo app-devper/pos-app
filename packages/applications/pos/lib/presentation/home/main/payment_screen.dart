@@ -153,14 +153,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
           "เงินสด",
           iconData: Icons.money,
           isSelected: _typeMode == "Cash",
-          onTap: () => setState(() => _typeMode = "Cash"),
+          onTap: () => _selectMethod("Cash"),
         ),
         const SizedBox(height: 16),
         _buildPaymentOption(
           "พร้อมเพย์",
           iconData: Icons.qr_code_2,
           isSelected: _typeMode == "PromptPay",
-          onTap: () => setState(() => _typeMode = "PromptPay"),
+          onTap: () => _selectMethod("PromptPay"),
         ),
       ],
     );
@@ -181,10 +181,28 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  /// Pays the amount due when nothing was entered, else the amount entered
-  /// when it covers the amount due; anything short is refused.
+  bool get _isPromptPay => _typeMode == "PromptPay";
+
+  /// Changes the method to [type], starting from an empty entry: a PromptPay
+  /// payment is for exactly the total, with nothing tendered and no change,
+  /// and cash chosen again starts afresh rather than with what was entered
+  /// before.
+  void _selectMethod(String type) {
+    if (type == _typeMode) return;
+    setState(() {
+      _typeMode = type;
+      _number = "";
+      _change = 0;
+      _isInput = false;
+      _keypadGeneration++;
+    });
+  }
+
+  /// Pays the amount due when nothing was entered (and always for
+  /// PromptPay), else the amount entered when it covers the amount due;
+  /// anything short is refused.
   void _pay() {
-    if (!_isInput) {
+    if (_isPromptPay || !_isInput) {
       widget.onCompleted(widget.amount, _typeMode);
     } else if (_change >= 0) {
       widget.onCompleted(double.parse(_number), _typeMode);
@@ -200,6 +218,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   void _calculate(String value) {
+    // PromptPay takes no tender: what is keyed in changes nothing.
+    if (_isPromptPay) return;
     setState(() {
       _isInput = true;
       _number = value;
