@@ -36,8 +36,9 @@ but some change what a sighted user sees:
   marked the same way and offers no action (#1, #2).
 - A sale says `ขายสำเร็จ เลขที่บิล <code>`; a bill row shows its number above
   its time; the bill labels are Thai (ยอดรวม, ต้นทุน, กำไร) (#26). The
-  bill and product forms' buttons read บันทึก / เพิ่ม instead of Update /
-  Add, and the category form's checkbox ต้องระบุลูกค้าเมื่อขาย (Task 6).
+  category, supplier, shop profile and lot edit forms' buttons read บันทึก /
+  เพิ่ม instead of Update / Add, and the category form's checkbox
+  ต้องระบุลูกค้าเมื่อขาย (Task 6).
 - Success bars close by themselves after 4 s (#11).
 - The customer list and the receipt line's product picker have a search
   field (#25).
@@ -134,7 +135,8 @@ way in, so it would be seeded); several carts; choosing a bills date range;
 a bill line's sales history page and its open-product link; the units
 dialog; adding, editing, setting on hand and ordering lots on the stock tab;
 a customer's purchase history tab; adding a supplier from a receipt;
-deleting a receipt line.
+deleting a receipt line; filling and saving the product form's drug
+section (ข้อมูลยา).
 
 ## The findings in detail
 

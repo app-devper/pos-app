@@ -55,7 +55,8 @@ the screens open (`showCenterDialog`, `showConfirmDialog` and the named
 Widget tests that reach a feature without a server are named where they are
 all there is. Where neither suite drives a feature, the last column says why:
 **cannot be automated** (and why), or **not automated yet** (it could be;
-listed under "Coverage still open" in [e2e-findings.md](e2e-findings.md)).
+listed under "Features no automated test drives yet" in
+[e2e-findings.md](e2e-findings.md)).
 
 | Area | Feature | Dart | Maestro | Notes |
 |---|---|---|---|---|
@@ -68,7 +69,7 @@ listed under "Coverage still open" in [e2e-findings.md](e2e-findings.md)).
 | ขายสินค้า | a barcode typed + Enter adds a line; unknown says `ไม่พบสินค้า`; a scan right after paying lands in the search field | `selling_test.dart`, `product_edit_test.dart` | `sell_and_bill` (web) | the phone layout has no search field on the selling screen |
 | ขายสินค้า | camera barcode scanner (`/scan`) | — | — | cannot be automated: needs a camera (typing the barcode goes through the same lookup, above) |
 | ขายสินค้า | quantity dialog `จำนวนสินค้า` (the line's `2x`) | `selling_test.dart` | — | layout: `quantity_dialog_layout_test.dart`, the sweep |
-| ขายสินค้า | line dialog: per-unit discount, remove the line | `selling_test.dart`, `product_edit_test.dart` | — | |
+| ขายสินค้า | line dialog: per-unit discount, remove the line | `selling_test.dart` (discount and remove), `product_edit_test.dart` (remove only) | — | |
 | ขายสินค้า | the line's + and − | — | `sell_and_bill` (the product tapped twice) | widget: `cart_order_item_layout_test.dart` taps each button |
 | ขายสินค้า | oversell toggle on a line | — | — | not automated yet; widget: its name and tap (`cart_order_item_layout_test.dart`) |
 | ขายสินค้า | choose a customer for the sale, take it off | `selling_test.dart` | `customer` | |
@@ -97,6 +98,7 @@ listed under "Coverage still open" in [e2e-findings.md](e2e-findings.md)).
 | สินค้า | delete a product, the stock question | `product_edit_test.dart` | `product_add_delete` | |
 | สินค้า | หน่วยนับ: the unit dialog | — | — | not automated yet |
 | สินค้า | ราคา: add and change a price (price dialog) | `product_edit_test.dart` | — | |
+| สินค้า | ข้อมูลยา: the product form's drug section (registration numbers, generic name, drug type, dosage form) | — | — | not automated yet: no test fills or saves it; widget: the sweep lays out the product form with it and the walk checks its controls (`main_screens.dart` "the product edit form") |
 | สินค้า | สต็อก: add a lot (lot form) | — | — | not automated yet (lots come in through receipts, above); widget: the walk |
 | สินค้า | สต็อก: edit a lot | — | — | not automated yet |
 | สินค้า | สต็อก: set on hand (`ปรับจำนวนคงเหลือ`) | — | — | not automated yet; widget: the sweep and walk |
@@ -109,6 +111,7 @@ listed under "Coverage still open" in [e2e-findings.md](e2e-findings.md)).
 | จัดการ | a customer's purchase history tab | — | — | not automated yet |
 | จัดการ | จัดการผู้ใช้งาน | — | `navigation` (tile shown) | cannot be automated here: UM's own screens |
 | จัดการ | Goods Receipt: list, new, supplier, a line through the product picker, import | `stock_in_test.dart` | `receive_stock` | |
+| จัดการ | Goods Receipt: the receipt line dialog `เพิ่มรายการรับสินค้า` (product through the picker, quantity, lot, expiry) | `stock_in_test.dart` (through `ReceiveRobot`) | `receive_stock` | widget: `receive_item_dialog_test.dart`, the sweep and walk |
 | จัดการ | Goods Receipt: add a supplier from the receipt | — | — | not automated yet |
 | จัดการ | Goods Receipt: delete a draft | `stock_in_test.dart` | — | |
 | จัดการ | Goods Receipt: delete a line | — | — | not automated yet |
