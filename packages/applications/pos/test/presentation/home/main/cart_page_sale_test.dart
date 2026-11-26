@@ -136,7 +136,7 @@ Future<void> _sellOne(WidgetTester tester) async {
   await _settle(tester);
   await tester.tap(find.textContaining('ชำระเงิน ('));
   await _settle(tester);
-  await tester.tap(find.text('รับชำระพอดี ไม่มีเงินทอน'));
+  await tester.tap(find.bySemanticsLabel('รับชำระพอดี ไม่มีเงินทอน'));
   await _settle(tester);
 }
 

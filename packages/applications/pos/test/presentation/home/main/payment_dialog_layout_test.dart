@@ -107,7 +107,9 @@ void main() {
         .pumpWidget(_host(onCompleted: (amount, _) => paid.add(amount)));
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    final pay = find.widgetWithText(ElevatedButton, 'รับชำระพอดี ไม่มีเงินทอน');
+    final pay = find.ancestor(
+        of: find.bySemanticsLabel('รับชำระพอดี ไม่มีเงินทอน'),
+        matching: find.byType(ElevatedButton));
 
     // Act
     await tester.ensureVisible(pay);
@@ -247,6 +249,38 @@ void main() {
         // Assert
         expect(tester.takeException(), isNull);
         expect(find.text('฿1,240'), findsOneWidget);
+      });
+    }
+  });
+
+  group('the exact-payment button', () {
+    for (final size in [phoneSize, const Size(320, 640), desktopSize]) {
+      testWidgets('reads รับชำระพอดี on one centred line, named in full, $size',
+          (tester) async {
+        // Arrange
+        useViewSize(tester, size);
+
+        // Act
+        await tester.pumpWidget(_host());
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+
+        // Assert
+        expect(tester.takeException(), isNull);
+        final button = find.byType(ElevatedButton);
+        expect(
+            find.descendant(
+                of: button,
+                matching: find.bySemanticsLabel('รับชำระพอดี ไม่มีเงินทอน')),
+            findsOneWidget);
+        final line =
+            find.descendant(of: button, matching: find.text('รับชำระพอดี'));
+        expect(line, findsOneWidget);
+        final lineRect = tester.getRect(line);
+        final buttonRect = tester.getRect(button);
+        expect(lineRect.height, lessThan(48), reason: 'one line, not wrapped');
+        expect((lineRect.center.dx - buttonRect.center.dx).abs(), lessThan(1),
+            reason: 'centred');
       });
     }
   });

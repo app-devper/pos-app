@@ -252,4 +252,19 @@ class LanguageEn extends Languages {
 
   @override
   String receiveCash(String amount) => "Receive $amount";
+
+  @override
+  String get exactPayment => "Exact amount";
+
+  @override
+  String get exactPaymentNoChange => "No change";
+
+  @override
+  String get exactPaymentName => "Exact amount, no change";
+
+  @override
+  String get enterAmountReceived => "Enter the amount received";
+
+  @override
+  String payWithChange(String amount) => "Change $amount";
 }

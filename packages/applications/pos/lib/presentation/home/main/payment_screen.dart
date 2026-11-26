@@ -10,6 +10,7 @@ import 'package:design_system/widgets/title_bar.dart';
 // Project imports:
 import 'package:design_system/theme/app_colors.dart';
 import 'package:pos/domain/model/sale/money.dart';
+import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/home/main/quick_cash_chips.dart';
 
 /// The most the payment dialog grows to fit its content (it is never above
@@ -180,11 +181,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      child: Text(
-                        _getPaymentBtn(_change),
-                        style: const TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
+                      child: _payButtonLabel(),
                     ),
                   ],
                 ),
@@ -219,16 +216,40 @@ class _PaymentScreenState extends State<PaymentScreen> {
     });
   }
 
-  String _getPaymentBtn(double value) {
-    if (!_isInput && _change == 0) {
-      return "รับชำระพอดี ไม่มีเงินทอน";
-    } else if (_isInput && _change == 0) {
-      return "รับชำระพอดี ไม่มีเงินทอน";
-    } else if (_change < 0) {
-      return "โปรดระบุยอดที่ต้องชำระ";
+  static const _payLabelStyle =
+      TextStyle(fontSize: 20, fontWeight: FontWeight.bold);
+
+  /// The pay button's label, centred, each line kept on one line (shrunk to
+  /// fit rather than wrapped). Paid exactly, it reads รับชำระพอดี over a
+  /// smaller ไม่มีเงินทอน, and is named as one phrase.
+  Widget _payButtonLabel() {
+    final strings = Languages.of(context);
+    if (_change == 0) {
+      return Semantics(
+        label: strings.exactPaymentName,
+        excludeSemantics: true,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _oneLine(Text(strings.exactPayment, style: _payLabelStyle)),
+            _oneLine(Text(strings.exactPaymentNoChange,
+                style: const TextStyle(fontSize: 14))),
+          ],
+        ),
+      );
     }
-    return "เงินทอน ฿${formatDouble(value)}";
+    if (_change < 0) {
+      return _oneLine(Text(strings.enterAmountReceived, style: _payLabelStyle));
+    }
+    return _oneLine(Text(strings.payWithChange("฿${formatDouble(_change)}"),
+        style: _payLabelStyle
+            .copyWith(fontFeatures: const [FontFeature.tabularFigures()])));
   }
+
+  static Widget _oneLine(Text text) => FittedBox(
+        fit: BoxFit.scaleDown,
+        child: text,
+      );
 
   String _getNumberFormat(String value) {
     if (value.isEmpty) {

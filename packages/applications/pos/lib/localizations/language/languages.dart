@@ -181,4 +181,18 @@ abstract class Languages {
 
   /// A quick-cash chip's name: receive [amount] (already formatted, ฿100).
   String receiveCash(String amount);
+
+  /// The payment's pay button when the amount due is paid exactly: its
+  /// first line, its smaller second line, and its name in full.
+  String get exactPayment;
+
+  String get exactPaymentNoChange;
+
+  String get exactPaymentName;
+
+  /// The pay button while the amount received is short of the amount due.
+  String get enterAmountReceived;
+
+  /// The pay button with change to give: [amount] already formatted.
+  String payWithChange(String amount);
 }

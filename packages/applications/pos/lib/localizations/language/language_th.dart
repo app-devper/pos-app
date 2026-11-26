@@ -259,4 +259,19 @@ class LanguageTh extends Languages {
 
   @override
   String receiveCash(String amount) => "รับเงิน $amount";
+
+  @override
+  String get exactPayment => "รับชำระพอดี";
+
+  @override
+  String get exactPaymentNoChange => "ไม่มีเงินทอน";
+
+  @override
+  String get exactPaymentName => "รับชำระพอดี ไม่มีเงินทอน";
+
+  @override
+  String get enterAmountReceived => "โปรดระบุยอดที่ต้องชำระ";
+
+  @override
+  String payWithChange(String amount) => "เงินทอน $amount";
 }
