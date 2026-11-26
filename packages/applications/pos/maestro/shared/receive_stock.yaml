@@ -92,7 +92,8 @@ appId: app.devper.pos
     visible: "Name: ${PRODUCT_NAME}.*"
     timeout: 15000
 # The green "Update success" bar lies over the import button on a narrow
-# screen until it closes by itself (4 s).
+# screen: the flow waits until it is gone. (It closes by itself after 4 s;
+# this wait does not time that, nor press its Clear.)
 - extendedWaitUntil:
     notVisible: ".*Update success.*"
     timeout: 10000

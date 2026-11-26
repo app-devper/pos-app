@@ -125,8 +125,14 @@ void main() {
   // and its 'Clear' then threw "Looking up a deactivated widget's ancestor
   // is unsafe" and left it over the stock count's 'เพิ่มสินค้า'. It now
   // closes by itself, and its 'Clear' uses the messenger, not the screen.
+  // What this checks: the bar is gone within the wait and nothing threw.
+  // 'Clear' is pressed only if the bar still shows when the stock count
+  // opens; it has usually closed by then, so the press is not guaranteed
+  // (the messenger's Clear has its own widget test).
   group('success bar from an earlier screen', () {
-    testWidgets('closes, and can be cleared while it shows', (tester) async {
+    testWidgets(
+        'an earlier screen\'s success bar closes by itself on the stock '
+        'count, with no error', (tester) async {
       // Arrange: importing a receipt shows 'นำเข้าสต็อกสำเร็จ'
       final shell = await _signedInShell(tester);
       final name = RunData.name('count snackbar product');
