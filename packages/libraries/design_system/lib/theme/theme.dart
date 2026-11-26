@@ -1,9 +1,11 @@
 // Flutter imports:
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 // Project imports:
 import 'package:design_system/theme/app_colors.dart';
 import 'package:design_system/theme/color.dart';
+import 'package:design_system/theme/page_transitions.dart';
 import 'package:design_system/theme/spacing.dart';
 import 'package:design_system/theme/radius.dart';
 
@@ -34,6 +36,7 @@ class CustomTheme {
       onSecondary: colors.surface,
     ),
     scaffoldBackgroundColor: colors.surface,
+    pageTransitionsTheme: appPageTransitionsTheme(isWeb: kIsWeb),
     buttonTheme: const ButtonThemeData(
       alignedDropdown: true,
       padding: EdgeInsets.symmetric(horizontal: 0),
