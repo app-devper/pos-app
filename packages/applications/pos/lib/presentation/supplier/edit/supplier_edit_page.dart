@@ -217,7 +217,7 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
           _viewModel.updateSupplierById(
               widget.supplier.id, _getSupplierParam());
         },
-        text: "Update",
+        text: Languages.of(context).saveButton,
       ),
     );
   }

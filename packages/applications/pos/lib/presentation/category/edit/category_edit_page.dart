@@ -195,9 +195,7 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
           padding: EdgeInsets.only(top: 12),
         ),
         CheckboxListTile(
-          title: const Text(
-            "Require customer order",
-          ),
+          title: Text(Languages.of(context).requireCustomerOrder),
           value: _requireCustomerOrder,
           onChanged: (newValue) {
             setState(() {
@@ -270,7 +268,7 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
           _viewModel.updateCategoryById(
               widget.category.id, _getCategoryParam());
         },
-        text: "Update",
+        text: Languages.of(context).saveButton,
       ),
     );
   }

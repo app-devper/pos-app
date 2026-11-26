@@ -223,4 +223,13 @@ class LanguageEn extends Languages {
 
   @override
   String get scanBarcode => "Scan barcode";
+
+  @override
+  String get saveButton => "Save";
+
+  @override
+  String get addButton => "Add";
+
+  @override
+  String get requireCustomerOrder => "Require customer order";
 }

@@ -157,4 +157,10 @@ abstract class Languages {
   String get pickExpiryDate;
 
   String get scanBarcode;
+
+  String get saveButton;
+
+  String get addButton;
+
+  String get requireCustomerOrder;
 }

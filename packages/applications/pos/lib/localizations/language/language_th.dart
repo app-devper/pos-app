@@ -230,4 +230,13 @@ class LanguageTh extends Languages {
 
   @override
   String get scanBarcode => "สแกนบาร์โค้ด";
+
+  @override
+  String get saveButton => "บันทึก";
+
+  @override
+  String get addButton => "เพิ่ม";
+
+  @override
+  String get requireCustomerOrder => "ต้องระบุลูกค้าเมื่อขาย";
 }

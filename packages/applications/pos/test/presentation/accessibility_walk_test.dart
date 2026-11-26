@@ -20,6 +20,7 @@ import 'package:pos/domain/model/order/order_item_detail.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/domain/model/supplier/supplier.dart';
 import 'package:pos/domain/repositories/product_repository.dart';
+import 'package:pos/presentation/core/readable_tile.dart';
 import 'package:pos/presentation/home/main/cart_page.dart';
 import 'package:pos/presentation/home/main/cart_view_model.dart';
 import 'package:pos/presentation/home/main/cart_widget.dart';
@@ -310,27 +311,188 @@ String _describe(Element element) {
 String _name(SemanticsData data) =>
     [data.label, data.tooltip].where((s) => s.trim().isNotEmpty).join(' | ');
 
-/// Each tappable control's semantics node with the elements that make it.
-Map<SemanticsNode, List<Element>> _controls(WidgetTester tester) {
-  final controls = <SemanticsNode, List<Element>>{};
-  for (final element in find.byWidgetPredicate(_isTappable).evaluate()) {
-    final node =
-        tester.getSemantics(find.byElementPredicate((e) => e == element));
-    if (!node.getSemanticsData().hasAction(SemanticsAction.tap)) continue;
-    controls.putIfAbsent(node, () => []).add(element);
+/// A tappable a screen reader is not meant to reach: [ReadableTile]'s row
+/// tap, which its label node offers instead, the framework's own gesture
+/// detectors, and showCenterDialog's tap catchers.
+bool _isAllowedUnreachable(Element element) {
+  // The framework's own gesture detectors (an InkResponse's, a selection
+  // handle's): their control, if any, is the widget around them.
+  if (element.widget is GestureDetector &&
+      !debugIsLocalCreationLocation(element.widget)) {
+    return true;
   }
-  return controls;
+  var allowed = false;
+  var depth = 0;
+  element.visitAncestorElements((ancestor) {
+    final widget = ancestor.widget;
+    if (widget is ReadableTile) {
+      allowed = element.widget is InkWell &&
+          (element.widget as InkWell).excludeFromSemantics;
+      return false;
+    }
+
+    // showCenterDialog's pair of tap catchers (outside closes, the dialog
+    // swallows taps); the route's barrier offers the dismiss.
+    if (_isTapCatcher(element.widget) &&
+        (_isTapCatcher(widget) || _holdsTapCatcher(element))) {
+      allowed = true;
+      return false;
+    }
+    return ++depth < 12;
+  });
+  return allowed;
 }
 
-/// Every control with no name, and every name two controls share.
-List<String> _faults(WidgetTester tester) {
-  final controls = _controls(tester);
-  final byName = <String, List<SemanticsNode>>{};
+bool _isTapCatcher(Widget widget) =>
+    widget is GestureDetector && widget.excludeFromSemantics;
+
+/// Whether a tap catcher sits just under [element] (the outer of the pair).
+bool _holdsTapCatcher(Element element) {
+  var found = false;
+  void visit(Element child, int depth) {
+    if (found || depth > 4) return;
+    if (_isTapCatcher(child.widget)) {
+      found = true;
+      return;
+    }
+    child.visitChildren((c) => visit(c, depth + 1));
+  }
+
+  element.visitChildren((c) => visit(c, 1));
+  return found;
+}
+
+/// Whether [element] is drawn: not under an Offstage, and of some size.
+bool _isVisible(Element element) {
+  final box = element.renderObject;
+  if (box is! RenderBox || !box.hasSize || box.size.isEmpty) return false;
+  var offstage = false;
+  element.visitAncestorElements((ancestor) {
+    if (ancestor.widget is Offstage && (ancestor.widget as Offstage).offstage) {
+      offstage = true;
+      return false;
+    }
+    return true;
+  });
+  return !offstage;
+}
+
+/// Each tappable control's semantics node with the elements that make it,
+/// and the faults found on the way: a visible control whose node offers no
+/// tap (kept out of the semantics, or under ExcludeSemantics).
+(Map<SemanticsNode, List<Element>>, List<String>) _controls(
+    WidgetTester tester) {
+  final controls = <SemanticsNode, List<Element>>{};
   final faults = <String>[];
+  for (final element in find.byWidgetPredicate(_isTappable).evaluate()) {
+    if (!_isVisible(element) || _isAllowedUnreachable(element)) continue;
+    final node =
+        tester.getSemantics(find.byElementPredicate((e) => e == element));
+    if (!node.getSemanticsData().hasAction(SemanticsAction.tap)) {
+      faults.add('not offered to a screen reader: ${_describe(element)}');
+      continue;
+    }
+    controls.putIfAbsent(node, () => []).add(element);
+  }
+  return (controls, faults);
+}
+
+/// Whether [elements], all in one node, are one control: two tappables in
+/// one node are two controls a screen reader hears as one (an unnamed icon
+/// merged into its row, read by the row's name).
+/// A framework control's own parts (a CheckboxListTile's tile and box) are
+/// one control: only a tappable the project put there counts as a second.
+bool _isOneControl(List<Element> elements) =>
+    elements.length < 2 ||
+    !elements.skip(1).any((e) => debugIsLocalCreationLocation(e.widget));
+
+/// The texts a control holds itself: its texts and icon labels, and the
+/// label or tooltip of the widgets right around it.
+Set<String> _ownTexts(Element element) {
+  final texts = <String>{};
+  void add(String? text) {
+    if (text != null && text.trim().isNotEmpty) texts.add(text.trim());
+  }
+
+  void read(Widget widget) {
+    switch (widget) {
+      case Text(:final data, :final semanticsLabel):
+        add(data);
+        add(semanticsLabel);
+      case Icon(:final semanticLabel):
+        add(semanticLabel);
+      case Semantics(:final properties):
+        add(properties.label);
+        add(properties.tooltip);
+      case Tooltip(:final message):
+        add(message);
+      case RichText(:final text):
+        add(text.toPlainText());
+    }
+  }
+
+  void visit(Element child) {
+    read(child.widget);
+    child.visitChildren(visit);
+  }
+
+  visit(element);
+  var depth = 0;
+  element.visitAncestorElements((ancestor) {
+    read(ancestor.widget);
+    return ++depth < 12;
+  });
+  return texts;
+}
+
+/// Whether the name a screen reader says for [element] is none of its
+/// own: an unnamed icon merged into its row and read by the row's text.
+bool _isNamedByItsRow(Element element, String name) =>
+    !_ownTexts(element).any(name.contains);
+
+/// Text that is the widget tests' own data, not the app's strings.
+const _testData = [
+  'open', // dialogOpener's button
+  'Paracetamol',
+  'ACME',
+  'name-',
+  'Product p',
+  'COUNT-1',
+  'RC-',
+  'OD_',
+  'CU0001',
+  'L2026',
+  'LOT-1',
+];
+
+/// Whether [name] is in English only (no Thai), and not test data.
+bool _isEnglishOnly(String name) =>
+    !RegExp(r'[\u0E00-\u0E7F]').hasMatch(name) &&
+    RegExp(r'[A-Za-z]').hasMatch(name) &&
+    !_testData
+        .any((data) => data == 'open' ? name == data : name.contains(data));
+
+/// Every control with no name, a name in English only, a control merged
+/// into another's node or kept from a screen reader, and every name two
+/// controls share.
+List<String> _faults(WidgetTester tester) {
+  final (controls, faults) = _controls(tester);
+  final byName = <String, List<SemanticsNode>>{};
   for (final MapEntry(key: node, value: elements) in controls.entries) {
     final name = _name(node.getSemanticsData());
+    if (name.isNotEmpty && _isNamedByItsRow(elements.first, name)) {
+      faults.add('merged, read by its row\'s text "$name": '
+          '${_describe(elements.first)}');
+      continue;
+    }
+    if (!_isOneControl(elements)) {
+      faults.add('merged into one node: '
+          '${elements.map(_describe).join('; ')}');
+    }
     if (name.isEmpty) {
       faults.add('no name: ${_describe(elements.first)}');
+    } else if (_isEnglishOnly(name)) {
+      faults.add('English only: "$name": ${_describe(elements.first)}');
     } else {
       byName.putIfAbsent(name, () => []).add(node);
     }
@@ -344,9 +506,64 @@ List<String> _faults(WidgetTester tester) {
   return faults;
 }
 
+/// Controls a screen reader cannot use, planted to prove the walk sees
+/// each kind: a tap kept out of the semantics, a button under
+/// ExcludeSemantics, an unnamed icon merged into its row's node, and a name
+/// in English only.
+class _PlantedOffenders extends StatelessWidget {
+  const _PlantedOffenders();
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        body: Column(children: [
+          InkWell(
+            excludeFromSemantics: true,
+            onTap: () {},
+            child: const Icon(Icons.star),
+          ),
+          ExcludeSemantics(
+            child: IconButton(
+                tooltip: 'ซ่อนอยู่',
+                onPressed: () {},
+                icon: const Icon(Icons.home)),
+          ),
+          ListTile(
+            title: const Text('แถว'),
+            onTap: () {},
+            trailing:
+                GestureDetector(onTap: () {}, child: const Icon(Icons.close)),
+          ),
+          IconButton(
+              tooltip: 'Delete',
+              onPressed: () {},
+              icon: const Icon(Icons.delete)),
+        ]),
+      );
+}
+
 void main() {
   setUpAll(loadAppFonts);
   tearDown(() async => sl.reset());
+
+  testWidgets('the walk finds every kind of planted offender', (tester) async {
+    // Arrange
+    final semantics = tester.ensureSemantics();
+    await showScreen(tester, const _PlantedOffenders(),
+        isDialog: false, languages: thaiLanguages);
+
+    // Act
+    final faults = _faults(tester);
+
+    // Assert
+    String kinds(String kind) =>
+        faults.where((f) => f.startsWith(kind)).join('\n');
+    expect(kinds('not offered').split('\n'), hasLength(2),
+        reason: faults.join('\n'));
+    expect(kinds('merged'), isNotEmpty, reason: faults.join('\n'));
+    expect(kinds('English only: "Delete"'), isNotEmpty,
+        reason: faults.join('\n'));
+    semantics.dispose();
+  });
 
   for (final size in [phoneSize, desktopSize]) {
     for (final MapEntry(key: name, value: (screen, isDialog))

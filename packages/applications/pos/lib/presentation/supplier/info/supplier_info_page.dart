@@ -208,7 +208,7 @@ class _SupplierInfoPageState extends State<SupplierInfoPage> {
         onClicked: () {
           _viewModel.updateSupplierInfo(_getSupplierParam());
         },
-        text: "Update",
+        text: Languages.of(context).saveButton,
       ),
     );
   }
