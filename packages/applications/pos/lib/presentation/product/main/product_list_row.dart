@@ -84,17 +84,36 @@ class ProductListRow extends StatelessWidget {
     final languages = Languages.of(context);
     return switch (stockLevelOf(product.getQuantity(), product.minStock)) {
       StockLevel.inStock => const [],
-      StockLevel.low =>
-        _flagged(languages.lowStock, AppColors.of(context).warning),
-      StockLevel.out =>
-        _flagged(languages.outOfStock, Theme.of(context).colorScheme.error),
+      StockLevel.low => _flagged(context, languages.lowStock,
+          Icons.warning_amber_rounded, AppColors.of(context).warning),
+      StockLevel.out => _flagged(context, languages.outOfStock,
+          Icons.error_outline, Theme.of(context).colorScheme.error),
     };
   }
 
-  List<InlineSpan> _flagged(String text, Color color) => [
+  static const _cueIconSize = 16.0;
+
+  /// The cue: a coloured [icon], then [text] in the text colour. The orange
+  /// and red are too light for 14 px text on white; the icon carries them,
+  /// and is kept from a screen reader since the word says it.
+  List<InlineSpan> _flagged(
+          BuildContext context, String text, IconData icon, Color color) =>
+      [
+        const TextSpan(text: ' · '),
+        WidgetSpan(
+          alignment: PlaceholderAlignment.middle,
+          child: ExcludeSemantics(
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(end: 2),
+              child: Icon(icon, size: _cueIconSize, color: color),
+            ),
+          ),
+        ),
         TextSpan(
-          text: ' · $text',
-          style: TextStyle(color: color, fontWeight: FontWeight.w600),
+          text: text,
+          style: TextStyle(
+              color: AppColors.of(context).textPrimary,
+              fontWeight: FontWeight.w600),
         ),
       ];
 }

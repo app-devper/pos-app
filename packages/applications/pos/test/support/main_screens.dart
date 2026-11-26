@@ -75,6 +75,39 @@ ProductStock _stock() => ProductStock(
       importDate: '2026-11-26T00:00:00Z',
     );
 
+/// Paracetamol as product [id] named [name], with [onHand] in its one
+/// unit and a minimum of [minStock]: a row that says หมด or ใกล้หมด.
+Product _stocked(String id, String name,
+    {required int onHand, int minStock = 0}) {
+  final product = products.paracetamol();
+  return Product(
+    id: id,
+    name: name,
+    status: product.status,
+    category: product.category,
+    createdDate: product.createdDate,
+    minStock: minStock,
+    units: product.units,
+    prices: product.prices,
+    stocks: [
+      ProductStock(
+        id: 's-$id',
+        unitId: 'u-1',
+        productId: id,
+        receiveCode: '',
+        sequence: 1,
+        lotNumber: 'L-$id',
+        costPrice: 4,
+        price: 10,
+        import: onHand,
+        quantity: onHand,
+        expireDate: '',
+        importDate: '',
+      ),
+    ],
+  );
+}
+
 void _registerProducts() {
   final catalogue = products.Catalogue([products.paracetamol()]);
   sl.registerFactory(() => ProductViewModel(productRepo: catalogue));
@@ -112,6 +145,15 @@ final mainPages = <String, Screen>{
   },
   'the product list': () {
     _registerProducts();
+    return const Scaffold(body: ProductsPage());
+  },
+  'the product list with low and no stock': () {
+    final catalogue = products.Catalogue([
+      _stocked('p-out', 'Paracetamol none left', onHand: 0),
+      _stocked('p-low', 'Paracetamol nearly out', onHand: 3, minStock: 5),
+    ]);
+    sl.registerFactory(() => ProductViewModel(productRepo: catalogue));
+    sl.registerFactory(() => ProductsViewModel(productRepo: catalogue));
     return const Scaffold(body: ProductsPage());
   },
   'the product list with no products': () {

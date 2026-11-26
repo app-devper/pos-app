@@ -7,6 +7,8 @@
 import 'package:flutter/material.dart';
 
 // Package imports:
+import 'package:design_system/theme/app_colors.dart';
+import 'package:design_system/theme/theme.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // Project imports:
@@ -79,10 +81,12 @@ Product _twoUnits(
   );
 }
 
-Future<void> _showList(WidgetTester tester, Product product) async {
+Future<void> _showList(WidgetTester tester, Product product,
+    {ThemeData? theme}) async {
   sl.registerFactory(
       () => ProductsViewModel(productRepo: products.Catalogue([product])));
   await tester.pumpWidget(MaterialApp(
+    theme: theme,
     localizationsDelegates: const [thaiLanguages],
     home: Scaffold(
       body: ProductsWidget(onSelected: (_) {}, onMenu: () {}, onAdd: () {}),
@@ -95,6 +99,18 @@ Future<void> _showList(WidgetTester tester, Product product) async {
 Finder _rich(String text) => find.byWidgetPredicate((widget) =>
     widget is RichText &&
     widget.text.toPlainText(includePlaceholders: false) == text);
+
+/// The span of the row's text that reads [text].
+TextSpan _span(WidgetTester tester, String text) {
+  TextSpan? found;
+  for (final rich in tester.widgetList<RichText>(find.byType(RichText))) {
+    rich.text.visitChildren((span) {
+      if (span is TextSpan && span.text == text) found = span;
+      return found == null;
+    });
+  }
+  return found ?? (throw StateError('no span reads "$text"'));
+}
 
 void main() {
   tearDown(() async => sl.reset());
@@ -192,4 +208,30 @@ void main() {
     // Assert
     expect(_rich('฿10.00 · คงเหลือ -2 เม็ด · หมด'), findsOneWidget);
   });
+
+  for (final (name, theme, colors) in [
+    ('light', CustomTheme.mainTheme, AppColors.light),
+    ('dark', CustomTheme.darkTheme, AppColors.dark),
+  ]) {
+    group('in the $name theme the cue reads in the text colour', () {
+      for (final (cue, onHand, minStock, icon) in [
+        ('หมด', 0, 0, Icons.error_outline),
+        ('ใกล้หมด', 3, 5, Icons.warning_amber_rounded),
+      ]) {
+        testWidgets('$cue, after its icon', (tester) async {
+          // Arrange, Act
+          await _showList(
+              tester, _paracetamol(onHand: onHand, minStock: minStock),
+              theme: theme);
+
+          // Assert
+          final style = _span(tester, cue).style!;
+          expect(style.color, colors.textPrimary);
+          expect(style.fontWeight, FontWeight.w600);
+          final shown = tester.widget<Icon>(find.byIcon(icon));
+          expect(shown.size, 16);
+        });
+      }
+    });
+  }
 }
