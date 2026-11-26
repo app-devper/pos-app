@@ -151,6 +151,12 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         ),
         child: _buildBody(context),
       ),
+      // The foot is the Scaffold's bottom bar, which a floating snack bar
+      // (success, loading, error) rises above instead of covering.
+      bottomNavigationBar: BillSummary(
+          total: _viewModel.state.value.total,
+          totalCost: _viewModel.state.value.totalCost,
+          showCost: isAdmin),
     );
   }
 
@@ -171,21 +177,12 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Widget _buildBody(BuildContext context) {
-    final Size size = MediaQuery.of(context).size;
-    return SizedBox(
-      height: size.height,
-      width: size.width,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          OrderDetailHeader(bill: order),
-          _buildOrderItem(context),
-          BillSummary(
-              total: _viewModel.state.value.total,
-              totalCost: _viewModel.state.value.totalCost,
-              showCost: isAdmin),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        OrderDetailHeader(bill: order),
+        _buildOrderItem(context),
+      ],
     );
   }
 

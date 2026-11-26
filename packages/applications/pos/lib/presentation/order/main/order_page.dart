@@ -114,37 +114,41 @@ class _OrderPageState extends State<OrderPage> {
 
   @override
   Widget build(BuildContext context) {
-    _snackBar = CustomSnackBar(key: const Key("snackbar"), context: context);
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).requestFocus(_viewNode),
-      child: Scaffold(
-        key: _scaffoldKey,
-        appBar: buildPageBar(
-          context,
-          Languages.of(context).ordersTitle,
-        ),
-        body: AnnotatedRegion<SystemUiOverlayStyle>(
-          value: SystemUiOverlayStyle.dark.copyWith(
-            statusBarColor: CustomColor.statusBarColor,
+    // The list sits inside the shell's Scaffold, which would float this
+    // page's bars over its foot. Its own messenger shows them on this
+    // page's Scaffold instead, whose bottom bar, the foot, they rise above.
+    return ScaffoldMessenger(
+      child: Builder(builder: (pageContext) {
+        _snackBar =
+            CustomSnackBar(key: const Key("snackbar"), context: pageContext);
+        return GestureDetector(
+          onTap: () => FocusScope.of(context).requestFocus(_viewNode),
+          child: Scaffold(
+            key: _scaffoldKey,
+            appBar: buildPageBar(
+              context,
+              Languages.of(context).ordersTitle,
+            ),
+            body: AnnotatedRegion<SystemUiOverlayStyle>(
+              value: SystemUiOverlayStyle.dark.copyWith(
+                statusBarColor: CustomColor.statusBarColor,
+              ),
+              child: _buildBody(context),
+            ),
+            bottomNavigationBar: BillSummary(
+                total: _total, totalCost: _totalCost, showCost: _isAdmin),
           ),
-          child: _buildBody(context),
-        ),
-      ),
+        );
+      }),
     );
   }
 
-  SizedBox _buildBody(BuildContext context) {
-    final Size size = MediaQuery.of(context).size;
-    return SizedBox(
-      height: size.height,
-      width: size.width,
-      child: Column(
-        children: <Widget>[
-          _buildMenu(context),
-          _buildOrderList(),
-          BillSummary(total: _total, totalCost: _totalCost, showCost: _isAdmin),
-        ],
-      ),
+  Widget _buildBody(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        _buildMenu(context),
+        _buildOrderList(),
+      ],
     );
   }
 
