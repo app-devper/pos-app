@@ -9,18 +9,25 @@ class StockCountsState {
   final List<StockCount> items;
   final bool loading;
 
+  /// Why the last load failed; null once a load succeeds.
+  final String? error;
+
   const StockCountsState({
     this.items = const [],
     this.loading = false,
+    this.error,
   });
 
   StockCountsState copyWith({
     List<StockCount>? items,
     bool? loading,
+    String? error,
+    bool clearError = false,
   }) {
     return StockCountsState(
       items: items ?? this.items,
       loading: loading ?? this.loading,
+      error: clearError ? null : (error ?? this.error),
     );
   }
 }

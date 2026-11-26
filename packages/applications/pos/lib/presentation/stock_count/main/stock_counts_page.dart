@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:pos/presentation/core/page_bar.dart';
 import 'package:design_system/widgets/snack_bar.dart';
+import 'package:design_system/widgets/error_state.dart';
 
 // Project imports:
 import 'package:pos/container.dart';
@@ -81,6 +82,11 @@ class _StockCountsPageState extends State<StockCountsPage> {
     return ValueListenableBuilder<StockCountsState>(
       valueListenable: _viewModel.state,
       builder: (BuildContext context, StockCountsState state, _) {
+        // A failed load is not an empty shop: it says so, with a retry.
+        if (state.error != null && state.items.isEmpty) {
+          return ErrorState(
+              message: state.error!, onRetry: _viewModel.getStockCounts);
+        }
         if (state.loading && state.items.isEmpty) {
           return Center(
             child: CircularProgressIndicator(
