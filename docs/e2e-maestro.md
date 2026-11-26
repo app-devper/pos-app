@@ -43,8 +43,10 @@ tools/e2e/maestro-selftest.sh               # the runner's own checks, no device
 ```
 
 One `PASS|FAIL <platform> <flow> <seconds>s` line per flow; exit 0 only when
-all passed. A run of all eleven takes about TIMING_ANDROID on the emulator
-and TIMING_WEB on the web, plus the build the first time (APK about four
+all passed. One flow takes about one to two minutes: measured per flow,
+67–116 s on the headless web and 84–143 s on the emulator (the five flows
+Task 6 added, three passes each, and `roles` alone). A run of all eleven is
+the sum of its flows, plus the build the first time (APK about four
 minutes, web about one). `E2E_MAESTRO_REUSE_BUILD=1` skips the build when the artefact is
 there — only when the app's code has not changed.
 
