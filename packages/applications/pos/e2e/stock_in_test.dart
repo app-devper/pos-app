@@ -229,7 +229,7 @@ void main() {
       Cleanup.add('draft receive $reference',
           () => cancelDraftReceivesWithReference(reference));
 
-      // Act: create shows 'Add success'
+      // Act: create shows 'เพิ่มสำเร็จ'
       await receives.create(
           supplierName: keptSupplierName, reference: reference);
 

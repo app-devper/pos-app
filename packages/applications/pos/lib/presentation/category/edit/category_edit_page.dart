@@ -71,7 +71,8 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
 
   void _onUpdated(Category category) {
     _snackBar.hideAll();
-    _snackBar.showSnackBar(text: "Update ${category.name} success");
+    _snackBar.showSnackBar(
+        text: Languages.of(context).savedNamed(category.name));
   }
 
   void _onRemoved(Category category) {

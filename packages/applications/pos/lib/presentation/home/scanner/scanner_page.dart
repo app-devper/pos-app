@@ -138,7 +138,7 @@ class _ScannerPageState extends State<ScannerPage> {
 
   void _onPermissionSet(QRViewController ctrl, bool p) {
     if (!p) {
-      _snackBar.showErrorSnackBar("No Permission Camera");
+      _snackBar.showErrorSnackBar(Languages.of(context).noCameraPermission);
     }
   }
 

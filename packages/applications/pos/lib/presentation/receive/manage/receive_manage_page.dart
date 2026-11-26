@@ -108,13 +108,15 @@ class _ReceiveManagePageState extends State<ReceiveManagePage> {
 
   void _onCreated(Receive receive) {
     _snackBar.hideAll();
-    _snackBar.showSnackBar(text: "Add success");
+    _snackBar.showSnackBar(text: Languages.of(context).added);
   }
 
   void _onUpdated(Receive receive) {
     _snackBar.hideAll();
     _snackBar.showSnackBar(
-        text: receive.isImported ? "นำเข้าสต็อกสำเร็จ" : "Update success");
+        text: receive.isImported
+            ? Languages.of(context).stockImported
+            : Languages.of(context).saved);
   }
 
   void _onRemoved(Receive receive) {

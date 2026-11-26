@@ -135,7 +135,7 @@ class ReceiveRobot {
     await tester.tap(_createButton.hitTestable());
     await tester.pump();
     await form.awaitOutcome(_addItemButton);
-    await shell.expectSnackbar('Add success');
+    await shell.expectSnackbar('เพิ่มสำเร็จ');
   }
 
   /// The supplier names the picker offers.
@@ -160,7 +160,7 @@ class ReceiveRobot {
     await form.enter('Address*', _supplierAddress);
     await tester.tap(find.byKey(const Key('add')).hitTestable());
     await tester.pump();
-    await shell.expectSnackbar('Add $name success');
+    await shell.expectSnackbar('เพิ่ม $name สำเร็จ');
     await _back(page);
     await pumpUntil(tester, () => _supplierOptions().contains(name),
         'the supplier picker to offer $name');
@@ -217,7 +217,7 @@ class ReceiveRobot {
 
   /// 'นำเข้าสต็อก' and its confirm; returns once the page says it imported.
   Future<void> import() async {
-    // The 'Update success' bar from adding the line covers this button
+    // The 'บันทึกสำเร็จ' bar from adding the line covers this button
     // until it closes by itself.
     await shell.waitForSnackbarToClose();
     await pumpUntilFound(tester, _importButton.hitTestable());

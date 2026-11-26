@@ -373,4 +373,22 @@ class LanguageEn extends Languages {
 
   @override
   String shortMonth(DateTime date) => _shortMonth.format(date);
+
+  @override
+  String get added => "Add success";
+
+  @override
+  String get saved => "Update success";
+
+  @override
+  String addedNamed(String name) => "Add $name success";
+
+  @override
+  String savedNamed(String name) => "Update $name success";
+
+  @override
+  String get stockImported => "Stock imported";
+
+  @override
+  String get noCameraPermission => "No permission to use the camera";
 }

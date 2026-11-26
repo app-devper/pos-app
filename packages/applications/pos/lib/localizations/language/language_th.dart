@@ -389,4 +389,22 @@ class LanguageTh extends Languages {
 
   @override
   String shortMonth(DateTime date) => _shortMonths[date.month - 1];
+
+  @override
+  String get added => "เพิ่มสำเร็จ";
+
+  @override
+  String get saved => "บันทึกสำเร็จ";
+
+  @override
+  String addedNamed(String name) => "เพิ่ม $name สำเร็จ";
+
+  @override
+  String savedNamed(String name) => "บันทึก $name สำเร็จ";
+
+  @override
+  String get stockImported => "นำเข้าสต็อกสำเร็จ";
+
+  @override
+  String get noCameraPermission => "ไม่ได้รับอนุญาตให้ใช้กล้อง";
 }

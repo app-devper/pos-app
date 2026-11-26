@@ -277,4 +277,19 @@ abstract class Languages {
 
   /// A month as the bills list shows it: `พ.ย.`, `Nov`.
   String shortMonth(DateTime date);
+
+  /// Success bars: something was added, or saved, and named when it can be.
+  String get added;
+
+  String get saved;
+
+  String addedNamed(String name);
+
+  String savedNamed(String name);
+
+  /// A receipt's stock went into the shop's stock.
+  String get stockImported;
+
+  /// The scanner was refused the camera.
+  String get noCameraPermission;
 }

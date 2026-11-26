@@ -66,7 +66,8 @@ class _SupplierInfoPageState extends State<SupplierInfoPage> {
 
   void _onUpdated(Supplier supplier) {
     _snackBar.hideAll();
-    _snackBar.showSnackBar(text: "Update ${supplier.name} success");
+    _snackBar.showSnackBar(
+        text: Languages.of(context).savedNamed(supplier.name));
   }
 
   void _onStateChanged() {

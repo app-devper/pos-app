@@ -75,7 +75,8 @@ class _CategoryAddPageState extends State<CategoryAddPage> {
 
   void _onCreated(Category category) {
     _snackBar.hideAll();
-    _snackBar.showSnackBar(text: "Add ${category.name} success");
+    _snackBar.showSnackBar(
+        text: Languages.of(context).addedNamed(category.name));
     _nameEditingController.text = "";
     _valueEditingController.text = "";
     _descriptionEditingController.text = "";

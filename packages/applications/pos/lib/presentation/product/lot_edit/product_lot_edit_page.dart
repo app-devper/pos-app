@@ -81,7 +81,7 @@ class _ProductLotEditPageState extends State<ProductLotEditPage> {
 
   void _onUpdated(ProductLot data) {
     _snackBar.hideAll();
-    _snackBar.showSnackBar(text: "Update success");
+    _snackBar.showSnackBar(text: Languages.of(context).saved);
   }
 
   void _onStateChanged() {

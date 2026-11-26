@@ -63,7 +63,8 @@ class _SupplierAddPageState extends State<SupplierAddPage> {
 
   void _onCreated(Supplier supplier) {
     _snackBar.hideAll();
-    _snackBar.showSnackBar(text: "Add ${supplier.name} success");
+    _snackBar.showSnackBar(
+        text: Languages.of(context).addedNamed(supplier.name));
     _nameEditingController.text = "";
     _addressEditingController.text = "";
     _phoneEditingController.text = "";
