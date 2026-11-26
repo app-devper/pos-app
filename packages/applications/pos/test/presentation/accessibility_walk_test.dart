@@ -70,10 +70,12 @@ CartOrderItem _cartLine(String name, {String unit = 'ชิ้น'}) => CartOrde
       onToggleOversell: () {},
     );
 
-OrderItemDetail _billLine(String id, String name, {int quantity = 2}) =>
+OrderItemDetail _billLine(String id, String name,
+        {int quantity = 2, String? productId, String unitId = ''}) =>
     OrderItemDetail(
       id: id,
-      product: _product('p-$id', name),
+      product: _product(productId ?? 'p-$id', name),
+      unitId: unitId,
       quantity: quantity,
       price: 25,
       costPrice: 10,
@@ -124,6 +126,38 @@ final _unit = ProductUnit(
 
 const _customer = 'สมชาย ใจดี';
 
+/// The catalogue of the bill's product p1: sold in ชิ้น (u1) and แผง (u2).
+class _CatalogueRepository implements ProductRepository {
+  @override
+  Future<Product?> getLocalProductById(String productId) async =>
+      productId != 'p1'
+          ? null
+          : Product(
+              id: 'p1',
+              name: 'พาราเซตามอล',
+              status: 'ACTIVE',
+              category: 'General',
+              createdDate: '',
+              units: [
+                _unit,
+                ProductUnit(
+                    id: 'u2',
+                    productId: 'p1',
+                    costPrice: 50,
+                    unit: 'แผง',
+                    size: 10,
+                    barcode: '',
+                    volume: 0,
+                    volumeUnit: ''),
+              ],
+              prices: const [],
+              stocks: const [],
+            );
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
 /// The bill detail of [detail], as an admin sees it.
 Widget _billDetail(OrderDetail detail) {
   sl.registerFactory(() => OrderDetailViewModel(
@@ -133,6 +167,7 @@ Widget _billDetail(OrderDetail detail) {
             supplier: Supplier(
                 id: 's1', name: 'ร้าน', address: '', phone: '', taxId: '')),
         customerRepo: bill.FakeCustomerRepository(),
+        productRepo: _CatalogueRepository(),
       ));
   return const OrderDetailPage(orderId: 'order-1');
 }
@@ -186,6 +221,14 @@ final _morePages = <String, _Walked>{
     build: () => _billDetail(_bill(items: [
           _billLine('i1', 'พาราเซตามอล'),
           _billLine('i2', 'พาราเซตามอล', quantity: 1),
+        ])),
+    then: null,
+  ),
+  // Same quantity, same amount, two units: only the unit tells them apart.
+  'a bill with one product in two units at one amount, for an admin': (
+    build: () => _billDetail(_bill(items: [
+          _billLine('i1', 'พาราเซตามอล', productId: 'p1', unitId: 'u1'),
+          _billLine('i2', 'พาราเซตามอล', productId: 'p1', unitId: 'u2'),
         ])),
     then: null,
   ),

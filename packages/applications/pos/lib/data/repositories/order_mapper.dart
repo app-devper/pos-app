@@ -105,6 +105,7 @@ extension OrderJson on Map<String, dynamic> {
     return OrderItemDetail(
       id: json["id"],
       product: product,
+      unitId: json["unitId"] ?? "",
       quantity: json["quantity"],
       price: json.readDouble("price"),
       costPrice: json.readDouble("costPrice"),

@@ -145,7 +145,8 @@ button labels, the stock row's scrollbar, among others).
   `บันทึกการนับสต็อก`, `ลบบิล`. A row's buttons name their row:
   `ลดจำนวน <product> <unit>`, `เพิ่มจำนวน <product> <unit>`,
   `2x แก้ไขจำนวน <product> <unit>` on a cart line, `คืนสินค้า 2x <product>
-  ฿<amount>` on a bill line.
+  <unit> ฿<amount>` on a bill line (the unit's name comes from the product
+  catalogue: the bill sends only its id).
 - A row's texts are one node of their own, beside its buttons
   (`ReadableTile`): the cart line `2x <product> <unit> ฿<amount> <price
   kind>`, the chosen customer `<name>\n<code>`, a bill line `2x <product>

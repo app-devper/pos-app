@@ -12,17 +12,20 @@ import 'package:um/domain/usecase/auth_use_cases.dart';
 // Project imports:
 import 'package:pos/domain/model/customer/customer.dart';
 import 'package:pos/domain/model/order/order_detail.dart';
+import 'package:pos/domain/model/product/product.dart';
 import 'order_detail_state.dart';
 
 import 'package:pos/domain/repositories/customer_repository.dart';
 
 import 'package:pos/domain/repositories/supplier_repository.dart';
 import 'package:pos/domain/repositories/order_repository.dart';
+import 'package:pos/domain/repositories/product_repository.dart';
 
 class OrderDetailViewModel {
   final OrderRepository orderRepo;
   final SupplierRepository supplierRepo;
   final CustomerRepository customerRepo;
+  final ProductRepository productRepo;
   final GetRoleUseCase getRoleUseCase;
 
   OrderDetailViewModel({
@@ -30,6 +33,7 @@ class OrderDetailViewModel {
     required this.getRoleUseCase,
     required this.supplierRepo,
     required this.customerRepo,
+    required this.productRepo,
   });
 
   final _state = ViewState<OrderDetailState>(const OrderDetailState());
@@ -128,6 +132,31 @@ class OrderDetailViewModel {
       _state.value = _state.value.copyWith(order: order, loading: false);
     } on Exception catch (e) {
       _fail(e);
+      return;
+    }
+    await _loadUnitNames();
+  }
+
+  /// Looks up the name of each line's unit in the product catalogue, so two
+  /// lines of one product in two units are told apart. The bill is already
+  /// shown; a lookup that fails is said, and the lines keep their names
+  /// without the unit.
+  Future<void> _loadUnitNames() async {
+    final productIds = {
+      for (final line in _state.value.items)
+        if (line.product case final product?) product.id,
+    };
+    try {
+      final products = await Future.wait(
+          productIds.map((id) => productRepo.getLocalProductById(id)));
+      final unitNames = {
+        for (final product in products)
+          for (final unit in product?.units ?? const <ProductUnit>[])
+            unit.id: unit.unit,
+      };
+      _state.value = _state.value.copyWith(unitNames: unitNames);
+    } on Exception catch (e) {
+      _errors.emit(toFailure(e).getMessage());
     }
   }
 

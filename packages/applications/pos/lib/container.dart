@@ -150,6 +150,7 @@ Future<void> initPos() async {
       orderRepo: sl(),
       supplierRepo: sl(),
       customerRepo: sl(),
+      productRepo: sl(),
     ),
   );
   sl.registerFactory(

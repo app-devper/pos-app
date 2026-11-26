@@ -228,6 +228,25 @@ void main() {
       expect(detail.items.single.product?.name, 'ยาแก้ปวด');
     });
 
+    test('getOrderById keeps the unit id each line was sold in', () async {
+      // Arrange
+      final recorder = _Recorder(
+        body: jsonEncode({
+          ..._orderJson,
+          'items': [
+            {..._itemJson(product: _productJson), 'unitId': 'u-strip'},
+            _itemJson(product: _productJson),
+          ],
+        }),
+      );
+
+      // Act
+      final detail = await _repo(recorder).getOrderById('o1');
+
+      // Assert
+      expect(detail.items.map((e) => e.unitId), ['u-strip', '']);
+    });
+
     test('getOrderById reads a cancelled line as cancelled', () async {
       // Arrange
       final recorder = _Recorder(

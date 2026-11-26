@@ -196,6 +196,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           final content = orderItem[index];
           return OrderLineTile(
             line: content,
+            unitName: _viewModel.state.value.unitNameOf(content),
             isAdmin: isAdmin,
             onTap: () {
               if (isAdmin) {

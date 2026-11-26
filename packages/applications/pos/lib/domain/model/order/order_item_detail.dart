@@ -10,6 +10,10 @@ import 'package:pos/domain/model/sale/money.dart';
 class OrderItemDetail {
   String id;
   Product? product;
+
+  /// The id of the unit the line was sold in; empty when pos-api sent none.
+  /// The bill carries no unit name: the product's units hold it.
+  String unitId;
   int quantity;
   double price;
   double costPrice;
@@ -25,6 +29,7 @@ class OrderItemDetail {
   OrderItemDetail({
     required this.id,
     required this.product,
+    this.unitId = '',
     required this.quantity,
     required this.price,
     required this.costPrice,

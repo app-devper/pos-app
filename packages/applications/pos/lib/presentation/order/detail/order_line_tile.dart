@@ -20,6 +20,9 @@ import 'package:pos/presentation/core/readable_tile.dart';
 /// no action.
 class OrderLineTile extends StatelessWidget {
   final OrderItemDetail line;
+
+  /// The name of the unit the line was sold in; empty while it is not known.
+  final String unitName;
   final bool isAdmin;
   final VoidCallback onTap;
   final VoidCallback onDelete;
@@ -29,6 +32,7 @@ class OrderLineTile extends StatelessWidget {
   const OrderLineTile({
     super.key,
     required this.line,
+    this.unitName = '',
     required this.isAdmin,
     required this.onTap,
     required this.onDelete,
@@ -91,10 +95,14 @@ class OrderLineTile extends StatelessWidget {
       return ExcludeSemantics(child: _buildQuantityColumn(context));
     }
     final names = Languages.of(context);
-    // The bill carries no unit name, so a line is told apart from another
-    // of the same product by its quantity and amount.
-    final product = '${line.quantity}x ${line.product?.name ?? ''} '
-        '฿${_format.format(line.paid())}';
+    // A line is told apart from another of the same product by its
+    // quantity, unit and amount, as the cart names its lines.
+    final product = [
+      '${line.quantity}x',
+      line.product?.name ?? '',
+      if (unitName.isNotEmpty) unitName,
+      '฿${_format.format(line.paid())}',
+    ].join(' ');
     return SizedBox(
       width: 130,
       height: 50,

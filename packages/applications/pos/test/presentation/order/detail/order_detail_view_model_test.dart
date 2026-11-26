@@ -9,6 +9,8 @@ import 'package:pos/domain/model/order/order_item_detail.dart';
 import 'package:pos/domain/model/supplier/supplier.dart';
 import 'package:pos/domain/repositories/customer_repository.dart';
 import 'package:pos/domain/repositories/order_repository.dart';
+import 'package:pos/domain/repositories/product_repository.dart';
+import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/domain/repositories/supplier_repository.dart';
 import 'package:pos/presentation/order/detail/order_detail_state.dart';
 import 'package:pos/presentation/order/detail/order_detail_view_model.dart';
@@ -214,13 +216,64 @@ OrderDetail _buildOrderDetail(String id,
   );
 }
 
+/// The product catalogue: [products] by id, or [throws] for every lookup.
+class FakeCatalogueRepository implements ProductRepository {
+  final Map<String, Product> products;
+  final Object? throws;
+
+  FakeCatalogueRepository({this.products = const {}, this.throws});
+
+  @override
+  Future<Product?> getLocalProductById(String productId) async {
+    final error = throws;
+    if (error != null) throw error;
+    return products[productId];
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+ProductUnit _unitOf(String id, String name) => ProductUnit(
+    id: id,
+    productId: 'p1',
+    costPrice: 1,
+    unit: name,
+    size: 1,
+    barcode: '',
+    volume: 0,
+    volumeUnit: '');
+
+Product _productWithUnits(List<ProductUnit> units) => Product(
+    id: 'p1',
+    name: 'Product',
+    status: 'ACTIVE',
+    category: 'General',
+    createdDate: '',
+    units: units,
+    prices: const [],
+    stocks: const []);
+
+OrderItemDetail _lineIn(String id, String unitId) => OrderItemDetail(
+    id: id,
+    product: _productWithUnits(const []),
+    unitId: unitId,
+    quantity: 2,
+    price: 50,
+    costPrice: 20,
+    discount: 0,
+    createdDate: '2026-01-01T00:00:00.000Z',
+    order: null);
+
 OrderDetailViewModel _buildViewModel({
   LoginRepository? loginRepo,
   OrderRepository? orderRepo,
   CustomerRepository? customerRepo,
   SupplierRepository? supplierRepo,
+  ProductRepository? productRepo,
 }) {
   return OrderDetailViewModel(
+    productRepo: productRepo ?? FakeCatalogueRepository(),
     getRoleUseCase: GetRoleUseCase(loginRepo ?? FakeLoginRepository()),
     orderRepo: orderRepo ?? FakeOrderRepository(),
     supplierRepo: supplierRepo ?? FakeSupplierRepository(),
@@ -333,6 +386,48 @@ void main() {
       expect(vm.state.value.order, isNotNull,
           reason: 'a failed refresh must not blank the order the user is '
               'reading');
+    });
+  });
+
+  group('the lines\' units', () {
+    test('each line\'s unit is named from the product catalogue', () async {
+      // Arrange
+      final bill = _buildOrderDetail('o1',
+          items: [_lineIn('i1', 'u1'), _lineIn('i2', 'u2')]);
+      final vm = _buildViewModel(
+          orderRepo: FakeOrderRepository(orderDetail: bill),
+          productRepo: FakeCatalogueRepository(products: {
+            'p1': _productWithUnits(
+                [_unitOf('u1', 'ชิ้น'), _unitOf('u2', 'แผง')]),
+          }));
+
+      // Act
+      await vm.getOrderById('o1');
+
+      // Assert
+      final state = vm.state.value;
+      expect(state.items.map(state.unitNameOf), ['ชิ้น', 'แผง']);
+    });
+
+    test('a catalogue that fails is said, and the bill is still shown',
+        () async {
+      // Arrange
+      final bill = _buildOrderDetail('o1', items: [_lineIn('i1', 'u1')]);
+      final vm = _buildViewModel(
+          orderRepo: FakeOrderRepository(orderDetail: bill),
+          productRepo: FakeCatalogueRepository(
+              throws: const ServerException(message: 'catalogue down')));
+      final errors = <String>[];
+      vm.errors.listen(errors.add);
+
+      // Act
+      await vm.getOrderById('o1');
+      await Future<void>.delayed(Duration.zero);
+
+      // Assert
+      expect(vm.state.value.order, same(bill));
+      expect(vm.state.value.unitNameOf(bill.items.first), isEmpty);
+      expect(errors, hasLength(1));
     });
   });
 
