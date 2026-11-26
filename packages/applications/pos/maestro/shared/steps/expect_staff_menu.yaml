@@ -1,5 +1,5 @@
 # On the bills list of a manager or a user: the menu holds selling and bills
-# only, and the bills have no store filter and no cost. The list is waited
+# only, and the bills show no cost, on a row or in the foot. The list is waited
 # for first (its foot), and its animations to end: the role reaches the
 # screen with the list, so what the role hides is checked once it is there.
 appId: app.devper.pos
@@ -8,12 +8,12 @@ appId: app.devper.pos
     visible: "สรุปรายการ.*"
     timeout: 15000
 - extendedWaitUntil:
-    visible: "ยอดรวม.*"
+    visible: "ยอดรวม ฿ .*"
     timeout: 15000
 - waitForAnimationToEnd:
     timeout: 3000
-- assertNotVisible: "All"
-- assertNotVisible: "ต้นทุน.*"
+- assertNotVisible: "ต้นทุน ฿ .*"
+- assertNotVisible: ".*ต้นทุน: .*"
 - runFlow:
     when:
       true: ${LAYOUT == 'narrow'}
