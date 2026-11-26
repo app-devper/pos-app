@@ -12,6 +12,7 @@ import 'package:pos/presentation/category/argument.dart';
 import 'package:pos/presentation/category/edit/category_edit_page.dart';
 import 'package:pos/presentation/category/main/category_page.dart';
 import 'package:pos/presentation/constants.dart';
+import 'package:pos/presentation/customer/main/customer_page.dart';
 import 'package:pos/presentation/home/main/home_page.dart';
 import 'package:pos/presentation/home/scanner/scanner_page.dart';
 import 'package:pos/presentation/order/argument.dart';
@@ -99,6 +100,15 @@ class RouterApp {
           final args = settings.arguments as SupplierArgument;
           return MaterialPageRoute(
               builder: (_) => SupplierEditPage(supplier: args.supplier));
+        case customersRoute:
+          // The list draws its own header (title and back arrow).
+          return MaterialPageRoute(
+            builder: (context) => Scaffold(
+              body: SafeArea(
+                child: CustomerPage(onBack: () => Navigator.maybePop(context)),
+              ),
+            ),
+          );
         case receivesRoute:
           return MaterialPageRoute(builder: (_) => const ReceivePage());
         case receiveManageRoute:

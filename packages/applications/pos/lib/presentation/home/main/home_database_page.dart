@@ -6,15 +6,11 @@ import 'package:um/presentation/constants.dart';
 
 // Project imports:
 import 'package:pos/presentation/constants.dart';
-import 'package:pos/presentation/home/main/menu_event.dart';
 
+/// The "จัดการ" landing page. Each tile pushes its page on top of this one,
+/// so Back (the arrow, Android's button, the browser's) returns here.
 class HomeDatabasePage extends StatelessWidget {
-  final Function(MenuEvent) onMenuTap;
-
-  const HomeDatabasePage({
-    super.key,
-    required this.onMenuTap,
-  });
+  const HomeDatabasePage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +27,7 @@ class HomeDatabasePage extends StatelessWidget {
           icon: Icons.person,
           title: 'จัดการลูกค้า',
           onTap: () {
-            onMenuTap(MenuEvent.customer);
+            Navigator.pushNamed(context, customersRoute);
           },
         ),
         _buildMenuItem(
@@ -45,7 +41,7 @@ class HomeDatabasePage extends StatelessWidget {
           icon: Icons.receipt_long,
           title: 'ใบรับสินค้า / Goods Receipt',
           onTap: () {
-            onMenuTap(MenuEvent.receive);
+            Navigator.pushNamed(context, receivesRoute);
           },
         ),
         _buildMenuItem(

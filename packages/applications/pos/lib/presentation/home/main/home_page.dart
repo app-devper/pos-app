@@ -11,14 +11,12 @@ import 'package:um/presentation/constants.dart';
 // Project imports:
 import 'package:pos/container.dart';
 import 'package:pos/localizations/language/languages.dart';
-import 'package:pos/presentation/customer/main/customer_page.dart';
 import 'package:pos/presentation/home/main/cart_page.dart';
 import 'package:pos/presentation/home/main/home_database_page.dart';
 import 'package:pos/presentation/home/main/home_view_model.dart';
 import 'package:pos/presentation/home/main/menu_event.dart';
 import 'package:pos/presentation/order/main/order_page.dart';
 import 'package:pos/presentation/product/main/product_page.dart';
-import 'package:pos/presentation/receive/main/receive_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -78,12 +76,7 @@ class _HomePageState extends State<HomePage> {
     ];
   }
 
-  /// Customer and receive live under the "จัดการ" landing page, so they keep
-  /// that entry highlighted rather than clearing the selection.
-  String get _selectedId {
-    if (isDatabaseMenu(_menuEvent)) return 'database';
-    return _menuEvent.name;
-  }
+  String get _selectedId => _menuEvent.name;
 
   void _onSelect(String id) {
     setState(() {
@@ -161,17 +154,8 @@ class _HomePageState extends State<HomePage> {
         return const OrderPage();
       case MenuEvent.product:
         return const ProductsPage();
-      case MenuEvent.receive:
-        return const ReceivePage();
       case MenuEvent.database:
-        return HomeDatabasePage(
-          onMenuTap: (event) => setState(() => _menuEvent = event),
-        );
-      case MenuEvent.customer:
-        return CustomerPage(
-            onBack: () => setState(() => _menuEvent = MenuEvent.database));
-      case MenuEvent.setting:
-        return Container();
+        return const HomeDatabasePage();
     }
   }
 }

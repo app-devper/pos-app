@@ -33,6 +33,11 @@ env:
     env:
       NAME: ${KEEPER}
       PHONE: 08${RUN_ID}1
+# The customer page is pushed over จัดการ: its back arrow returns to the menu.
+- tapOn: "ย้อนกลับ"
+- extendedWaitUntil:
+    visible: "จัดการลูกค้า"
+    timeout: 15000
 - runFlow:
     file: steps/open_screen.yaml
     env:

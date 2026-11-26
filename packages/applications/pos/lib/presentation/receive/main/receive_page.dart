@@ -4,7 +4,10 @@ import 'package:design_system/widgets/title_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:design_system/theme/app_colors.dart';
 
+import 'package:design_system/widgets/app_bar.dart';
+
 // Project imports:
+import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/constants.dart';
 import 'package:pos/presentation/receive/argument.dart';
 import 'package:design_system/widgets/dialogs.dart';
@@ -20,11 +23,16 @@ class ReceivePage extends StatefulWidget {
 
 class _ReceivePageState extends State<ReceivePage> {
   int _revision = 0;
+
+  /// A page of its own, pushed over จัดการ: its bar carries the way back.
   @override
   Widget build(BuildContext context) {
-    return Responsive(
-      mobile: _buildMobile(),
-      desktop: _buildDesktop(),
+    return Scaffold(
+      appBar: buildAppBar(Languages.of(context).receivesTitle),
+      body: Responsive(
+        mobile: _buildMobile(),
+        desktop: _buildDesktop(),
+      ),
     );
   }
 

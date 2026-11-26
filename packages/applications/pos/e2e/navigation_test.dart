@@ -136,12 +136,13 @@ Future<void> _customersOpenAndReturn(ShellRobot shell) async {
   await pumpUntilFound(shell.tester, find.text('จัดการลูกค้า').hitTestable());
 }
 
-/// The goods-receipt list has no back control; the sidebar leaves it.
+/// The goods-receipt list is pushed over จัดการ; its back arrow returns.
 Future<void> _goodsReceiptsOpenAndReturn(ShellRobot shell) async {
   await shell.openManageTile('ใบรับสินค้า / Goods Receipt');
   await shell
       .expectScreenWithoutError(shell.searchField('ค้นหาเลขที่ใบรับสินค้า...'));
-  await shell.openManage();
+  await shell.pageBack();
+  await pumpUntilFound(shell.tester, find.text('ร้านค้าของฉัน').hitTestable());
 }
 
 Future<void> _stockCountsOpenAndReturn(ShellRobot shell) async {
