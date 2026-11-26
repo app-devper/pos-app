@@ -6,6 +6,7 @@ import 'package:design_system/theme/app_colors.dart';
 import 'package:design_system/widgets/title_bar.dart';
 
 // Project imports:
+import 'package:pos/presentation/core/readable_tab.dart';
 import 'package:pos/domain/model/core/core.dart';
 import 'package:pos/domain/model/customer/customer.dart';
 
@@ -84,14 +85,8 @@ class _CustomerDetailWidgetState extends State<CustomerDetailWidget>
               labelColor: AppColors.of(context).textPrimary,
               controller: _tabController,
               tabs: const <Widget>[
-                Tab(
-                  height: 36,
-                  child: Text('ข้อมูลทั่วไป', maxLines: 1),
-                ),
-                Tab(
-                  height: 36,
-                  child: Text('ประวัติการซื้อ', maxLines: 1),
-                ),
+                ReadableTab('ข้อมูลทั่วไป'),
+                ReadableTab('ประวัติการซื้อ'),
               ],
             ),
           ],

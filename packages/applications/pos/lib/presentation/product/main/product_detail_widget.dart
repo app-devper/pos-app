@@ -6,6 +6,7 @@ import 'package:common/core/ext/number_ext.dart';
 import 'package:design_system/widgets/title_bar.dart';
 
 // Project imports:
+import 'package:pos/presentation/core/readable_tab.dart';
 import 'package:pos/domain/model/core/core.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:design_system/widgets/dialogs.dart';
@@ -95,30 +96,12 @@ class _ProductDetailWidgetState extends State<ProductDetailWidget>
               labelColor: AppColors.of(context).textPrimary,
               controller: _tabController,
               tabs: const <Widget>[
-                Tab(
-                  height: 36,
-                  child: Text('ข้อมูลทั่วไป', maxLines: 1),
-                ),
-                Tab(
-                  height: 36,
-                  child: Text('หน่วยนับ', maxLines: 1),
-                ),
-                Tab(
-                  height: 36,
-                  child: Text('ราคา', maxLines: 1),
-                ),
-                Tab(
-                  height: 36,
-                  child: Text('สต็อก', maxLines: 1),
-                ),
-                Tab(
-                  height: 36,
-                  child: Text('ประวัติ', maxLines: 1),
-                ),
-                Tab(
-                  height: 36,
-                  child: Text('ปรับสต็อก', maxLines: 1),
-                ),
+                ReadableTab('ข้อมูลทั่วไป'),
+                ReadableTab('หน่วยนับ'),
+                ReadableTab('ราคา'),
+                ReadableTab('สต็อก'),
+                ReadableTab('ประวัติ'),
+                ReadableTab('ปรับสต็อก'),
               ],
             ),
           ],
