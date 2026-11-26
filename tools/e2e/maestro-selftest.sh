@@ -30,6 +30,7 @@ cat > "$WORK/fake-maestro" <<'EOF'
 #!/usr/bin/env bash
 echo "args: $*"
 env | grep -E '^(MAESTRO_CLI_NO_ANALYTICS|MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED|MAESTRO_DISABLE_UPDATE_CHECK|SE_OFFLINE)=' | sort
+env | grep -E '^MAESTRO_(UM|POS)_PORT=' | sort
 env | grep -cE '^MAESTRO_(USERNAME|PASSWORD|MANAGER_USERNAME|MANAGER_PASSWORD|USER_USERNAME|USER_PASSWORD)=.' | sed 's/^/accounts: /'
 EOF
 chmod +x "$WORK/fake-maestro"
@@ -65,6 +66,25 @@ check 'android names the flow file' 0 'maestro/android/auth.yaml' -- dry "$runne
 check 'a pass prints a PASS line' 0 'PASS web auth' -- dry "$runner" web auth
 check 'a failing maestro fails the run' 1 'FAIL web auth' -- \
   env E2E_MAESTRO_SKIP_SETUP=1 MAESTRO_BIN=false E2E_MAESTRO_ENV_FILE="$WORK/env" "$runner" web auth
+
+# Each platform has a stack of its own, so both can run at once: the web on the
+# usual ports, Android 1000 above them (the emulator still sees 8585/8586).
+check 'web flows ask the stack on the usual ports' 0 'MAESTRO_UM_PORT=8585' -- dry "$runner" web auth
+check 'android flows ask the stack 1000 above (um)' 0 'MAESTRO_UM_PORT=9585' -- dry "$runner" android auth
+check 'android flows ask the stack 1000 above (pos)' 0 'MAESTRO_POS_PORT=9586' -- dry "$runner" android auth
+check 'a flow output folder names its platform' 0 '-android-auth' -- dry "$runner" android auth
+check 'ports: the usual ones' 0 'mongod=27719 redis=6390 um=8585 pos=8586' -- "$SCRIPT_DIR/local-stack.sh" ports
+check 'ports: moved by the offset' 0 'mongod=28719 redis=7390 um=9585 pos=9586' -- \
+  env E2E_STACK_PORT_OFFSET=1000 "$SCRIPT_DIR/local-stack.sh" ports
+check 'ports: an offset that is not a number is refused' 2 'E2E_STACK_PORT_OFFSET' -- \
+  env E2E_STACK_PORT_OFFSET=abc "$SCRIPT_DIR/local-stack.sh" ports
+check 'data: an offset that is not a number is refused' 2 'E2E_STACK_PORT_OFFSET' -- \
+  env E2E_STACK_PORT_OFFSET='1;x' "$data" up 123
+check 'both: web and android run in one go' 0 'PASS android auth' -- dry "$SCRIPT_DIR/maestro-all.sh" auth
+check 'both: the web result is there too' 0 'PASS web auth' -- dry "$SCRIPT_DIR/maestro-all.sh" auth
+check 'both: one platform failing fails the run' 1 'FAIL' -- \
+  env E2E_MAESTRO_SKIP_SETUP=1 MAESTRO_BIN=false E2E_MAESTRO_ENV_FILE="$WORK/env" "$SCRIPT_DIR/maestro-all.sh" auth
+check 'both: an option it does not know is a usage error' 2 'usage:' -- "$SCRIPT_DIR/maestro-all.sh" --hosted
 
 no_secret="$(dry "$runner" web auth 2>&1 | grep -c 'selftest-secret' || true)"
 if [ "$no_secret" -eq 0 ]; then printf 'ok   no password in the runner output\n'

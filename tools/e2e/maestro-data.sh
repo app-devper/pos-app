@@ -14,7 +14,8 @@
 #                                  whose name starts with "MST-<run-id>"
 set -eu
 
-MONGO_PORT=27719
+# shellcheck source=stack-ports.sh
+. "$(cd "$(dirname "$0")" && pwd)/stack-ports.sh"
 POS_DB=e2e_pos
 
 usage() { echo "usage: $0 up|down <run-id>   (run id: letters and digits)" >&2; exit 2; }

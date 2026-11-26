@@ -36,6 +36,7 @@ fetched it on its first web run), and what the local stack needs (MongoDB,
 Redis, Go — see [e2e.md](e2e.md)).
 
 ```bash
+tools/e2e/maestro-all.sh                    # every flow, web (headless) and emulator at once
 tools/e2e/maestro.sh android all            # every flow on the emulator
 tools/e2e/maestro.sh web all --headless     # every flow in a headless browser, 1400x900
 tools/e2e/maestro.sh web sell_and_bill      # one flow, in a visible window
@@ -49,6 +50,15 @@ Task 6 added, three passes each, and `roles` alone). A run of all eleven is
 the sum of its flows, plus the build the first time (APK about four
 minutes, web about one). `E2E_MAESTRO_REUSE_BUILD=1` skips the build when the artefact is
 there — only when the app's code has not changed.
+
+`maestro-all.sh [<flow>|all]` is the quick way to run everything: it builds
+the two apps one after the other, then runs the web and the emulator side by
+side, once each, and exits 0 only when both passed. Measured on the eleven
+flows with the builds already there: 1477 s (about 25 minutes) for both
+platforms together, against 900 s for the web alone plus 1441 s for the
+emulator alone when run one after the other. The emulator is the longer half,
+so the pair takes as long as the emulator does. One pass is the normal check;
+run a flow more than once when it is new or was just changed.
 
 What the runner does: refuses unless `config/e2e-local.json` points at
 127.0.0.1; starts the flows' own local stack; builds the debug APK (or the web
@@ -82,12 +92,23 @@ too old for the bundled driver the web run fails instead of fetching one.
 
 ### A database of their own
 
-The flows use their own stack state (`${TMPDIR}/pos-e2e-maestro-stack`), not
-the Dart suite's. That one is crowded on purpose; Maestro cannot pick a
-supplier out of a plain dropdown of dozens. Both stacks use the same ports, so they cannot run at the same
-time: the runner says so when the other one is up
-(`tools/e2e/local-stack.sh stop` stops the Dart suite's). Sales the flows make
-stay in that local database.
+The flows use their own stacks, not the Dart suite's. That one is crowded on
+purpose; Maestro cannot pick a supplier out of a plain dropdown of dozens.
+Each platform has one, so the two can run at once without seeing each other's
+bills and customers:
+
+| | state | um-api / pos-api | mongod / redis | accounts |
+|---|---|---|---|---|
+| web | `${TMPDIR}/pos-e2e-maestro-stack` | 8585 / 8586 | 27719 / 6390 | `.env.e2e.local` |
+| Android | `${TMPDIR}/pos-e2e-maestro-stack-android` | 9585 / 9586 | 28719 / 7390 | `env.e2e.local` in that state folder |
+
+The app is built once for 127.0.0.1:8585 and :8586; on the emulator
+`adb reverse` points those two at the Android stack's ports. The offset is
+`E2E_STACK_PORT_OFFSET` (see `tools/e2e/stack-ports.sh`), which
+`local-stack.sh` and `maestro-data.sh` read too. The web's stack uses the same
+ports as the Dart suite's, so those two cannot run at the same time: the
+runner says so when the other one is up (`tools/e2e/local-stack.sh stop` stops
+the Dart suite's). Sales the flows make stay in those local databases.
 
 ## How the flows are written
 
