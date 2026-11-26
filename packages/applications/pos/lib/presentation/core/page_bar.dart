@@ -26,7 +26,9 @@ class PageBackButton extends StatelessWidget {
 }
 
 /// A pushed page's top bar: the back arrow at its start whenever there is a
-/// page underneath to return to.
+/// page underneath to return to. The arrow's own padding sets the title off
+/// from it, so the title takes no further spacing: on a 320 px phone a
+/// title beside the arrow and three actions still fits.
 AppBar buildPageBar(BuildContext context, String title,
     {List<Widget>? actions}) {
   final canGoBack = ModalRoute.of(context)?.impliesAppBarDismissal ?? false;
@@ -34,5 +36,6 @@ AppBar buildPageBar(BuildContext context, String title,
     title,
     actions: actions,
     leading: canGoBack ? const PageBackButton() : null,
+    titleSpacing: canGoBack ? 0 : null,
   );
 }

@@ -33,7 +33,7 @@ class LanguageEn extends Languages {
   String get orderSelectStartDate => "Select start date";
 
   @override
-  String get orderDetailTitle => "Order Detail";
+  String get orderDetailTitle => "Bill details";
 
   @override
   String get orderHistoryTitle => "Order History";
@@ -151,6 +151,9 @@ class LanguageEn extends Languages {
 
   @override
   String get billDelete => "Delete bill";
+
+  @override
+  String get billCommands => "More bill commands";
 
   @override
   String deleteBillLine(String name) => "Delete line $name";

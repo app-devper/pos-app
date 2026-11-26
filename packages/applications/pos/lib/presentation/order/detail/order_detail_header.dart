@@ -37,9 +37,12 @@ class OrderDetailHeader extends StatelessWidget {
   }
 }
 
+/// The bill's less common commands, in its menu.
+enum _BillCommand { returns, delete }
+
 /// The bill's app bar actions: the receipt for everyone; for an admin also
-/// sync, the returns history and, unless the bill is already cancelled,
-/// delete.
+/// reload, and a menu with the returns history and, unless the bill is
+/// already cancelled, delete (red, apart from the rest).
 class OrderDetailActions extends StatelessWidget {
   final OrderDetail? bill;
   final bool isAdmin;
@@ -67,9 +70,33 @@ class OrderDetailActions extends StatelessWidget {
         _button(Icons.picture_as_pdf, names.billReceipt, onPrint),
         if (isAdmin) ...[
           _button(Icons.sync, names.billReload, onSync),
-          _button(Icons.assignment_return, names.billReturns, onReturns),
-          if (!(bill?.isCancelled ?? false))
-            _button(Icons.delete, names.billDelete, onDelete),
+          _buildMenu(context, names),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildMenu(BuildContext context, Languages names) {
+    final canDelete = !(bill?.isCancelled ?? false);
+    final error = Theme.of(context).colorScheme.error;
+    return PopupMenuButton<_BillCommand>(
+      tooltip: names.billCommands,
+      icon: const Icon(Icons.more_vert),
+      onSelected: (command) => switch (command) {
+        _BillCommand.returns => onReturns(),
+        _BillCommand.delete => onDelete(),
+      },
+      itemBuilder: (_) => [
+        PopupMenuItem(
+          value: _BillCommand.returns,
+          child: menuEntry(Icons.assignment_return, names.billReturns),
+        ),
+        if (canDelete) ...[
+          const PopupMenuDivider(),
+          PopupMenuItem(
+            value: _BillCommand.delete,
+            child: menuEntry(Icons.delete, names.billDelete, color: error),
+          ),
         ],
       ],
     );
@@ -83,3 +110,13 @@ class OrderDetailActions extends StatelessWidget {
         icon: Icon(icon),
       );
 }
+
+/// A command menu's item: its icon and its label, in [color] when given
+/// (a destructive command's error red).
+Widget menuEntry(IconData icon, String label, {Color? color}) => Row(
+      children: [
+        Icon(icon, color: color),
+        const SizedBox(width: 12),
+        Flexible(child: Text(label, style: TextStyle(color: color))),
+      ],
+    );

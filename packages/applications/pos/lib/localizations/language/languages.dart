@@ -110,6 +110,9 @@ abstract class Languages {
 
   String get billDelete;
 
+  /// The bill's menu of its less common commands.
+  String get billCommands;
+
   String deleteBillLine(String name);
 
   String billLineHistory(String name);

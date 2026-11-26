@@ -37,6 +37,13 @@ final _detail = find.byType(OrderDetailPage);
 final _returnDialog = find.byType(ProductReturnWidget);
 final _history = find.byType(ProductReturnsHistoryWidget);
 
+/// The bill's command menu in the AppBar, an admin's.
+final _billMenu = find
+    .descendant(
+        of: find.byType(AppBar),
+        matching: find.byTooltip('คำสั่งเพิ่มเติมของบิล'))
+    .hitTestable();
+
 class OrderRobot {
   OrderRobot(this.shell) : form = FormDriver(shell);
 
@@ -144,12 +151,9 @@ class OrderRobot {
   Future<void> _awaitDetail() async {
     await shell.expectScreenWithoutError(
         find.descendant(of: _detail, matching: find.text('ยอดรวม')));
-    // The header fills in once the bill has loaded; the admin icons once
+    // The header fills in once the bill has loaded; the admin's menu once
     // the role has been read.
-    await pumpUntilFound(
-        tester,
-        find.descendant(
-            of: find.byType(AppBar), matching: find.byIcon(Icons.delete)));
+    await pumpUntilFound(tester, _billMenu);
     await pumpUntilFound(
         tester, find.descendant(of: _detail, matching: find.byType(ListTile)));
     await shell.waitForSnackbarToClose();
@@ -243,14 +247,9 @@ class OrderRobot {
     await shell.expectScreenWithoutError(_detail);
   }
 
-  /// The AppBar's returns-history icon opens 'ประวัติการคืนสินค้า'.
+  /// The bill menu's returns history opens 'ประวัติการคืนสินค้า'.
   Future<void> openReturnHistory() async {
-    await tester.tap(find
-        .descendant(
-            of: find.byType(AppBar),
-            matching: find.byIcon(Icons.assignment_return))
-        .hitTestable());
-    await tester.pump();
+    await _chooseFromBillMenu('ประวัติการคืนสินค้า');
     await pumpUntilFound(
         tester,
         find.descendant(
@@ -279,17 +278,27 @@ class OrderRobot {
     await _awaitReload();
   }
 
-  /// The AppBar's delete icon, confirmed; the detail closes and the list
+  /// The bill menu's ลบบิล, confirmed; the detail closes and the list
   /// reloads.
   Future<void> cancelBill() async {
-    await tester.tap(find
-        .descendant(
-            of: find.byType(AppBar), matching: find.byIcon(Icons.delete))
-        .hitTestable());
-    await tester.pump();
+    await _chooseFromBillMenu('ลบบิล');
     await shell.confirm();
     await pumpUntilGone(tester, _detail, timeout: const Duration(seconds: 30));
     await _settleList();
+  }
+
+  /// Opens the bill's menu (an admin's, in the AppBar) and chooses [item].
+  Future<void> _chooseFromBillMenu(String item) async {
+    await tester.tap(_billMenu);
+    await tester.pump();
+    final entry = find
+        .descendant(
+            of: find.byWidgetPredicate((w) => w is PopupMenuItem),
+            matching: find.text(item))
+        .hitTestable();
+    await pumpUntilFound(tester, entry);
+    await tester.tap(entry);
+    await tester.pump();
   }
 
   /// The loading snackbar shows while the bill reloads; waits it out and

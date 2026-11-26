@@ -40,7 +40,7 @@ class LanguageTh extends Languages {
   String get orderSelectStartDate => "เลือกวันที่เริ่มต้น";
 
   @override
-  String get orderDetailTitle => "รายละเอียดรายการ";
+  String get orderDetailTitle => "รายละเอียดบิล";
 
   @override
   String get orderHistoryTitle => "ประวัติรายการ";
@@ -158,6 +158,9 @@ class LanguageTh extends Languages {
 
   @override
   String get billDelete => "ลบบิล";
+
+  @override
+  String get billCommands => "คำสั่งเพิ่มเติมของบิล";
 
   @override
   String deleteBillLine(String name) => "ลบรายการ $name";

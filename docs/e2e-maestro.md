@@ -173,7 +173,8 @@ button labels, the stock row's scrollbar, among others).
   product picker), `นำลูกค้า <name> ออก`, `เพิ่มลูกค้า`, `คำสั่งเพิ่มเติม`
   (a list's commands on a phone), `ย้อนกลับ` (a pushed page's back arrow),
   `ปรับสต็อก ล็อต <lot>`, `เพิ่มการนับสต็อก`,
-  `บันทึกการนับสต็อก`, `ลบบิล`. A row's buttons name their row:
+  `บันทึกการนับสต็อก`, `คำสั่งเพิ่มเติมของบิล` (the bill's menu, which
+  holds `ลบบิล`). A row's buttons name their row:
   `ลดจำนวน <product> <unit>`, `เพิ่มจำนวน <product> <unit>`,
   `2x แก้ไขจำนวน <product> <unit>` on a cart line, `คืนสินค้า 2x <product>
   <unit> ฿<amount>` on a bill line (the unit's name comes from the product

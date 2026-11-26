@@ -70,7 +70,8 @@ env:
             NAME: ${PRODUCT_NAME}
 - assertTrue: ${output.onHand == '999'}
 - takeScreenshot: returned
-# Cancel the bill from its app bar.
+# Cancel the bill from its app bar's menu.
+- tapOn: "คำสั่งเพิ่มเติมของบิล"
 - tapOn: "ลบบิล"
 - extendedWaitUntil:
     visible: "ต้องการลบรายการใช่หรือไม่\\?"
