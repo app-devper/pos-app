@@ -221,7 +221,7 @@ class _ProductLotEditPageState extends State<ProductLotEditPage> {
             UpdateProductLotQuantityParam(quantity: quantity),
           );
         },
-        text: "Update",
+        text: Languages.of(context).saveButton,
       ),
     );
   }

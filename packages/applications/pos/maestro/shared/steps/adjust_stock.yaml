@@ -1,0 +1,39 @@
+# On a product's สต็อก tab: the lot L${RUN_ID}'s adjust button, then reason
+# อื่นๆ, ${DIRECTION} (เพิ่มสต็อก or ลดสต็อก), ${QUANTITY} and the note
+# ${NOTE}, confirmed. Returns once the dialog is gone.
+appId: app.devper.pos
+---
+# On a phone the lot's row scrolls sideways and its adjust button starts
+# past the right edge: the row is swiped by its cost heading (on screen
+# before and after a swipe) until the button shows.
+- repeat:
+    times: 4
+    while:
+      notVisible: "ปรับสต็อก ล็อต L${RUN_ID}"
+    commands:
+      - swipe:
+          from: "ต้นทุน"
+          direction: LEFT
+- tapOn: "ปรับสต็อก ล็อต L${RUN_ID}"
+- extendedWaitUntil:
+    visible: "ปรับสต็อกสินค้า"
+    timeout: 10000
+- assertVisible: "ล็อต L${RUN_ID} คงเหลือ ${ON_HAND}"
+- tapOn: "เหตุผลการปรับสต็อก"
+- runFlow:
+    file: choose_dropdown_option.yaml
+    env:
+      OPTION: "อื่นๆ"
+# The add / take toggle by its identifier, its text: the web writes a
+# toggle's name only as an aria-label.
+- tapOn:
+    id: ${DIRECTION}
+- tapOn: "จำนวน"
+- inputText: ${QUANTITY}
+- tapOn: "หมายเหตุ"
+- inputText: ${NOTE}
+- runFlow: hide_keyboard.yaml
+- tapOn: "ยืนยัน"
+- extendedWaitUntil:
+    notVisible: "ปรับสต็อกสินค้า"
+    timeout: 15000

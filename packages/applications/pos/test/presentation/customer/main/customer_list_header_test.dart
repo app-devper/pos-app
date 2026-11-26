@@ -17,10 +17,12 @@ void main() {
     var added = 0;
     await tester.pumpWidget(_host(CustomerListHeader(
       title: 'ข้อมูลลูกค้า',
+      backLabel: 'ย้อนกลับ',
       addLabel: 'เพิ่มลูกค้า',
       showAdd: true,
       onBack: () {},
       onAdd: () => added++,
+      onSearch: (_) {},
     )));
 
     // Act
@@ -37,10 +39,12 @@ void main() {
     // Arrange / Act
     await tester.pumpWidget(_host(CustomerListHeader(
       title: 'ข้อมูลลูกค้า',
+      backLabel: 'ย้อนกลับ',
       addLabel: 'เพิ่มลูกค้า',
       showAdd: false,
       onBack: () {},
       onAdd: () {},
+      onSearch: (_) {},
     )));
 
     // Assert
@@ -52,10 +56,12 @@ void main() {
     var back = 0;
     await tester.pumpWidget(_host(CustomerListHeader(
       title: 'ข้อมูลลูกค้า',
+      backLabel: 'ย้อนกลับ',
       addLabel: 'เพิ่มลูกค้า',
       showAdd: true,
       onBack: () => back++,
       onAdd: () {},
+      onSearch: (_) {},
     )));
 
     // Act
@@ -63,5 +69,49 @@ void main() {
 
     // Assert
     expect(back, 1);
+  });
+
+  testWidgets('the customer list has a search field that reports each change',
+      (tester) async {
+    // Arrange
+    final searched = <String>[];
+    await tester.pumpWidget(_host(CustomerListHeader(
+      title: 'ข้อมูลลูกค้า',
+      backLabel: 'ย้อนกลับ',
+      addLabel: 'เพิ่มลูกค้า',
+      showAdd: false,
+      onBack: () {},
+      onAdd: () {},
+      onSearch: searched.add,
+    )));
+
+    // Act
+    await tester.enterText(
+        find.widgetWithText(TextField, 'ค้นหาลูกค้า...'), 'สม');
+
+    // Assert
+    expect(searched, ['สม']);
+  });
+
+  testWidgets('the customer list title is a header of its own', (tester) async {
+    // Arrange
+    final semantics = tester.ensureSemantics();
+
+    // Act
+    await tester.pumpWidget(_host(CustomerListHeader(
+      title: 'ข้อมูลลูกค้า',
+      backLabel: 'ย้อนกลับ',
+      addLabel: 'เพิ่มลูกค้า',
+      showAdd: true,
+      onBack: () {},
+      onAdd: () {},
+      onSearch: (_) {},
+    )));
+
+    // Assert
+    final title = tester.getSemantics(find.bySemanticsLabel('ข้อมูลลูกค้า'));
+    expect(title.childrenCount, 0);
+    expect(title.getSemanticsData().flagsCollection.isHeader, isTrue);
+    semantics.dispose();
   });
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:um/domain/usecase/auth_use_cases.dart';
 import 'package:common/core/error/exception.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,7 +18,7 @@ import 'package:um/domain/entities/auth/passkey.dart';
 import 'package:um/domain/repositories/login_repository.dart';
 
 OrderSummary order(String id, String type,
-    {double total = 100, double cost = 60}) {
+    {double total = 100, double cost = 60, String status = 'CONFIRMED'}) {
   return OrderSummary(
     id: id,
     code: 'OD-$id',
@@ -27,6 +29,7 @@ OrderSummary order(String id, String type,
     totalCost: cost,
     discount: 0,
     type: type,
+    status: status,
   );
 }
 
@@ -47,9 +50,33 @@ class FakeOrderRepository implements OrderRepository {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
+/// Answers each list request only when the test completes it, in any order.
+class ScriptedOrderRepository implements OrderRepository {
+  final pending = <Completer<List<OrderSummary>>>[];
+
+  @override
+  Future<List<OrderSummary>> getOrderRange(GetOrderRangeParam param) {
+    final load = Completer<List<OrderSummary>>();
+    pending.add(load);
+    return load.future;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+/// Answers the role only when the test completes [pending].
+class PendingRoleRepository extends FakeLoginRepository {
+  final pending = Completer<String>();
+
+  @override
+  Future<String> getRole() => pending.future;
+}
+
 class FakeLoginRepository implements LoginRepository {
   @override
-  Future<PasskeyChallenge> passkeyLoginOptions(String system) => throw UnimplementedError();
+  Future<PasskeyChallenge> passkeyLoginOptions(String system) =>
+      throw UnimplementedError();
 
   @override
   Future<Session> loginWithPasskey({
@@ -61,7 +88,8 @@ class FakeLoginRepository implements LoginRepository {
       throw UnimplementedError();
 
   @override
-  Future<Session> exchangeTicket(String ticket, String system) => throw UnimplementedError();
+  Future<Session> exchangeTicket(String ticket, String system) =>
+      throw UnimplementedError();
 
   FakeLoginRepository({this.role = 'USER', this.throws});
 
@@ -102,7 +130,7 @@ class FakeLoginRepository implements LoginRepository {
 }
 
 OrderViewModel buildViewModel({
-  FakeOrderRepository? orders,
+  OrderRepository? orders,
   FakeLoginRepository? login,
 }) {
   return OrderViewModel(
@@ -170,6 +198,72 @@ void main() {
     expect(viewModel.state.value.totalCost, 80);
   });
 
+  test('a cancelled bill stays listed but counts in no total', () async {
+    // Arrange
+    final viewModel = buildViewModel(
+      orders: FakeOrderRepository(orders: [
+        order('1', 'Cash', total: 50, cost: 20),
+        order('2', 'Cash', total: 50, cost: 20, status: 'CANCELLED'),
+      ]),
+    );
+
+    // Act
+    await viewModel.getOrderItem('All', anyRange());
+
+    // Assert
+    final state = viewModel.state.value;
+    expect(state.orders!.map((e) => e.id), ['1', '2']);
+    expect(state.total, 50);
+    expect(state.totalCost, 20);
+    // The profit the bills screen shows (BillSummary: total - cost).
+    expect(state.total - state.totalCost, 30);
+  });
+
+  test('an older list that answers last does not replace the newer one',
+      () async {
+    // Arrange: "Yesterday" asked, then "Today"; Today answers first
+    final repo = ScriptedOrderRepository();
+    final viewModel = buildViewModel(orders: repo);
+    final yesterday = viewModel.getOrderItem('All', anyRange());
+    final today = viewModel.getOrderItem('All', anyRange());
+
+    // Act
+    repo.pending[1].complete([order('today', 'Cash', total: 30, cost: 10)]);
+    await today;
+    repo.pending[0]
+        .complete([order('yesterday', 'Cash', total: 999, cost: 500)]);
+    await yesterday;
+
+    // Assert
+    final state = viewModel.state.value;
+    expect(state.orders!.map((e) => e.id), ['today']);
+    expect(state.total, 30);
+    expect(state.totalCost, 10);
+  });
+
+  test('an older load that fails after a newer list is shown says nothing',
+      () async {
+    // Arrange
+    final repo = ScriptedOrderRepository();
+    final viewModel = buildViewModel(orders: repo);
+    final errors = <String>[];
+    viewModel.errors.listen(errors.add);
+    final older = viewModel.getOrderItem('All', anyRange());
+    final newer = viewModel.getOrderItem('All', anyRange());
+
+    // Act
+    repo.pending[1].complete([order('today', 'Cash')]);
+    await newer;
+    repo.pending[0].completeError(
+        const NetworkException(message: 'down', code: 'NETWORK_ERROR'));
+    await older;
+    await Future<void>.delayed(Duration.zero);
+
+    // Assert
+    expect(errors, isEmpty);
+    expect(viewModel.state.value.orders!.map((e) => e.id), ['today']);
+  });
+
   test('a failed refresh reports the error and keeps what is on screen',
       () async {
     final repo = FakeOrderRepository(orders: [order('1', 'Cash')]);
@@ -210,6 +304,40 @@ void main() {
       expect(superuser.state.value.isAdmin, isTrue);
       expect(manager.state.value.isAdmin, isFalse);
       expect(cashier.state.value.isAdmin, isFalse);
+    });
+
+    test('the role answer keeps the ranges set while it was awaited', () async {
+      // Arrange: the page calls checkLogin, then initData, without waiting
+      final viewModel =
+          buildViewModel(login: FakeLoginRepository(role: 'ADMIN'));
+
+      // Act
+      final roleRead = viewModel.checkLogin();
+      viewModel.initData();
+      await roleRead;
+
+      // Assert
+      expect(viewModel.state.value.isAdmin, isTrue);
+      expect(viewModel.state.value.ranges, isNotEmpty,
+          reason: 'the admin gets the date-range dropdown');
+    });
+
+    test('a role answer after the page is left writes nothing', () async {
+      // Arrange: the bills page is left while the role is still awaited
+      final login = PendingRoleRepository();
+      final viewModel = buildViewModel(login: login);
+      final roleRead = viewModel.checkLogin();
+      var notified = 0;
+      viewModel.state.addListener(() => notified++);
+      viewModel.dispose();
+
+      // Act
+      login.pending.complete('ADMIN');
+
+      // Assert
+      await expectLater(roleRead, completes);
+      expect(viewModel.state.value.isAdmin, isFalse);
+      expect(notified, 0);
     });
 
     test('an unreadable role stays a cashier, as every screen treats it',

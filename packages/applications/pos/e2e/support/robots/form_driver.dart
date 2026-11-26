@@ -92,8 +92,7 @@ class FormDriver {
     await tester.pump();
     await pumpUntil(tester, () => !menuElement.mounted,
         'the $label menu to close on $option');
-    // The field may clip what it shows (see known_faults.dart), so its
-    // choice is read from the tree, not from what takes taps.
+    // The choice is read from the tree, not from what takes taps.
     expect(
         find.descendant(
             of: dropdown(label, within: within), matching: find.text(option)),

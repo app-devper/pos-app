@@ -81,7 +81,6 @@ abstract class ProductRepository {
   Future<List<ProductStock>> updateProductStockSequence(
       UpdateProductStockSequenceParam param);
 
-
   // Product History
   Future<List<ProductHistory>> getProductHistoriesByProductId(String productId);
 

@@ -3,11 +3,52 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:common/core/ext/number_ext.dart';
+import 'package:design_system/widgets/dialogs.dart';
 import 'package:design_system/widgets/input_number.dart';
+import 'package:design_system/widgets/title_bar.dart';
 
 // Project imports:
 import 'package:design_system/theme/app_colors.dart';
 import 'package:pos/domain/model/sale/money.dart';
+
+/// The most the payment dialog grows to fit its content (it is never above
+/// 90% of the screen; below that its content scrolls).
+const paymentDialogMaxHeight = 720.0;
+
+/// The cart's ชำระเงิน dialog: a title bar over the [PaymentScreen], as tall
+/// as its content.
+void showPaymentDialog(
+  BuildContext context, {
+  Key? alertKey,
+  required double amount,
+  required Function(double, String) onCompleted,
+  required Function onError,
+}) {
+  showCenterDialog(
+    context: context,
+    alertKey: alertKey,
+    maxHeight: paymentDialogMaxHeight,
+    builder: (dialogContext) => Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TitleBar(
+          title: "ชำระเงิน",
+          onBack: () {
+            Navigator.pop(dialogContext);
+          },
+        ),
+        const Divider(height: 1),
+        Flexible(
+          child: PaymentScreen(
+            amount: amount,
+            onCompleted: onCompleted,
+            onError: onError,
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
 class PaymentScreen extends StatefulWidget {
   final double amount;
@@ -33,32 +74,26 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    // Sized by its content; where the dialog is lower than that (a small
+    // phone) it scrolls rather than squeezing the amounts out of their boxes.
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Flexible(
-            child: Column(
-              children: [
-                Expanded(
-                  child: _buildInputSection(
-                      'ยอดรับเงินรวม', _getNumberFormat(_number)),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildAmountSection(
-                          'ยอดที่ต้องชำระ', "฿${formatDouble(widget.amount)}"),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildAmountChange("เงินทอน", _change),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+          _buildInputSection('ยอดรับเงินรวม', _getNumberFormat(_number)),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildAmountSection(
+                    'ยอดที่ต้องชำระ', "฿${formatDouble(widget.amount)}"),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildAmountChange("เงินทอน", _change),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           Row(
@@ -211,7 +246,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
 
     return Container(
-      height: 100,
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -231,9 +265,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
+  static const _amountBoxHeight = 80.0;
+
   Widget _buildAmountSection(String title, String amount) {
     return Container(
-      height: 80,
+      // At least 80 px, taller when a larger system text size needs it.
+      constraints: const BoxConstraints(minHeight: _amountBoxHeight),
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       decoration: BoxDecoration(
@@ -246,11 +283,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
           Text(title,
               style: TextStyle(
                   fontSize: 16, color: AppColors.of(context).textSecondary)),
-          Text(amount,
-              style: TextStyle(
-                  fontSize: 24,
-                  color: AppColors.of(context).textPrimary,
-                  fontWeight: FontWeight.bold)),
+          // One line, shrunk to the box on a narrow phone, never wrapped.
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(amount,
+                style: TextStyle(
+                    fontSize: 24,
+                    color: AppColors.of(context).textPrimary,
+                    fontWeight: FontWeight.bold)),
+          ),
         ],
       ),
     );
@@ -265,7 +306,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
 
     return Container(
-      height: 80,
+      // At least 80 px, taller when a larger system text size needs it.
+      constraints: const BoxConstraints(minHeight: _amountBoxHeight),
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       decoration: BoxDecoration(
@@ -278,11 +320,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
           Text(title,
               style: TextStyle(
                   fontSize: 16, color: AppColors.of(context).textSecondary)),
-          Text(getChange(),
-              style: TextStyle(
-                  fontSize: 24,
-                  color: AppColors.of(context).textPrimary,
-                  fontWeight: FontWeight.bold)),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(getChange(),
+                style: TextStyle(
+                    fontSize: 24,
+                    color: AppColors.of(context).textPrimary,
+                    fontWeight: FontWeight.bold)),
+          ),
         ],
       ),
     );

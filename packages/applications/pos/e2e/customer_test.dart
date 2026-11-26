@@ -2,8 +2,9 @@
 // customer pages under "จัดการ". Run with
 // tools/e2e/run.sh <local|hosted> customer_test.dart.
 //
-// pos-api only archives a removed customer and the app keeps listing it, so
-// the hosted target never removes one: it reuses the one kept customer
+// pos-api only archives a removed customer (the app no longer lists it, but
+// the record stays on the server for good), so the hosted target never
+// removes one: it reuses the one kept customer
 // "E2E customer" (see support/customer_plan.dart). The local target creates
 // and removes its own run-named customer.
 
@@ -29,16 +30,14 @@ import 'support/run_data.dart';
 const _phone = '0800000000';
 final _changedPhone = runPhone(E2EEnv.runId);
 
-const _general = 'ลูกค้าทั่วไป';
 const _wholesale = 'ลูกค้าขายส่ง';
 const _typeRow = 'ประเภทลูกค้า';
 
 const _addressRow = 'ที่อยู่';
 
 const _removalLocalOnly = 'E2E: customer removal is checked on the local '
-    'target only (a removed customer stays listed as archived); the kept '
-    'customer is reused instead, its phone changed each run, and the edit '
-    'also resets its type to ลูกค้าทั่วไป (FINDING, customer_edit_page.dart:59)';
+    'target only (a removed customer stays on the server, archived); the kept '
+    'customer is reused instead, its phone changed each run';
 
 void main() {
   initE2E();
@@ -71,13 +70,12 @@ void main() {
     await customers.delete();
     await customers.reenterList();
 
-    // Assert
-    // FINDING: pos-api only archives a removed customer and lists archived
-    // ones too, and the app does not filter them, so the customer is still
-    // listed. Asserted as the app behaves; a skipped test below says what a
-    // user expects. The server shows the removal was recorded.
-    expect(await customers.scrollListTo(plan.name, code: customer.code), isTrue,
-        reason: 'the app currently keeps listing a removed customer');
+    // Assert: pos-api only archives a removed customer and still returns
+    // it; the app leaves archived customers out of the list. The server
+    // shows the removal was recorded.
+    expect(
+        await customers.scrollListTo(plan.name, code: customer.code), isFalse,
+        reason: 'a removed customer leaves the list');
     expect(await _statusOf(customer), archivedStatus);
   }, timeout: e2eTestTimeout);
 
@@ -109,7 +107,8 @@ void main() {
         customers.detailRow(_addressRow, keptCustomerMarker), findsOneWidget);
   }, skip: E2EEnv.isHosted, timeout: e2eTestTimeout);
 
-  testWidgets('editing a wholesale customer\'s phone resets its type',
+  testWidgets(
+      'editing a wholesale customer\'s phone (made by the API) keeps its type',
       (tester) async {
     // Arrange: a wholesale customer, made through the API (local only)
     final customers = await _openCustomers(tester);
@@ -125,22 +124,14 @@ void main() {
     await customers.edit(phone: _changedPhone);
 
     // Assert
-    // FINDING: the edit form starts on the first type and never loads the
-    // customer's (customer_edit_page.dart:59, 117-122), so saving a phone
-    // change also turns the customer general. A skipped test below says what
-    // a user expects.
     expect(customers.detailRow('โทรศัพท์', _changedPhone), findsOneWidget);
-    expect(customers.detailRow(_typeRow, _general), findsOneWidget,
-        reason: 'the app currently resets the type on any edit');
+    expect(customers.detailRow(_typeRow, _wholesale), findsOneWidget,
+        reason: 'an edit keeps the customer type');
   }, skip: E2EEnv.isHosted, timeout: e2eTestTimeout);
 
-  // FINDING (Task 7): on a wide screen CustomerPage keeps the same
-  // CustomersWidget while the right panel changes, and that widget loads
-  // only in initState (customers_widget.dart:38-42, customer_page.dart:74-85),
-  // so a customer just added (or removed) is not shown (or still shown)
-  // until the user leaves the page and comes back. The running test above
-  // re-enters; this one states what a user expects. Skipped tests do not
-  // sign in or write anything.
+  // Was a finding (#13): on a wide screen the list stays on screen while the
+  // panel beside it changes, and it loaded only in initState; the page now
+  // reloads it after an add, a rename and a removal.
   group('customer list refresh', () {
     testWidgets('a new customer appears in the list without leaving the page',
         (tester) async {
@@ -155,15 +146,10 @@ void main() {
       // Assert
       expect(await customers.scrollListTo(name), isTrue);
     }, timeout: e2eTestTimeout);
-  },
-      skip: 'FINDING: on a wide screen the customer list does not reload '
-          'after an add or a removal (customers_widget.dart:38-42)');
+  });
 
-  // FINDING (Task 7): DELETE /customers/:id sets status ARCHIVED
-  // (pos-api app/data/repositories/customer.go:109-129) and GET /customers
-  // returns every status (customer.go:40-54); CustomersViewModel shows them
-  // all (customers_view_model.dart:24-28), so a removed customer never leaves
-  // the list.
+  // Was a finding (#7): pos-api archives a removed customer and returns it
+  // from GET /customers; CustomersViewModel now leaves archived ones out.
   group('customer removal', () {
     testWidgets('a removed customer is no longer listed', (tester) async {
       // Arrange
@@ -181,11 +167,10 @@ void main() {
       // Assert
       expect(await customers.scrollListTo(name), isFalse);
     }, timeout: e2eTestTimeout);
-  },
-      skip: 'FINDING: a removed customer stays in the list (pos-api archives '
-          'it and lists archived customers; the app does not filter them)');
+  });
 
-  // FINDING (Task 7): see the running type test above.
+  // Was a finding (#3): the edit form started on the first type, so any
+  // edit turned the customer general; this one makes it through the form.
   group('customer type on edit', () {
     testWidgets('editing only the phone keeps the customer type',
         (tester) async {
@@ -203,9 +188,7 @@ void main() {
       // Assert
       expect(customers.detailRow(_typeRow, _wholesale), findsOneWidget);
     }, timeout: e2eTestTimeout);
-  },
-      skip: 'FINDING: editing a customer resets its type to ลูกค้าทั่วไป '
-          '(customer_edit_page.dart:59)');
+  });
 
   testWidgets('saving without a name asks for one', (tester) async {
     // Arrange
@@ -246,9 +229,8 @@ void _registerCleanup(CustomerPlan plan) {
 
 /// Adds [plan]'s customer through the form, with the suite's marker, unless
 /// the suite's own one is active; refuses (fails, touching nothing) when
-/// only someone else's customer has the name. Then re-enters the list
-/// (FINDING: on a wide screen it loads only on entry) and returns the
-/// suite's customer as the server has it.
+/// only someone else's customer has the name. Then re-enters the list and
+/// returns the suite's customer as the server has it.
 Future<({Customer customer, bool created})> _ensureListed(
     CustomerRobot customers, CustomerPlan plan) async {
   final decision = plan.decide(await _recordsNamed(plan.name));

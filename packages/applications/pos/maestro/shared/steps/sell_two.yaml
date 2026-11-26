@@ -1,0 +1,31 @@
+# Sells two of ${PRODUCT_NAME}, paid with the exact amount, and leaves the new
+# bill's number in output.billCode (the server is asked until it has a bill
+# newer than the one before the sale).
+appId: app.devper.pos
+---
+- runFlow: add_product_twice.yaml
+- extendedWaitUntil:
+    visible: "ยอดรวมสุทธิ\n?฿50\\.00"
+    timeout: 10000
+- runScript:
+    file: ../../scripts/api.js
+    env:
+      ACTION: newestBill
+- evalScript: ${output.billBefore = output.billCode}
+- tapOn: "ชำระเงิน \\(1 รายการ\\)\n?฿50\\.00"
+- tapOn: "รับชำระพอดี ไม่มีเงินทอน"
+- extendedWaitUntil:
+    visible: "ยอดรวมสุทธิ\n?฿0\\.00"
+    timeout: 15000
+- repeat:
+    times: 15
+    while:
+      true: ${output.billCode == output.billBefore}
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 1000
+      - runScript:
+          file: ../../scripts/api.js
+          env:
+            ACTION: newestBill
+- assertTrue: ${output.billCode != output.billBefore}

@@ -273,8 +273,8 @@ class ProductRobot {
     String note = '',
     String reason = 'อื่นๆ',
   }) async {
-    final tune = _inDetail(find.byTooltip('ปรับสต็อก'));
-    expect(tune, findsOneWidget, reason: 'expected one lot on the stock tab');
+    final tune = _inDetail(find.byTooltip('ปรับสต็อก ล็อต $lot'));
+    expect(tune, findsOneWidget, reason: 'expected lot $lot on the stock tab');
     await tester.tap(tune);
     await tester.pump();
     await pumpUntilFound(tester, _adjustDialog.hitTestable());
@@ -315,6 +315,21 @@ class ProductRobot {
   /// From the detail: 'แก้ไข' → the red 'ลบสินค้า' → confirm
   /// 'ต้องการลบสินค้าใช่หรือไม่'; returns once the menu is back.
   Future<void> delete() async {
+    await _askToDelete('ต้องการลบสินค้าใช่หรือไม่');
+    await shell.confirm();
+    await form.awaitOutcome(_menu);
+  }
+
+  /// From the detail: 'แก้ไข' → 'ลบสินค้า', expects the question [question],
+  /// answers 'ยกเลิก' and closes the form; returns on the detail.
+  Future<void> askToDeleteAndCancel(String question) async {
+    await _askToDelete(question);
+    await shell.cancelConfirm();
+    await shell.closeDialog();
+    await pumpUntilGone(tester, _editPage);
+  }
+
+  Future<void> _askToDelete(String question) async {
     await openEditForm();
     final remove =
         find.descendant(of: _editPage, matching: find.text('ลบสินค้า'));
@@ -323,10 +338,7 @@ class ProductRobot {
     await tester.pump();
     await tester.tap(remove.hitTestable());
     await tester.pump();
-    await pumpUntilFound(
-        tester, find.text('ต้องการลบสินค้าใช่หรือไม่').hitTestable());
-    await shell.confirm();
-    await form.awaitOutcome(_menu);
+    await pumpUntilFound(tester, find.text(question).hitTestable());
   }
 }
 

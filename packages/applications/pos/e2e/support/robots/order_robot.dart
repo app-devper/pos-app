@@ -20,6 +20,7 @@ import '../pump.dart';
 import 'form_driver.dart';
 import 'scroll.dart';
 import 'shell_robot.dart';
+import 'package:pos/presentation/order/detail/order_line_tile.dart';
 
 /// One drag of the list; a few rows.
 const _step = Duration(milliseconds: 100);
@@ -50,7 +51,7 @@ class OrderRobot {
   /// bills have loaded without an error.
   Future<void> openList() async {
     await shell.openOrders();
-    await shell.expectScreenWithoutError(find.text('Total'));
+    await shell.expectScreenWithoutError(find.text('ยอดรวม'));
     await pumpUntilGone(tester,
         find.descendant(of: _list, matching: find.byType(ProgressIndicator)));
   }
@@ -61,14 +62,16 @@ class OrderRobot {
     await _settleList();
   }
 
-  /// The rows showing [bill]'s title and total. Several bills can share a
-  /// minute and a total, so the detail's header tells them apart.
+  /// The rows showing [bill]'s number and total. The number is the row's
+  /// title, so this is one row; the detail's header still confirms it.
   Finder _rows(Bill bill) => find.descendant(
       of: _list,
       matching: find.byWidgetPredicate((w) =>
           w is ListTile &&
-          (w.title as Text?)?.data == bill.rowTitle &&
-          (w.trailing as Text?)?.data == bill.totalText));
+          w.title is Text &&
+          (w.title as Text).data == bill.code &&
+          w.trailing is Text &&
+          (w.trailing as Text).data == bill.totalText));
 
   /// Whether a row with [bill]'s title and total is listed, scrolling the
   /// whole list (today's bills, in the server's order).
@@ -76,7 +79,7 @@ class OrderRobot {
         tester,
         find.descendant(of: _list, matching: find.byType(Scrollable)),
         _rows(bill),
-        what: 'the bill row ${bill.rowTitle} ${bill.totalText}',
+        what: 'the bill row ${bill.code} ${bill.totalText}',
       );
 
   /// Opens the row of [bill] whose detail header shows its code; tries each
@@ -97,6 +100,24 @@ class OrderRobot {
     final opened = await _openRowOf(bill);
     if (opened) await leaveBill();
     return opened;
+  }
+
+  /// [text] (exactly) on [bill]'s row, e.g. its `ยกเลิกแล้ว` mark; scroll
+  /// to it first with [isListed].
+  Finder rowShows(Bill bill, String text) =>
+      find.descendant(of: _rows(bill), matching: find.text(text));
+
+  /// The amount the list's foot reads next to ยอดรวม, `฿ #,##0.00`.
+  String listTotal() => _totalOn(_list);
+
+  String _totalOn(Finder screen) {
+    final row = find
+        .descendant(
+            of: screen,
+            matching: find.ancestor(
+                of: find.text('ยอดรวม'), matching: find.byType(Row)))
+        .first;
+    return form.textsUnder(row).last;
   }
 
   /// Opens, one by one, each row with [bill]'s title and total until one
@@ -121,7 +142,7 @@ class OrderRobot {
 
   Future<void> _awaitDetail() async {
     await shell.expectScreenWithoutError(
-        find.descendant(of: _detail, matching: find.text('Total')));
+        find.descendant(of: _detail, matching: find.text('ยอดรวม')));
     // The header fills in once the bill has loaded; the admin icons once
     // the role has been read.
     await pumpUntilFound(
@@ -142,7 +163,7 @@ class OrderRobot {
   /// Waits until the list's rows and footer have stopped changing for
   /// [_settled] after a reload, then watches it for errors.
   Future<void> _settleList() async {
-    await pumpUntilFound(tester, find.text('Total').hitTestable());
+    await pumpUntilFound(tester, find.text('ยอดรวม').hitTestable());
     var last = _listTexts();
     final quiet = Stopwatch()..start();
     final clock = Stopwatch()..start();
@@ -157,7 +178,7 @@ class OrderRobot {
         quiet.reset();
       }
     }
-    await shell.expectScreenWithoutError(find.text('Total'));
+    await shell.expectScreenWithoutError(find.text('ยอดรวม'));
   }
 
   /// What the list shows: every row's texts and the footer.
@@ -170,7 +191,7 @@ class OrderRobot {
       .descendant(
           of: _detail,
           matching: find.byWidgetPredicate(
-              (w) => w is ListTile && (w.title as Text?)?.data == productName))
+              (w) => w is OrderLineTile && w.line.product?.name == productName))
       .hitTestable();
 
   /// [text] (exactly) on [productName]'s row: its quantity, paid amount or
@@ -181,6 +202,13 @@ class OrderRobot {
   /// [text] (exactly) anywhere on the detail, e.g. its Total `฿ 40.00`.
   Finder detailShows(String text) =>
       find.descendant(of: _detail, matching: find.text(text)).hitTestable();
+
+  /// The amount the bill's foot reads next to ยอดรวม, `฿ #,##0.00`.
+  String detailTotal() => _totalOn(_detail);
+
+  /// [icon] (an action such as delete or return) on [productName]'s row.
+  Finder lineIcon(String productName, IconData icon) =>
+      _inLine(productName, icon);
 
   Finder _inLine(String productName, IconData icon) =>
       find.descendant(of: _line(productName), matching: find.byIcon(icon));

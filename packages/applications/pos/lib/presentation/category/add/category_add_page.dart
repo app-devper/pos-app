@@ -162,16 +162,15 @@ class _CategoryAddPageState extends State<CategoryAddPage> {
           padding: EdgeInsets.only(top: 12),
         ),
         CheckboxListTile(
-          title: const Text(
-            "Require customer order",
-          ),
+          title: Text(Languages.of(context).requireCustomerOrder),
           value: _requireCustomerOrder,
           onChanged: (newValue) {
             setState(() {
               _requireCustomerOrder = newValue;
             });
           },
-          controlAffinity: ListTileControlAffinity.leading, //  <-- leading Checkbox
+          controlAffinity:
+              ListTileControlAffinity.leading, //  <-- leading Checkbox
         )
       ],
     );
@@ -235,7 +234,7 @@ class _CategoryAddPageState extends State<CategoryAddPage> {
         onClicked: () {
           _viewModel.createCategory(_getCategoryParam());
         },
-        text: "Add",
+        text: Languages.of(context).addButton,
       ),
     );
   }

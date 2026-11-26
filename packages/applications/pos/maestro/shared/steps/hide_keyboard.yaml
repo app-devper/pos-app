@@ -1,0 +1,16 @@
+# Hides the on-screen keyboard on Android, only when it is up. Maestro's
+# hideKeyboard presses Back on Android; with no keyboard up, that Back leaves
+# the screen (from the sign-in page it closes the app). An emulator with a
+# hardware keyboard shows no on-screen keyboard, only Gboard's small "More
+# keyboard options" button, so the keyboard counts as up when Gboard shows
+# something and that button is not it. A no-op on the web.
+appId: app.devper.pos
+---
+- runFlow:
+    when:
+      platform: Android
+      visible:
+        id: "com\\.google\\.android\\.inputmethod\\.latin:id/.*"
+      notVisible: "More keyboard options"
+    commands:
+      - hideKeyboard

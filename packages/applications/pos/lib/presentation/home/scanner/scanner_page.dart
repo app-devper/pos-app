@@ -15,6 +15,7 @@ import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/constants.dart';
 import 'package:pos/presentation/product/argument.dart';
+import 'scanner_actions.dart';
 import 'scanner_view_model.dart';
 
 class ScannerPage extends StatefulWidget {
@@ -85,17 +86,9 @@ class _ScannerPageState extends State<ScannerPage> {
       appBar: buildAppBar(
         Languages.of(context).productFindTitle,
         actions: [
-          IconButton(
-            onPressed: () {
-              controller?.toggleFlash();
-            },
-            icon: const Icon(Icons.flash_on),
-          ),
-          IconButton(
-            onPressed: () {
-              controller?.flipCamera();
-            },
-            icon: const Icon(Icons.flip_camera_ios),
+          ScannerActions(
+            onToggleFlash: () => controller?.toggleFlash(),
+            onSwitchCamera: () => controller?.flipCamera(),
           ),
         ],
       ),

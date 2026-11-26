@@ -1,6 +1,7 @@
-# Sells two of the run's product, paid with the exact amount, and finds that bill, by its number,
-# in the bills list: the cart line, the totals, the payment, what the server
-# recorded and what the bill's own page shows.
+# Sells two of the run's product, paid with the exact amount, and finds that
+# bill, by the number the row shows, in the bills list: the cart line, the
+# totals, the payment, the next scan going into the search field (web), what
+# the server recorded and what the bill's own page shows.
 appId: app.devper.pos
 ---
 - runFlow:
@@ -12,7 +13,9 @@ appId: app.devper.pos
 - extendedWaitUntil:
     visible: "ยอดรวมสุทธิ\n?฿50\\.00"
     timeout: 10000
-- assertVisible: "2x ${PRODUCT_NAME}"
+# The cart line reads as one node: quantity, product, unit, amount and the
+# price's kind, on the web too.
+- assertVisible: "2x ${PRODUCT_NAME} .*฿50\\.00.*"
 - takeScreenshot: cart
 # The newest bill before paying: the sale must add one after it, or an earlier
 # run's bill of the same amount would pass for this one.
@@ -26,6 +29,17 @@ appId: app.devper.pos
 - extendedWaitUntil:
     visible: "ยอดรวมสุทธิ\n?฿0\\.00"
     timeout: 15000
+# After the payment the search field has the focus again: a scan typed
+# without touching it adds a line. Only the wide layout shows the field.
+- runFlow:
+    when:
+      true: ${LAYOUT == 'wide'}
+    commands:
+      - inputText: 93${RUN_ID}0001
+      - pressKey: Enter
+      - extendedWaitUntil:
+          visible: "1x ${PRODUCT_NAME} .*"
+          timeout: 10000
 - repeat:
     times: 15
     while:
@@ -43,12 +57,16 @@ appId: app.devper.pos
     file: steps/open_screen.yaml
     env:
       SCREEN: "รายการขาย"
+# The row shows the bill's number as text (and is read as one node with it).
 - extendedWaitUntil:
-    visible: "\\d+ ${output.billCode}.*"
+    visible: "\\d+\n?${output.billCode}.*"
     timeout: 15000
-- tapOn: "\\d+ ${output.billCode}.*"
+- tapOn: "\\d+\n?${output.billCode}.*"
 - extendedWaitUntil:
     visible: "${output.billCode} .*"
     timeout: 10000
-- assertVisible: "(Total\n?)?฿ 50\\.00"
+- assertVisible: "ยอดรวม ฿ 50\\.00"
+# The bill's line reads as one node: quantity, product, (for an admin) cost
+# and profit, amount.
+- assertVisible: "2x ${PRODUCT_NAME} .*฿50\\.00"
 - takeScreenshot: bill

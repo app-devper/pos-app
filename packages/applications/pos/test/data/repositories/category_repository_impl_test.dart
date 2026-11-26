@@ -9,7 +9,8 @@ import 'package:pos/data/repositories/category_repository_impl.dart';
 
 class FakeNetworkConfig implements NetworkConfig {
   @override
-  Map<String, String> getHeaders(Uri uri) => {'Content-Type': 'application/json'};
+  Map<String, String> getHeaders(Uri uri) =>
+      {'Content-Type': 'application/json'};
 
   @override
   bool isDebug() => false;
@@ -22,8 +23,10 @@ class FakeNetworkConfig implements NetworkConfig {
 }
 
 CategoryRepositoryImpl buildRepo(http.Response Function(http.Request) handler) {
-  final client = CustomClient(inner: MockClient((request) async => handler(request)));
-  final service = PosService(networkConfig: FakeNetworkConfig(), client: client);
+  final client =
+      CustomClient(inner: MockClient((request) async => handler(request)));
+  final service =
+      PosService(networkConfig: FakeNetworkConfig(), client: client);
   return CategoryRepositoryImpl(posService: service);
 }
 
@@ -33,7 +36,8 @@ const jsonUtf8Headers = {'content-type': 'application/json; charset=utf-8'};
 
 void main() {
   test('getCategories maps the response array', () async {
-    final repo = buildRepo((request) => http.Response('[$categoryBody]', 200, headers: jsonUtf8Headers));
+    final repo = buildRepo((request) =>
+        http.Response('[$categoryBody]', 200, headers: jsonUtf8Headers));
 
     final categories = await repo.getCategories();
 
@@ -43,14 +47,16 @@ void main() {
   });
 
   test('getCategoryById throws NotFoundException on 404', () async {
-    final repo = buildRepo((request) => http.Response('{"error":"not found"}', 404));
+    final repo =
+        buildRepo((request) => http.Response('{"error":"not found"}', 404));
 
-    await expectLater(repo.getCategoryById('missing'), throwsA(isA<NotFoundException>()));
+    await expectLater(
+        repo.getCategoryById('missing'), throwsA(isA<NotFoundException>()));
   });
 
   test('getCategories throws AuthException on 401', () async {
-    final repo = buildRepo(
-        (request) => http.Response('{"code":"UM-401","message":"session expired"}', 401));
+    final repo = buildRepo((request) =>
+        http.Response('{"code":"UM-401","message":"session expired"}', 401));
 
     await expectLater(repo.getCategories(), throwsA(isA<AuthException>()));
   });
@@ -69,8 +75,10 @@ void main() {
     expect(cached, hasLength(1));
   });
 
-  test('requireCustomerOrder resolves from the cached category value', () async {
-    final repo = buildRepo((request) => http.Response('[$categoryBody]', 200, headers: jsonUtf8Headers));
+  test('requireCustomerOrder resolves from the cached category value',
+      () async {
+    final repo = buildRepo((request) =>
+        http.Response('[$categoryBody]', 200, headers: jsonUtf8Headers));
 
     expect(await repo.requireCustomerOrder('TABLET'), isTrue);
     expect(await repo.requireCustomerOrder('OTHER'), isFalse);

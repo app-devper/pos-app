@@ -20,7 +20,6 @@ class ProductsArgument {
   ProductsArgument(this.mode);
 }
 
-
 class ProductLotArgument {
   final ProductLot productLot;
 

@@ -19,8 +19,7 @@ class ProductLotEditViewModel {
     required this.productRepo,
   });
 
-  final _state =
-      ViewState<ProductLotEditState>(const ProductLotEditState());
+  final _state = ViewState<ProductLotEditState>(const ProductLotEditState());
 
   /// The lot the form opens with, and the lot it saved. Each reaches the view
   /// once; neither is drawn from state.

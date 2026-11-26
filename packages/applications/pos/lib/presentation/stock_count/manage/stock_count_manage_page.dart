@@ -9,10 +9,13 @@ import 'package:design_system/widgets/app_bar.dart';
 import 'package:design_system/widgets/snack_bar.dart';
 
 // Project imports:
+import 'package:pos/presentation/core/lot_name.dart';
+import 'package:pos/presentation/core/readable_tile.dart';
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/stock_count/stock_count.dart';
 import 'package:pos/localizations/language/languages.dart';
 import 'package:design_system/widgets/dialogs.dart';
+import 'package:pos/presentation/stock_count/manage/stock_count_detail_line.dart';
 import 'package:pos/presentation/stock_count/manage/stock_count_item_picker_widget.dart';
 import 'package:pos/presentation/stock_count/manage/stock_count_manage_state.dart';
 import 'package:pos/presentation/stock_count/manage/stock_count_manage_view_model.dart';
@@ -72,11 +75,14 @@ class _StockCountManagePageState extends State<StockCountManagePage> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: buildAppBar(
-        _isViewOnly ? Languages.of(context).stockCountManageTitle : Languages.of(context).stockCountCreateTitle,
+        _isViewOnly
+            ? Languages.of(context).stockCountManageTitle
+            : Languages.of(context).stockCountCreateTitle,
         actions: _isViewOnly
             ? null
             : [
                 IconButton(
+                  tooltip: Languages.of(context).saveStockCount,
                   splashRadius: 20,
                   onPressed: _submit,
                   icon: const Icon(Icons.check),
@@ -87,7 +93,7 @@ class _StockCountManagePageState extends State<StockCountManagePage> {
         valueListenable: _viewModel.state,
         builder: (context, state, _) {
           if (_isViewOnly) {
-            return _buildDetail(state.stockCount);
+            return _buildDetail(state.stockCount, state.productNames);
           }
           return _buildCreateForm(state);
         },
@@ -95,7 +101,8 @@ class _StockCountManagePageState extends State<StockCountManagePage> {
     );
   }
 
-  Widget _buildDetail(StockCount? stockCount) {
+  Widget _buildDetail(
+      StockCount? stockCount, Map<String, String> productNames) {
     if (stockCount == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -120,17 +127,8 @@ class _StockCountManagePageState extends State<StockCountManagePage> {
         ...stockCount.items.map(
           (item) => Column(
             children: [
-              ListTile(
-                title: Text('สินค้า ${item.productId}'),
-                subtitle: Text('ในระบบ ${item.systemQuantity} / นับได้ ${item.countedQuantity}'),
-                trailing: Text(
-                  item.delta == 0 ? 'ตรงกัน' : (item.delta > 0 ? '+${item.delta}' : '${item.delta}'),
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: item.delta == 0 ? AppColors.of(context).textSecondary : (item.delta > 0 ? Colors.green : Colors.red),
-                  ),
-                ),
-              ),
+              StockCountDetailLine(
+                  item: item, productName: productNames[item.productId]),
               const Divider(height: 1),
             ],
           ),
@@ -149,7 +147,8 @@ class _StockCountManagePageState extends State<StockCountManagePage> {
             decoration: InputDecoration(
               labelText: 'หมายเหตุ',
               hintText: 'โปรดระบุหมายเหตุ (ถ้ามี)',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             ),
           ),
         ),
@@ -158,18 +157,22 @@ class _StockCountManagePageState extends State<StockCountManagePage> {
               ? Center(
                   child: Text(
                     'ยังไม่มีสินค้าที่นับ',
-                    style: TextStyle(color: AppColors.of(context).textSecondary),
+                    style:
+                        TextStyle(color: AppColors.of(context).textSecondary),
                   ),
                 )
               : ListView.builder(
                   itemCount: state.items.length,
                   itemBuilder: (context, index) {
                     final item = state.items[index];
+                    final lot =
+                        'ล็อต ${item.lotNumber}, ในระบบ ${item.systemQuantity}';
                     return Column(
                       children: [
-                        ListTile(
+                        ReadableTile(
+                          label: '${item.productName}\n$lot',
                           title: Text(item.productName),
-                          subtitle: Text('ล็อต ${item.lotNumber}, ในระบบ ${item.systemQuantity}'),
+                          subtitle: Text(lot),
                           trailing: SizedBox(
                             width: 140,
                             child: Row(
@@ -180,15 +183,20 @@ class _StockCountManagePageState extends State<StockCountManagePage> {
                                     initialValue: item.counted.toString(),
                                     keyboardType: TextInputType.number,
                                     textAlign: TextAlign.center,
-                                    decoration: const InputDecoration(labelText: 'นับได้'),
+                                    decoration: const InputDecoration(
+                                        labelText: 'นับได้'),
                                     onChanged: (value) {
-                                      _viewModel.updateCounted(index, int.tryParse(value) ?? -1);
+                                      _viewModel.updateCounted(
+                                          index, int.tryParse(value) ?? -1);
                                     },
                                   ),
                                 ),
                                 IconButton(
+                                  tooltip: Languages.of(context).removeCountLine(
+                                      '${item.productName} ${lotName(Languages.of(context), item.lotNumber, row: index + 1)}'),
                                   splashRadius: 20,
-                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.red),
                                   onPressed: () {
                                     _viewModel.removeItem(index);
                                   },

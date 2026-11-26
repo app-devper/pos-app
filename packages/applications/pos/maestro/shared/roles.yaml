@@ -1,0 +1,66 @@
+# What each role is shown (as navigation_test.dart checks it): an admin has
+# selling, bills, products and จัดการ in the menu, and the bills' cost (on
+# each row and in the foot); a manager and a user have selling and bills
+# only, and no cost. The admin sells first, so the list holds a bill of this
+# run whatever the stack held before; each role finds that bill's row before
+# anything is checked on it, so a list still empty or loading cannot pass for
+# one that hides the cost. (The store filter chips are left to the Dart
+# suite: a chip's label is not text on the web.)
+appId: app.devper.pos
+---
+- runFlow:
+    file: steps/sign_in.yaml
+    env:
+      USERNAME: ${MAESTRO_USERNAME}
+      PASSWORD: ${MAESTRO_PASSWORD}
+- runFlow: steps/sell_two.yaml
+- runFlow:
+    file: steps/open_screen.yaml
+    env:
+      SCREEN: "รายการขาย"
+- extendedWaitUntil:
+    visible: "\\d+\n?${output.billCode}.*"
+    timeout: 15000
+- assertVisible: "ต้นทุน ฿ .*"
+- assertVisible: "\\d+\n?${output.billCode}.*ต้นทุน: .*"
+- runFlow:
+    when:
+      true: ${LAYOUT == 'narrow'}
+    commands:
+      - tapOn: "เมนู"
+- assertVisible: "สินค้า"
+- assertVisible: "จัดการ"
+- runFlow:
+    when:
+      true: ${LAYOUT == 'narrow'}
+    commands:
+      - tapOn: "รายการขาย"
+- runFlow: steps/sign_out.yaml
+- runFlow:
+    file: steps/sign_in.yaml
+    env:
+      USERNAME: ${MAESTRO_MANAGER_USERNAME}
+      PASSWORD: ${MAESTRO_MANAGER_PASSWORD}
+- runFlow:
+    file: steps/open_screen.yaml
+    env:
+      SCREEN: "รายการขาย"
+- runFlow:
+    file: steps/expect_staff_menu.yaml
+    env:
+      BILL_CODE: ${output.billCode}
+- runFlow: steps/sign_out.yaml
+- runFlow:
+    file: steps/sign_in.yaml
+    env:
+      USERNAME: ${MAESTRO_USER_USERNAME}
+      PASSWORD: ${MAESTRO_USER_PASSWORD}
+- runFlow:
+    file: steps/open_screen.yaml
+    env:
+      SCREEN: "รายการขาย"
+- runFlow:
+    file: steps/expect_staff_menu.yaml
+    env:
+      BILL_CODE: ${output.billCode}
+- runFlow: steps/sign_out.yaml

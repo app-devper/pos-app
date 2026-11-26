@@ -20,8 +20,7 @@ class ProductsExpiredViewModel {
     required this.productRepo,
   });
 
-  final _state =
-      ViewState<ProductsExpiredState>(const ProductsExpiredState());
+  final _state = ViewState<ProductsExpiredState>(const ProductsExpiredState());
 
   /// Shown as a snackbar and then gone. It never belonged in state: a message
   /// the view had to remember to clear is one it can forget to clear.

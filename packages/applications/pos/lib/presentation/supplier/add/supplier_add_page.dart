@@ -186,7 +186,7 @@ class _SupplierAddPageState extends State<SupplierAddPage> {
         onClicked: () {
           _viewModel.createSupplier(_getSupplierParam());
         },
-        text: "Add",
+        text: Languages.of(context).addButton,
       ),
     );
   }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:um/domain/usecase/auth_use_cases.dart';
 import 'package:common/core/error/exception.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,6 +9,8 @@ import 'package:pos/domain/model/order/order_item_detail.dart';
 import 'package:pos/domain/model/supplier/supplier.dart';
 import 'package:pos/domain/repositories/customer_repository.dart';
 import 'package:pos/domain/repositories/order_repository.dart';
+import 'package:pos/domain/repositories/product_repository.dart';
+import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/domain/repositories/supplier_repository.dart';
 import 'package:pos/presentation/order/detail/order_detail_state.dart';
 import 'package:pos/presentation/order/detail/order_detail_view_model.dart';
@@ -16,7 +20,8 @@ import 'package:um/domain/repositories/login_repository.dart';
 
 class FakeLoginRepository implements LoginRepository {
   @override
-  Future<PasskeyChallenge> passkeyLoginOptions(String system) => throw UnimplementedError();
+  Future<PasskeyChallenge> passkeyLoginOptions(String system) =>
+      throw UnimplementedError();
 
   @override
   Future<Session> loginWithPasskey({
@@ -43,6 +48,14 @@ class FakeLoginRepository implements LoginRepository {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+/// Answers the role only when the test completes [role].
+class PendingRoleRepository extends FakeLoginRepository {
+  final pending = Completer<String>();
+
+  @override
+  Future<String> getRole() => pending.future;
 }
 
 class FakeOrderRepository implements OrderRepository {
@@ -187,11 +200,12 @@ OrderItemDetail _buildOrderItem(String id) {
   );
 }
 
-OrderDetail _buildOrderDetail(String id) {
+OrderDetail _buildOrderDetail(String id,
+    {List<OrderItemDetail> items = const [], String status = ''}) {
   return OrderDetail(
     id: id,
     createdDate: '2026-01-01T00:00:00.000Z',
-    items: const [],
+    items: items,
     total: 100,
     totalCost: 50,
     discount: 0,
@@ -199,16 +213,68 @@ OrderDetail _buildOrderDetail(String id) {
     code: 'O-1',
     customerCode: 'CUST-1',
     customerName: 'Test Customer',
+    status: status,
   );
 }
+
+/// The product catalogue: [products] by id, or [throws] for every lookup.
+class FakeCatalogueRepository implements ProductRepository {
+  final Map<String, Product> products;
+  final Object? throws;
+
+  FakeCatalogueRepository({this.products = const {}, this.throws});
+
+  @override
+  Future<Product?> getLocalProductById(String productId) async {
+    final error = throws;
+    if (error != null) throw error;
+    return products[productId];
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+ProductUnit _unitOf(String id, String name) => ProductUnit(
+    id: id,
+    productId: 'p1',
+    costPrice: 1,
+    unit: name,
+    size: 1,
+    barcode: '',
+    volume: 0,
+    volumeUnit: '');
+
+Product _productWithUnits(List<ProductUnit> units) => Product(
+    id: 'p1',
+    name: 'Product',
+    status: 'ACTIVE',
+    category: 'General',
+    createdDate: '',
+    units: units,
+    prices: const [],
+    stocks: const []);
+
+OrderItemDetail _lineIn(String id, String unitId) => OrderItemDetail(
+    id: id,
+    product: _productWithUnits(const []),
+    unitId: unitId,
+    quantity: 2,
+    price: 50,
+    costPrice: 20,
+    discount: 0,
+    createdDate: '2026-01-01T00:00:00.000Z',
+    order: null);
 
 OrderDetailViewModel _buildViewModel({
   LoginRepository? loginRepo,
   OrderRepository? orderRepo,
   CustomerRepository? customerRepo,
   SupplierRepository? supplierRepo,
+  ProductRepository? productRepo,
 }) {
   return OrderDetailViewModel(
+    productRepo: productRepo ?? FakeCatalogueRepository(),
     getRoleUseCase: GetRoleUseCase(loginRepo ?? FakeLoginRepository()),
     orderRepo: orderRepo ?? FakeOrderRepository(),
     supplierRepo: supplierRepo ?? FakeSupplierRepository(),
@@ -218,6 +284,27 @@ OrderDetailViewModel _buildViewModel({
 
 void main() {
   group('checkLogin', () {
+    test('the role answer keeps the bill loaded while it was awaited',
+        () async {
+      // Arrange: the page asks for the role and the bill together
+      final login = PendingRoleRepository();
+      final bill = _buildOrderDetail('order-1');
+      final vm = _buildViewModel(
+          loginRepo: login, orderRepo: FakeOrderRepository(orderDetail: bill));
+
+      // Act: the bill arrives first, then the role
+      final roleRead = vm.checkLogin();
+      await vm.getOrderById('order-1');
+      login.pending.complete('ADMIN');
+      await roleRead;
+
+      // Assert
+      expect(vm.state.value.isAdmin, isTrue);
+      expect(vm.state.value.order, same(bill),
+          reason: 'the role must not write back the state from before');
+      expect(vm.state.value.loading, isFalse);
+    });
+
     test('an admin gets the admin actions', () async {
       final vm = _buildViewModel(loginRepo: FakeLoginRepository(role: 'ADMIN'));
 
@@ -300,6 +387,110 @@ void main() {
       expect(vm.state.value.order, isNotNull,
           reason: 'a failed refresh must not blank the order the user is '
               'reading');
+    });
+  });
+
+  group('the lines\' units', () {
+    test('each line\'s unit is named from the product catalogue', () async {
+      // Arrange
+      final bill = _buildOrderDetail('o1',
+          items: [_lineIn('i1', 'u1'), _lineIn('i2', 'u2')]);
+      final vm = _buildViewModel(
+          orderRepo: FakeOrderRepository(orderDetail: bill),
+          productRepo: FakeCatalogueRepository(products: {
+            'p1': _productWithUnits(
+                [_unitOf('u1', 'ชิ้น'), _unitOf('u2', 'แผง')]),
+          }));
+
+      // Act
+      await vm.getOrderById('o1');
+
+      // Assert
+      final state = vm.state.value;
+      expect(state.items.map(state.unitNameOf), ['ชิ้น', 'แผง']);
+    });
+
+    test('a catalogue that fails is said, and the bill is still shown',
+        () async {
+      // Arrange
+      final bill = _buildOrderDetail('o1', items: [_lineIn('i1', 'u1')]);
+      final vm = _buildViewModel(
+          orderRepo: FakeOrderRepository(orderDetail: bill),
+          productRepo: FakeCatalogueRepository(
+              throws: const ServerException(message: 'catalogue down')));
+      final errors = <String>[];
+      vm.errors.listen(errors.add);
+
+      // Act
+      await vm.getOrderById('o1');
+      await Future<void>.delayed(Duration.zero);
+
+      // Assert
+      expect(vm.state.value.order, same(bill));
+      expect(vm.state.value.unitNameOf(bill.items.first), isEmpty);
+      expect(errors, hasLength(1));
+    });
+  });
+
+  group('the bill totals', () {
+    OrderItemDetail line(String id,
+            {required double price,
+            required double cost,
+            String status = 'CONFIRMED'}) =>
+        OrderItemDetail(
+          id: id,
+          product: null,
+          quantity: 1,
+          price: price,
+          costPrice: cost,
+          discount: 0,
+          createdDate: '2026-01-01T00:00:00.000Z',
+          order: null,
+          status: status,
+        );
+
+    test('a cancelled line counts in neither the total, the cost nor profit',
+        () async {
+      // Arrange
+      final bill = _buildOrderDetail('o1', items: [
+        line('i1', price: 30, cost: 10),
+        line('i2', price: 20, cost: 8, status: 'CANCELLED'),
+      ]);
+      final vm =
+          _buildViewModel(orderRepo: FakeOrderRepository(orderDetail: bill));
+
+      // Act
+      await vm.getOrderById('o1');
+
+      // Assert
+      final state = vm.state.value;
+      expect(state.items, hasLength(2), reason: 'the line is still shown');
+      expect(state.total, 30);
+      expect(state.totalCost, 10);
+      // The profit the bill shows (BillSummary: total - cost).
+      expect(state.total - state.totalCost, 20);
+    });
+
+    test(
+        'a cancelled bill counts none of its lines, even lines not marked '
+        'cancelled themselves', () async {
+      // Arrange: older data, the bill cancelled and its lines left ACTIVE
+      final bill = _buildOrderDetail('o1', status: 'CANCELLED', items: [
+        line('i1', price: 30, cost: 10, status: 'ACTIVE'),
+        line('i2', price: 20, cost: 8, status: 'ACTIVE'),
+      ]);
+      final vm =
+          _buildViewModel(orderRepo: FakeOrderRepository(orderDetail: bill));
+
+      // Act
+      await vm.getOrderById('o1');
+
+      // Assert
+      final state = vm.state.value;
+      expect(state.items, hasLength(2), reason: 'the lines are still shown');
+      expect(state.total, 0);
+      expect(state.totalCost, 0);
+      expect(state.items.map(state.isLineCancelled), [true, true]);
     });
   });
 

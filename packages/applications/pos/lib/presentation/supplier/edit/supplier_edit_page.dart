@@ -128,6 +128,7 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
   List<Widget> _buildAction(BuildContext context) {
     return [
       IconButton(
+        tooltip: Languages.of(context).deleteSupplier,
         splashRadius: 20,
         onPressed: () {
           _showRemoveConfirm(context, widget.supplier);
@@ -216,7 +217,7 @@ class _SupplierEditPageState extends State<SupplierEditPage> {
           _viewModel.updateSupplierById(
               widget.supplier.id, _getSupplierParam());
         },
-        text: "Update",
+        text: Languages.of(context).saveButton,
       ),
     );
   }

@@ -24,7 +24,10 @@ class ReceiveMenuWidget extends StatelessWidget {
     );
   }
 
-  Column _buildMenuItem({required IconData icon, required String title, required Null Function() onTap}) {
+  Column _buildMenuItem(
+      {required IconData icon,
+      required String title,
+      required Null Function() onTap}) {
     return Column(
       children: [
         ListTile(

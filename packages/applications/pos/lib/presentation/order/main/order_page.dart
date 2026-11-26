@@ -15,6 +15,7 @@ import 'package:pos/domain/model/order/order_summary.dart';
 import 'package:pos/domain/model/order/param.dart';
 import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/constants.dart';
+import 'package:pos/presentation/order/bill_summary.dart';
 import 'package:pos/presentation/order/argument.dart';
 import 'package:design_system/theme/app_colors.dart';
 import 'package:design_system/theme/color.dart';
@@ -33,7 +34,6 @@ class OrderPage extends StatefulWidget {
 class _OrderPageState extends State<OrderPage> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  final _format = NumberFormat("#,##0.00", "en_US");
   final _dateFormat = DateFormat("MMM dd");
   final _mountFormat = DateFormat("MMM");
 
@@ -141,7 +141,7 @@ class _OrderPageState extends State<OrderPage> {
         children: <Widget>[
           _buildMenu(context),
           _buildOrderList(),
-          _buildSummaryTotal(),
+          BillSummary(total: _total, totalCost: _totalCost, showCost: _isAdmin),
         ],
       ),
     );
@@ -202,7 +202,9 @@ class _OrderPageState extends State<OrderPage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            _buildFilter(),
+            // Flexible: on a phone the chips wrap under each other instead
+            // of pushing the date range off the screen.
+            Flexible(child: _buildFilter()),
             _buildDropdown(context),
           ],
         ),
@@ -322,69 +324,6 @@ class _OrderPageState extends State<OrderPage> {
         }
       },
     );
-  }
-
-  Container _buildSummaryTotal() {
-    return Container(
-      padding: const EdgeInsets.all(defaultPagePadding),
-      child: Column(
-        children: <Widget>[
-          _buildTotal(),
-          _buildTotalCost(),
-          _buildTotalProfit(),
-        ],
-      ),
-    );
-  }
-
-  Row _buildTotal() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: <Widget>[
-        const Text(
-          'Total',
-        ),
-        Text(
-          '฿ ${_format.format(_total)}',
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTotalCost() {
-    if (_isAdmin) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          const Text(
-            'Total Cost',
-          ),
-          Text(
-            '฿ ${_format.format(_totalCost)}',
-          ),
-        ],
-      );
-    } else {
-      return Container();
-    }
-  }
-
-  Widget _buildTotalProfit() {
-    if (_isAdmin) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          const Text(
-            'Total Profit',
-          ),
-          Text(
-            '฿ ${_format.format(_total - _totalCost)}',
-          ),
-        ],
-      );
-    } else {
-      return Container();
-    }
   }
 
   Future<void> _selectRangeDate(DateTime currentDate, Range range) async {

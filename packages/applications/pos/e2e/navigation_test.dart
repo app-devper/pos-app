@@ -37,7 +37,7 @@ void main() {
     await shell.openOrders();
     await shell.expectScreenWithoutError(find.text('สรุปรายการ'));
     expect(shell.choiceChip('All'), findsOneWidget);
-    expect(find.text('Total Cost').hitTestable(), findsOneWidget);
+    expect(find.text('ต้นทุน').hitTestable(), findsOneWidget);
 
     await shell.openProducts();
     await shell.expectScreenWithoutError(
@@ -58,13 +58,10 @@ void main() {
     await _userInfoOpensAndReturns(shell);
   }, timeout: e2eTestTimeout);
 
-  // FINDING (Task 7): OrderViewModel.checkLogin reads _state.value before it
-  // awaits the role, then writes that stale copy back, wiping the ranges
-  // initData set meanwhile; so no one ever gets the range dropdown. Unskip
-  // when the app is fixed, and add `expect(shell.rangeDropdown, findsNothing)`
-  // back to _expectSellingAndBillsWithoutAdminTools: until then it would pass
-  // for every role and prove nothing. Skipped tests do not sign in.
-  // testWidgets takes no skip reason; a group does, and the runner prints it.
+  // Was finding #5: OrderViewModel.checkLogin wrote back the state it read
+  // before awaiting the role, wiping the ranges initData set meanwhile, so
+  // no one ever got the range dropdown. The non-admin tests below check
+  // that they still do not.
   group('bills date range', () {
     testWidgets('an admin can choose the date range of the bills',
         (tester) async {
@@ -76,13 +73,12 @@ void main() {
       // Act
       await shell.openOrders();
       await shell.expectScreenWithoutError(find.text('สรุปรายการ'));
+      await shell.waitForRoleToApply();
 
       // Assert
       expect(shell.rangeDropdown, findsOneWidget);
     }, timeout: e2eTestTimeout);
-  },
-      skip: 'FINDING: an admin never gets the bills date-range dropdown '
-          '(OrderViewModel.checkLogin overwrites ranges)');
+  });
 
   testWidgets(
       'a user sees selling and bills only, '
@@ -105,23 +101,30 @@ void main() {
   }, timeout: e2eTestTimeout);
 }
 
-/// FINDING (Task 7): with no shop profile yet, 'ร้านของฉัน' shows the red
-/// snackbar "Error: ไม่พบข้อมูลที่ต้องการ [SY-404-002]" over an empty form,
-/// although this is the screen that creates the profile (order detail sends
-/// the user here on exactly that 404). Only that code is let through, and
-/// the screen is watched again once it has closed, so the stop passes on an
-/// empty and on a populated database and still catches any other error.
-const _noShopProfileYet = '[SY-404-002]';
+/// With no shop profile yet the form is empty and says so
+/// (`ยังไม่มีข้อมูลร้านค้า กรอกแล้วกดบันทึก`); it used to show a red
+/// "Error: ไม่พบข้อมูลที่ต้องการ [SY-404-002]" (was finding #14). No error is
+/// tolerated any more, on an empty or a populated database.
+const _noShopProfileHint = 'ยังไม่มีข้อมูลร้านค้า กรอกแล้วกดบันทึก';
 
 /// Opened and read only: the profile may be the shop's real one, so its
 /// Update button is checked for and never pressed.
 Future<void> _shopProfileOpensUntouched(ShellRobot shell) async {
   await shell.openManageTile('ร้านค้าของฉัน');
-  await shell.expectScreenWithoutError(
-    shell.appBarTitle('ร้านของฉัน'),
-    tolerated: _noShopProfileYet,
-  );
+  await shell.expectScreenWithoutError(shell.appBarTitle('ร้านของฉัน'));
   expect(find.byKey(const Key('update')).hitTestable(), findsOneWidget);
+  // Once loaded, the form holds the profile or, with none yet, says so.
+  final hint = find.text(_noShopProfileHint);
+  String name() => shell.tester
+      .widget<TextField>(find
+          .byWidgetPredicate(
+              (w) => w is TextField && w.decoration?.labelText == 'Name*')
+          .first)
+      .controller!
+      .text;
+  await pumpUntil(shell.tester,
+      () => hint.evaluate().isNotEmpty || name().isNotEmpty, 'the profile');
+  expect(hint, name().isEmpty ? findsOneWidget : findsNothing);
   await shell.pageBack();
   await pumpUntilFound(shell.tester, find.text('ร้านค้าของฉัน').hitTestable());
 }
@@ -167,5 +170,6 @@ Future<void> _expectSellingAndBillsWithoutAdminTools(ShellRobot shell) async {
   expect(shell.sidebarItem('สินค้า'), findsNothing);
   expect(shell.sidebarItem('จัดการ'), findsNothing);
   expect(shell.choiceChip('All'), findsNothing);
-  expect(find.text('Total Cost'), findsNothing);
+  expect(find.text('ต้นทุน'), findsNothing);
+  expect(shell.rangeDropdown, findsNothing);
 }

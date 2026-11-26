@@ -9,5 +9,7 @@ enum MenuEvent {
 }
 
 bool isDatabaseMenu(MenuEvent menuEvent) {
-  return menuEvent == MenuEvent.database || menuEvent == MenuEvent.customer || menuEvent == MenuEvent.receive;
+  return menuEvent == MenuEvent.database ||
+      menuEvent == MenuEvent.customer ||
+      menuEvent == MenuEvent.receive;
 }

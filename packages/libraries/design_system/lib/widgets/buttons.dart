@@ -35,21 +35,35 @@ class ButtonIconWidget extends StatelessWidget {
   final Icon icon;
   final VoidCallback onClicked;
 
+  /// What the button does: said by a screen reader, shown on hover.
+  final String tooltip;
+
   const ButtonIconWidget({
     super.key,
     required this.icon,
     required this.onClicked,
+    required this.tooltip,
   });
 
   @override
   Widget build(BuildContext context) {
+    // The tooltip shows over the whole button; its name is given inside the
+    // button, so a screen reader says it with the button.
+    return Tooltip(
+      message: tooltip,
+      excludeFromSemantics: true,
+      child: _button(context),
+    );
+  }
+
+  Widget _button(BuildContext context) {
     return FilledButton(
       style: FilledButton.styleFrom(
         backgroundColor: Theme.of(context).colorScheme.primary,
         minimumSize: const Size.fromHeight(50),
       ),
       onPressed: onClicked,
-      child: FittedBox(child: icon),
+      child: Semantics(tooltip: tooltip, child: FittedBox(child: icon)),
     );
   }
 }

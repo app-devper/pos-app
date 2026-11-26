@@ -1,0 +1,7 @@
+url: http://127.0.0.1:8090
+name: web - each role sees only its menu items and bill tools
+env:
+  LAYOUT: wide
+---
+- launchApp
+- runFlow: ../shared/roles.yaml

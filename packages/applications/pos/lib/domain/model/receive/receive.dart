@@ -4,6 +4,10 @@ import 'package:pos/domain/model/receive/receive_item.dart';
 // Project imports:
 import 'package:pos/domain/model/supplier/supplier.dart';
 
+/// pos-api's status of a deleted draft receipt: it is cancelled, not
+/// deleted, and still returned by `GET /receives`.
+const receiveStatusCancelled = 'CANCELLED';
+
 class Receive {
   final String id;
   final String supplierId;
@@ -14,6 +18,9 @@ class Receive {
   final String status;
   final List<ReceiveItem> items;
   bool get isImported => status == 'IMPORTED';
+
+  /// A deleted draft: not listed.
+  bool get isCancelled => status == receiveStatusCancelled;
   Supplier? supplier;
 
   Receive({

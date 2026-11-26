@@ -16,6 +16,7 @@ import 'package:pos/domain/model/core/core.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/domain/model/stock_adjustment/param.dart';
 import 'package:pos/presentation/core/core_widget.dart';
+import 'package:pos/presentation/product/stock/stock_direction_toggle.dart';
 import 'package:pos/presentation/product/core/catalogue_edit.dart';
 import 'package:pos/domain/repositories/stock_adjustment_repository.dart';
 
@@ -135,24 +136,13 @@ class _StockAdjustmentWidgetState extends State<StockAdjustmentWidget> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  ToggleButtons(
-                    isSelected: [_isIncrease, !_isIncrease],
-                    onPressed: (index) {
+                  StockDirectionToggle(
+                    isIncrease: _isIncrease,
+                    onChanged: (increase) {
                       setState(() {
-                        _isIncrease = index == 0;
+                        _isIncrease = increase;
                       });
                     },
-                    borderRadius: BorderRadius.circular(8.0),
-                    children: const [
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text('เพิ่มสต็อก'),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text('ลดสต็อก'),
-                      ),
-                    ],
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -170,7 +160,9 @@ class _StockAdjustmentWidgetState extends State<StockAdjustmentWidget> {
                       hintText: 'โปรดระบุจำนวนที่ต้องการปรับ',
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty || int.tryParse(value) == 0) {
+                      if (value == null ||
+                          value.isEmpty ||
+                          int.tryParse(value) == 0) {
                         return 'โปรดระบุจำนวนที่ต้องการปรับ';
                       }
                       return null;
@@ -209,13 +201,13 @@ class _StockAdjustmentWidgetState extends State<StockAdjustmentWidget> {
     final magnitude = int.tryParse(_deltaController.text) ?? 0;
     final delta = _isIncrease ? magnitude : -magnitude;
     _viewModel.run(() => _adjustments.createStockAdjustment(
-      CreateStockAdjustmentParam(
-        productId: widget.stock.productId,
-        stockId: widget.stock.id,
-        reason: _reason!,
-        note: _noteController.text,
-        delta: delta,
-      ),
-    ));
+          CreateStockAdjustmentParam(
+            productId: widget.stock.productId,
+            stockId: widget.stock.id,
+            reason: _reason!,
+            note: _noteController.text,
+            delta: delta,
+          ),
+        ));
   }
 }

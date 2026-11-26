@@ -9,7 +9,6 @@ import 'package:common/core/error/failure.dart';
 import 'package:design_system/widgets/app_bar.dart';
 import 'package:design_system/widgets/buttons.dart';
 import 'package:design_system/widgets/snack_bar.dart';
-import 'package:design_system/widgets/dropdown_input.dart';
 import 'package:intl/intl.dart';
 
 // Project imports:
@@ -24,6 +23,8 @@ import 'package:pos/domain/repositories/product_repository.dart';
 import 'receive_item_dialog.dart';
 import 'receive_manage_state.dart';
 import 'receive_manage_view_model.dart';
+import 'receive_supplier_picker.dart';
+import 'package:pos/presentation/receive/manage/receive_line_tile.dart';
 
 class ReceiveManagePage extends StatefulWidget {
   final String? receiveId;
@@ -149,6 +150,7 @@ class _ReceiveManagePageState extends State<ReceiveManagePage> {
         Languages.of(context).receiveManageTitle,
         actions: [
           IconButton(
+            tooltip: Languages.of(context).deleteReceive,
             splashRadius: 20,
             onPressed: () {
               if (_receive != null && !_receive!.isImported) {
@@ -220,39 +222,19 @@ class _ReceiveManagePageState extends State<ReceiveManagePage> {
     );
   }
 
-  SizedBox _buildSuppliers() {
-    return SizedBox(
-      height: 50,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: <Widget>[
-          Flexible(
-            child: DropdownInput<Supplier>(
-              hintText: "ร้านขายสินค้า",
-              options: _suppliers,
-              value: _supplier,
-              onChanged: (Supplier? value) {
-                setState(() {
-                  _supplierId = value?.id;
-                });
-              },
-              getLabel: (Supplier value) => value.name,
-            ),
-          ),
-          const SizedBox(width: 12),
-          SizedBox(
-            width: 60,
-            height: 50,
-            child: ButtonIconWidget(
-              key: const Key("supplier"),
-              onClicked: () {
-                _nextToSupplierAdd(context);
-              },
-              icon: const Icon(Icons.add_business),
-            ),
-          ),
-        ],
-      ),
+  Widget _buildSuppliers() {
+    return ReceiveSupplierPicker(
+      suppliers: _suppliers,
+      value: _supplier,
+      onChanged: (Supplier? value) {
+        setState(() {
+          _supplierId = value?.id;
+        });
+      },
+      onAdd: () {
+        _nextToSupplierAdd(context);
+      },
+      addLabel: Languages.of(context).addSupplier,
     );
   }
 
@@ -262,26 +244,14 @@ class _ReceiveManagePageState extends State<ReceiveManagePage> {
         itemCount: _receiveItems.length,
         itemBuilder: (context, index) {
           final content = _receiveItems[index];
-          return ListTile(
-            leading: SizedBox(
-              width: 50,
-              height: 50,
-              child: InkWell(
-                child: Icon(
-                    _receive?.isImported == true ? Icons.lock : Icons.delete),
-                onTap: () {
-                  if (!_receive!.isImported) {
-                    _showRemoveItemAlertDialog(context, index);
-                  }
-                },
-              ),
-            ),
-            title: Text('Name: ${content.product?.name ?? "-"}'),
-            subtitle: Text(
-                'Quantity: ${content.quantity} Cost: ${_format.format(content.costPrice)}'),
-            trailing:
-                Text(_format.format(content.costPrice * content.quantity)),
-            onTap: () {},
+          return ReceiveLineTile(
+            line: content,
+            imported: _receive?.isImported == true,
+            onDelete: () {
+              if (!_receive!.isImported) {
+                _showRemoveItemAlertDialog(context, index);
+              }
+            },
           );
         },
       ),

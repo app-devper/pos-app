@@ -2,15 +2,27 @@
 import 'package:flutter/material.dart';
 
 // Package imports:
+import 'package:design_system/theme/theme.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // Project imports:
 import 'package:pos/presentation/home/main/cart_widget.dart';
+import '../../../support/app_fonts.dart';
+import '../../../support/app_languages.dart';
 
-Widget _host(Widget child) => MaterialApp(home: Scaffold(body: child));
+/// In the app's theme, fonts and (Thai unless [languages] says otherwise)
+/// strings, so a layout error here is one a user gets.
+Widget _host(Widget child, {TestLanguages languages = thaiLanguages}) =>
+    MaterialApp(
+      theme: CustomTheme.mainTheme,
+      localizationsDelegates: [languages],
+      home: Scaffold(body: child),
+    );
 
 void main() {
-  testWidgets('a cart line says which product its quantity belongs to',
+  setUpAll(loadAppFonts);
+
+  testWidgets('a cart line quantity button says which line it changes',
       (tester) async {
     // Arrange
     final semantics = tester.ensureSemantics();
@@ -30,16 +42,11 @@ void main() {
       onEditPrice: () {},
       onToggleOversell: () {},
     )));
-    // The price column may overflow by a few pixels with the test font's
-    // metrics (a known layout finding); that is not what this test is about.
-    final layoutError = tester.takeException();
-    if (layoutError != null) {
-      expect(layoutError.toString(), contains('overflowed'));
-    }
-
-    // Assert: the visible text is unchanged, the label names the product.
+    // Assert: the visible text is unchanged, the label names the line (the
+    // line's own node reads the quantity: text_beside_controls_semantics_test)
     expect(find.text('2x'), findsOneWidget);
-    expect(find.bySemanticsLabel('2x Paracetamol 500'), findsOneWidget);
+    expect(find.bySemanticsLabel('2x แก้ไขจำนวน Paracetamol 500 ชิ้น'),
+        findsOneWidget);
     semantics.dispose();
   });
 
@@ -70,5 +77,21 @@ void main() {
     // Assert
     expect(removed, 1);
     expect(find.byIcon(Icons.close), findsOneWidget);
+  });
+
+  testWidgets('in English the cart buttons are named in English',
+      (tester) async {
+    // Arrange / Act
+    await tester.pumpWidget(_host(
+      Row(children: [
+        CartSearchButton(onPressed: () {}),
+        CartCustomerRemoveButton(customerName: 'Ann', onPressed: () {}),
+      ]),
+      languages: englishLanguages,
+    ));
+
+    // Assert
+    expect(find.byTooltip('Choose product'), findsOneWidget);
+    expect(find.byTooltip('Remove customer Ann'), findsOneWidget);
   });
 }

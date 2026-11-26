@@ -75,4 +75,95 @@ abstract class Languages {
   String get stockCountManageTitle;
 
   String get stockCountCreateTitle;
+
+  // The names of icon-only controls: what a screen reader says, and the
+  // tooltip on hover or long-press. A name that takes a product, lot or
+  // customer names which row the control acts on.
+
+  String get back;
+
+  String get clearSearch;
+
+  String get sortByBalance;
+
+  String get sortByName;
+
+  String get productMenu;
+
+  String get addSupplier;
+
+  String get chooseProduct;
+
+  String removeCustomer(String name);
+
+  String get receiveMenu;
+
+  String get deleteReceive;
+
+  String deleteReceiveLine(String name);
+
+  String importedReceiveLine(String name);
+
+  String get billReceipt;
+
+  String get billReload;
+
+  String get billReturns;
+
+  String get billDelete;
+
+  String deleteBillLine(String name);
+
+  String billLineHistory(String name);
+
+  String returnBillLine(String name);
+
+  String oneLess(String name);
+
+  String oneMore(String name);
+
+  String changeQuantity(String name);
+
+  String allowOversell(String name);
+
+  String oversellAllowed(String name);
+
+  String editLot(String lot);
+
+  String lotOnHand(String lot);
+
+  String adjustLot(String lot);
+
+  /// A lot with no lot number, by its row (and import date when known).
+  String unnumberedLot(int row, {String importDate = ''});
+
+  String get saveStockCount;
+
+  String removeCountLine(String name);
+
+  String get newStockCount;
+
+  String get toggleFlash;
+
+  String get switchCamera;
+
+  String get addCategory;
+
+  String get deleteCategory;
+
+  String get deleteSupplier;
+
+  String get downloadSalesCsv;
+
+  String get pickImportDate;
+
+  String get pickExpiryDate;
+
+  String get scanBarcode;
+
+  String get saveButton;
+
+  String get addButton;
+
+  String get requireCustomerOrder;
 }

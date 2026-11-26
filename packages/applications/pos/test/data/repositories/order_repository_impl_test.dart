@@ -150,7 +150,7 @@ void main() {
       );
 
       final result = await _repo(recorder).createOrder(CreateOrderParam(
-          saleId: 'sale-1',
+        saleId: 'sale-1',
         customerCode: 'C1',
         customerName: 'ลูกค้าทั่วไป',
         amount: 120,
@@ -169,7 +169,7 @@ void main() {
       final recorder = _Recorder(body: jsonEncode({'data': _orderJson}));
 
       final result = await _repo(recorder).createOrder(CreateOrderParam(
-          saleId: 'sale-1',
+        saleId: 'sale-1',
         customerCode: '',
         customerName: '',
         amount: 0,
@@ -194,6 +194,23 @@ void main() {
           'GET /api/pos/v1/orders?startDate=2026-09-01&endDate=2026-09-30');
     });
 
+    test('getOrderRange reads a cancelled bill as cancelled', () async {
+      // Arrange
+      final recorder = _Recorder(
+          body: jsonEncode([
+        {..._orderJson, 'id': 'o1', 'status': 'CANCELLED'},
+        {..._orderJson, 'id': 'o2', 'status': 'CONFIRMED'},
+        {..._orderJson, 'id': 'o3'},
+      ]));
+
+      // Act
+      final summaries = await _repo(recorder).getOrderRange(
+          GetOrderRangeParam(startDate: '2026-09-01', endDate: '2026-09-30'));
+
+      // Assert
+      expect(summaries.map((e) => e.isCancelled), [true, false, false]);
+    });
+
     test('getOrderById maps the detail and its items', () async {
       final recorder = _Recorder(
         body: jsonEncode({
@@ -209,6 +226,62 @@ void main() {
       expect(detail.items.single.quantity, 2);
       expect(detail.items.single.oversoldQty, 1);
       expect(detail.items.single.product?.name, 'ยาแก้ปวด');
+    });
+
+    test('getOrderById keeps the unit id each line was sold in', () async {
+      // Arrange
+      final recorder = _Recorder(
+        body: jsonEncode({
+          ..._orderJson,
+          'items': [
+            {..._itemJson(product: _productJson), 'unitId': 'u-strip'},
+            _itemJson(product: _productJson),
+          ],
+        }),
+      );
+
+      // Act
+      final detail = await _repo(recorder).getOrderById('o1');
+
+      // Assert
+      expect(detail.items.map((e) => e.unitId), ['u-strip', '']);
+    });
+
+    test('getOrderById reads a cancelled line as cancelled', () async {
+      // Arrange
+      final recorder = _Recorder(
+        body: jsonEncode({
+          ..._orderJson,
+          'items': [
+            {..._itemJson(product: _productJson), 'status': 'CANCELLED'},
+            {..._itemJson(product: _productJson), 'status': 'CONFIRMED'},
+            _itemJson(product: _productJson),
+          ],
+        }),
+      );
+
+      // Act
+      final detail = await _repo(recorder).getOrderById('o1');
+
+      // Assert
+      expect(detail.items.map((e) => e.isCancelled), [true, false, false]);
+    });
+
+    test('getOrderById reads a cancelled bill as cancelled', () async {
+      // Arrange
+      final cancelled = _Recorder(
+          body:
+              jsonEncode({..._orderJson, 'items': [], 'status': 'CANCELLED'}));
+      final confirmed = _Recorder(
+          body:
+              jsonEncode({..._orderJson, 'items': [], 'status': 'CONFIRMED'}));
+
+      // Act
+      final a = await _repo(cancelled).getOrderById('o1');
+      final b = await _repo(confirmed).getOrderById('o1');
+
+      // Assert
+      expect([a.isCancelled, b.isCancelled], [true, false]);
     });
 
     test('removeOrderById maps the deleted detail', () async {
@@ -360,7 +433,7 @@ void main() {
           posService: recorder.service(), productCache: cache);
       await expectLater(
           repo.createOrder(CreateOrderParam(
-          saleId: 'sale-1',
+              saleId: 'sale-1',
               customerCode: '',
               customerName: '',
               amount: 20,
@@ -402,7 +475,7 @@ void main() {
 
     test('an explicit payment list wins over the single amount', () async {
       final body = await bodyFor(CreateOrderParam(
-          saleId: 'sale-1',
+        saleId: 'sale-1',
         customerCode: '',
         customerName: '',
         amount: 100,
@@ -421,7 +494,7 @@ void main() {
     test('with no payment list one is synthesised from amount and type',
         () async {
       final body = await bodyFor(CreateOrderParam(
-          saleId: 'sale-1',
+        saleId: 'sale-1',
         customerCode: '',
         customerName: '',
         amount: 75,
@@ -436,7 +509,7 @@ void main() {
 
     test('the printed message lists every line and the total', () async {
       final body = await bodyFor(CreateOrderParam(
-          saleId: 'sale-1',
+        saleId: 'sale-1',
         customerCode: '',
         customerName: '',
         amount: 0,
@@ -450,7 +523,7 @@ void main() {
 
     test('an explicit message replaces the generated one', () async {
       final body = await bodyFor(CreateOrderParam(
-          saleId: 'sale-1',
+        saleId: 'sale-1',
         customerCode: '',
         customerName: '',
         amount: 0,

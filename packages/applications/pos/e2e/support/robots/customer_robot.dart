@@ -91,7 +91,10 @@ class CustomerRobot {
   /// customers, in any order, so the E2E one is found by its exact name.
   Future<bool> scrollListTo(String name, {String? code}) => scrollUntilShown(
         tester,
-        find.descendant(of: _list, matching: find.byType(Scrollable)),
+        // The list's own Scrollable: the search field above it has one too.
+        find.descendant(
+            of: find.descendant(of: _list, matching: find.byType(ListView)),
+            matching: find.byType(Scrollable)),
         _listRow(name, code),
         what: 'the customer $name ${code ?? ''}',
       );

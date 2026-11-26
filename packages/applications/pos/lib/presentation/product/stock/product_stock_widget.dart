@@ -13,6 +13,7 @@ import 'package:design_system/widgets/title_bar.dart';
 import 'package:intl/intl.dart';
 
 // Project imports:
+import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/product/param.dart';
 import 'package:pos/domain/model/product/product.dart';
@@ -159,31 +160,33 @@ class _ProductStockWidgetState extends State<ProductStockWidget> {
             if (_formKey.currentState!.validate()) {
               if (widget.stock != null) {
                 _viewModel.run(() => _productRepo.updateProductStockById(
-                  widget.stock!.id,
-                  ProductStockParam(
-                    quantity: int.tryParse(_importController.text) ?? 0,
-                    importDate: _importDateController.text.toServerDate(),
-                    price: double.tryParse(_priceController.text) ?? 0,
-                    costPrice: double.tryParse(_costPriceController.text) ?? 0,
-                    lotNumber: _lotNumberController.text,
-                    expireDate: _expireDateController.text.toServerDate(),
-                    productId: widget.unit.productId,
-                    unitId: widget.unit.id,
-                  ),
-                ));
+                      widget.stock!.id,
+                      ProductStockParam(
+                        quantity: int.tryParse(_importController.text) ?? 0,
+                        importDate: _importDateController.text.toServerDate(),
+                        price: double.tryParse(_priceController.text) ?? 0,
+                        costPrice:
+                            double.tryParse(_costPriceController.text) ?? 0,
+                        lotNumber: _lotNumberController.text,
+                        expireDate: _expireDateController.text.toServerDate(),
+                        productId: widget.unit.productId,
+                        unitId: widget.unit.id,
+                      ),
+                    ));
               } else {
                 _viewModel.run(() => _productRepo.addProductStock(
-                  ProductStockParam(
-                    quantity: int.tryParse(_importController.text) ?? 0,
-                    importDate: _importDateController.text.toServerDate(),
-                    price: double.tryParse(_priceController.text) ?? 0,
-                    costPrice: double.tryParse(_costPriceController.text) ?? 0,
-                    lotNumber: _lotNumberController.text,
-                    expireDate: _expireDateController.text.toServerDate(),
-                    productId: widget.unit.productId,
-                    unitId: widget.unit.id,
-                  ),
-                ));
+                      ProductStockParam(
+                        quantity: int.tryParse(_importController.text) ?? 0,
+                        importDate: _importDateController.text.toServerDate(),
+                        price: double.tryParse(_priceController.text) ?? 0,
+                        costPrice:
+                            double.tryParse(_costPriceController.text) ?? 0,
+                        lotNumber: _lotNumberController.text,
+                        expireDate: _expireDateController.text.toServerDate(),
+                        productId: widget.unit.productId,
+                        unitId: widget.unit.id,
+                      ),
+                    ));
               }
             }
           },
@@ -272,6 +275,7 @@ class _ProductStockWidgetState extends State<ProductStockWidget> {
                                 labelText: 'วันที่นำเข้า',
                                 hintText: 'โปรดระบุวันที่นำเข้า',
                                 suffix: IconButton(
+                                  tooltip: Languages.of(context).pickImportDate,
                                   icon: const Icon(Icons.calendar_today),
                                   splashRadius: 20,
                                   color: Theme.of(context).colorScheme.primary,
@@ -407,6 +411,7 @@ class _ProductStockWidgetState extends State<ProductStockWidget> {
                                 labelText: 'วันหมดอายุ',
                                 hintText: 'โปรดระบุวันหมดอายุ',
                                 suffix: IconButton(
+                                  tooltip: Languages.of(context).pickExpiryDate,
                                   splashRadius: 20,
                                   color: Theme.of(context).colorScheme.primary,
                                   icon: const Icon(Icons.calendar_today),

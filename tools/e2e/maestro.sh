@@ -39,7 +39,7 @@ OUT_ROOT="${OUT_ROOT%/}/pos-e2e-maestro"
 BOOT_TIMEOUT_SEC=240
 TMP_ROOT="${TMPDIR:-/tmp}"
 export E2E_STACK_STATE="${E2E_MAESTRO_STACK_STATE:-${TMP_ROOT%/}/pos-e2e-maestro-stack}"
-ALL_FLOWS="auth navigation sell_and_bill customer receive_stock product_edit"
+ALL_FLOWS="auth navigation sell_and_bill customer receive_stock product_edit stock_adjust stock_count product_add_delete bill_cancel_return roles"
 
 log() { printf 'maestro.sh: %s\n' "$*"; }
 die() { printf 'maestro.sh: %s\n' "$*" >&2; exit 1; }

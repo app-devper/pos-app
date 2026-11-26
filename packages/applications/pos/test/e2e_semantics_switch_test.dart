@@ -5,7 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pos/main.dart';
 
 void main() {
-  test('the semantics switch for Maestro test builds is off in an ordinary build', () {
+  test(
+      'the semantics switch for Maestro test builds is off in an ordinary build',
+      () {
     // Arrange: this test run was started without --dart-define=E2E_SEMANTICS.
 
     // Act

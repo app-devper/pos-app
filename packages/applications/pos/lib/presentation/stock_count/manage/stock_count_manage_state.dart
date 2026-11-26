@@ -17,21 +17,27 @@ class StockCountManageState {
   final StockCount? stockCount;
   final List<StockCountItemParam> items;
 
+  /// The counted products' names by id: a count's lines carry only ids.
+  final Map<String, String> productNames;
+
   const StockCountManageState({
     this.loading = false,
     this.stockCount,
     this.items = const [],
+    this.productNames = const {},
   });
 
   StockCountManageState copyWith({
     bool? loading,
     StockCount? stockCount,
     List<StockCountItemParam>? items,
+    Map<String, String>? productNames,
   }) {
     return StockCountManageState(
       loading: loading ?? this.loading,
       stockCount: stockCount ?? this.stockCount,
       items: items ?? this.items,
+      productNames: productNames ?? this.productNames,
     );
   }
 }

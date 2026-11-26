@@ -33,13 +33,15 @@ class _DecimalInputState extends State<DecimalInput> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    // Sized by its content: the display is as tall as its two lines of text,
+    // so the dialog around it grows instead of cutting them; on a screen too
+    // short for display and keypad (a phone held sideways) it scrolls.
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: _buildInputSection(widget.title, _getNumberFormat(_number)),
-          ),
+          _buildInputSection(widget.title, _getNumberFormat(_number)),
           const SizedBox(height: 16),
           SizedBox(
             height: 250,
@@ -93,7 +95,6 @@ class _DecimalInputState extends State<DecimalInput> {
     }
 
     return Container(
-      height: 100,
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

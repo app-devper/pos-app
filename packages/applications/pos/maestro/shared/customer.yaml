@@ -1,9 +1,11 @@
-# A customer's life: added through the form, on the server, found by name and
-# chosen for a sale on the selling screen, then deleted from its own page and
-# gone from the server.
+# A customer's life: added through the form (with a second one that stays),
+# on the server, found by name and chosen for a sale on the selling screen,
+# then found by the list's search, deleted from its own page, gone from the
+# server and from the list while the second one is listed.
 appId: app.devper.pos
 env:
   CUSTOMER: MST-${RUN_ID} customer
+  KEEPER: MST-${RUN_ID} keeper
 ---
 - runFlow:
     file: steps/sign_in.yaml
@@ -15,37 +17,22 @@ env:
     env:
       SCREEN: "จัดการ"
 - tapOn: "จัดการลูกค้า"
-# The list's title does not reach the web's semantics tree; its add button does.
+# The list's title is a header the web now writes into the page.
 - extendedWaitUntil:
-    visible: "เพิ่มลูกค้า"
+    visible: "ข้อมูลลูกค้า"
     timeout: 15000
-- tapOn: "เพิ่มลูกค้า"
-- tapOn: "ชื่อลูกค้า"
-- inputText: ${CUSTOMER}
-- tapOn: "โทรศัพท์"
-- inputText: 08${RUN_ID}0
 - runFlow:
-    when:
-      platform: Android
-    commands:
-      - hideKeyboard
-- tapOn: "ยืนยัน"
-# The form closes when the server has answered; "เพิ่มลูกค้า" is on both the
-# form and the list, so the server is asked until it has the customer.
-- evalScript: ${output.customerCount = '0'}
-- repeat:
-    times: 15
-    while:
-      true: ${output.customerCount != '1'}
-    commands:
-      - waitForAnimationToEnd:
-          timeout: 1000
-      - runScript:
-          file: ../scripts/api.js
-          env:
-            ACTION: customerCount
-            NAME: ${CUSTOMER}
-- assertTrue: ${output.customerCount == '1'}
+    file: steps/add_customer.yaml
+    env:
+      NAME: ${CUSTOMER}
+      PHONE: 08${RUN_ID}0
+# A second customer that stays: the end of the flow sees it listed, which
+# proves the list has loaded when the removed one is not there.
+- runFlow:
+    file: steps/add_customer.yaml
+    env:
+      NAME: ${KEEPER}
+      PHONE: 08${RUN_ID}1
 - runFlow:
     file: steps/open_screen.yaml
     env:
@@ -60,16 +47,22 @@ env:
     visible: "${CUSTOMER}.*"
     timeout: 15000
 - tapOn: "${CUSTOMER}.*"
-# The cart names the chosen customer on the button that takes them off again.
+# The cart shows the chosen customer by name and code (one node of their
+# own, on the web too), and names them on the button that takes them off.
 - extendedWaitUntil:
-    visible: "นำลูกค้า ${CUSTOMER} ออก"
+    visible: "${CUSTOMER}\n?.+"
     timeout: 10000
+- assertVisible: "นำลูกค้า ${CUSTOMER} ออก"
 - takeScreenshot: customer-on-sale
 - runFlow:
     file: steps/open_screen.yaml
     env:
       SCREEN: "จัดการ"
 - tapOn: "จัดการลูกค้า"
+# The list is searched rather than scrolled: a real shop has many customers.
+- tapOn: "ค้นหาลูกค้า\\.\\.\\."
+- inputText: MST-${RUN_ID}
+- runFlow: steps/hide_keyboard.yaml
 - extendedWaitUntil:
     visible: "${CUSTOMER}.*"
     timeout: 15000
@@ -99,7 +92,13 @@ env:
             ACTION: customerCount
             NAME: ${CUSTOMER}
 - assertTrue: ${output.customerCount == '0'}
-# FINDING 7 (docs/e2e-findings.md): the removed customer stays in the list,
-# because the server keeps it as ARCHIVED and the list shows every status.
-# When that is fixed this line fails; turn it into assertNotVisible then.
-- assertVisible: "${CUSTOMER}.*"
+# Finding 7, fixed: the server keeps the removed customer as ARCHIVED, and the
+# list leaves archived customers out, so the row leaves the list. The list
+# still holds the search for MST-<run>, and the keeper, found by it, must be
+# listed first: only a loaded list makes "not visible" mean something.
+- extendedWaitUntil:
+    visible: "${KEEPER}.*"
+    timeout: 15000
+- extendedWaitUntil:
+    notVisible: "${CUSTOMER}.*"
+    timeout: 15000

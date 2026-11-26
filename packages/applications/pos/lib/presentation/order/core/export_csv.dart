@@ -11,30 +11,32 @@ import 'package:pos/domain/model/order/order_item_detail.dart';
 import 'package:pos/domain/model/product/product.dart';
 
 class ExportCsv {
+  /// The rows of a product's sales history export: a header, then one row
+  /// per line that counts. A cancelled line was not paid for, so it is left
+  /// out rather than exported as paid.
+  static List<List<dynamic>> orderItemRows(List<OrderItemDetail> lines) {
+    final data = lines.counted;
+    final rows = <List<dynamic>>[
+      ["No.", "Date", "Name", "Quantity", "Price", "Discount", "Paid"],
+    ];
+    for (int i = 0; i < data.length; i++) {
+      final line = data[i];
+      rows.add([
+        i + 1,
+        line.getCreatedDate(),
+        line.order?.customerName ?? "",
+        line.quantity,
+        line.price,
+        line.discount * line.quantity,
+        line.paid(),
+      ]);
+    }
+    return rows;
+  }
+
   static Future<void> downloadOrderItems(
       Product product, List<OrderItemDetail> data) async {
-    List<List<dynamic>> rows = <List<dynamic>>[];
-    List<dynamic> row = [];
-    row.add("No.");
-    row.add("Date");
-    row.add("Name");
-    row.add("Quantity");
-    row.add("Price");
-    row.add("Discount");
-    row.add("Paid");
-    rows.add(row);
-    for (int i = 0; i < data.length; i++) {
-      List<dynamic> row = [];
-      row.add(i + 1);
-      row.add(data[i].getCreatedDate());
-      row.add(data[i].order?.customerName ?? "");
-      row.add(data[i].quantity);
-      row.add(data[i].price);
-      row.add(data[i].discount * data[i].quantity);
-      row.add(data[i].paid());
-      rows.add(row);
-    }
-
+    final rows = orderItemRows(data);
     String csv = Csv().encode(rows);
     var format = DateFormat("yyyy-MM-dd");
     var date = format.format(DateTime.now().toLocal());

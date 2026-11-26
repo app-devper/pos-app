@@ -13,7 +13,9 @@ import 'package:pos/domain/model/supplier/supplier.dart';
 import 'package:pos/presentation/receive/main/receives_widget.dart';
 import '../pump.dart';
 import 'form_driver.dart';
+import 'product_picker.dart';
 import 'shell_robot.dart';
+import 'package:pos/presentation/receive/manage/receive_line_tile.dart';
 
 const _manageTile = 'ใบรับสินค้า / Goods Receipt';
 const _searchHint = 'ค้นหาเลขที่ใบรับสินค้า...';
@@ -29,7 +31,6 @@ final _createButton = find.byKey(const Key('add'));
 final _addItemButton = find.byKey(const Key('product'));
 final _importButton = find.byKey(const Key('import-receive'));
 final _importedMarker = find.byKey(const Key('receive-imported'));
-final _snackbar = find.byKey(const Key('snackbar'));
 final _itemDialog = find.ancestor(
     of: find.text(_itemDialogTitle), matching: find.byType(AlertDialog));
 
@@ -175,7 +176,11 @@ class ReceiveRobot {
     await tester.tap(_addItemButton.hitTestable());
     await tester.pump();
     await pumpUntilFound(tester, _itemDialog.hitTestable());
-    await form.choose('สินค้า', item.productName, within: _itemDialog);
+    // The product is chosen through the product picker and its search.
+    await tester.tap(form.field('สินค้า', within: _itemDialog));
+    await tester.pump();
+    await pickProductByName(shell, item.productName);
+    await pumpUntilGone(tester, productPicker);
     await form.enter('จำนวน (', '${item.quantity}',
         within: _itemDialog, prefix: true);
     await form.enter('ต้นทุนต่อหน่วย', _money(item.cost), within: _itemDialog);
@@ -194,24 +199,21 @@ class ReceiveRobot {
     await form.awaitOutcome(itemRow(item));
   }
 
-  /// The receipt line for [item]: `Name: <product>` and its quantity and
-  /// unit cost.
+  /// The receipt line for [item]: its product, quantity and unit cost (shown
+  /// as `Name: <product>` and `Quantity: <n> Cost: <cost>`).
   Finder itemRow(ReceiptItem item) => find
       .byWidgetPredicate((w) =>
-          w is ListTile &&
-          w.title is Text &&
-          (w.title as Text).data == 'Name: ${item.productName}' &&
-          w.subtitle is Text &&
-          (w.subtitle as Text).data ==
-              'Quantity: ${item.quantity} Cost: ${_money(item.cost)}')
+          w is ReceiveLineTile &&
+          w.line.product?.name == item.productName &&
+          w.line.quantity == item.quantity &&
+          _money(w.line.costPrice) == _money(item.cost))
       .hitTestable();
 
   /// 'นำเข้าสต็อก' and its confirm; returns once the page says it imported.
   Future<void> import() async {
-    // FINDING: the 'Update success' snackbar from adding the line never
-    // closes on its own (see dismissSuccessSnackbar) and covers this
-    // button, so the user presses its 'Clear' first.
-    await dismissSuccessSnackbar();
+    // The 'Update success' bar from adding the line covers this button
+    // until it closes by itself.
+    await shell.waitForSnackbarToClose();
     await pumpUntilFound(tester, _importButton.hitTestable());
     await tester.tap(_importButton.hitTestable());
     await tester.pump();
@@ -225,23 +227,6 @@ class ReceiveRobot {
     await pumpUntilFound(tester, _importedMarker.hitTestable());
     await pumpUntilFound(tester, find.byIcon(Icons.lock).hitTestable());
     expect(_importButton, findsNothing);
-  }
-
-  /// Presses 'Clear' on the green success snackbar and waits for it to go.
-  ///
-  /// FINDING (Task 7): CustomSnackBar.showSnackBar adds a 'Clear' action by
-  /// default (design_system snack_bar.dart:44-69), and in the Flutter this
-  /// repo pins (3.38) a SnackBar with an action persists until dismissed
-  /// (SnackBar.persist defaults to `action != null`), so 'Add success' and
-  /// 'Update success' stay over the bottom of the page for good.
-  Future<void> dismissSuccessSnackbar() async {
-    final clear = find
-        .descendant(of: _snackbar, matching: find.text('Clear'))
-        .hitTestable();
-    await pumpUntilFound(tester, clear);
-    await tester.tap(clear);
-    await tester.pump();
-    await shell.waitForSnackbarToClose();
   }
 
   /// The AppBar's delete (the lines have delete icons too) and its confirm;

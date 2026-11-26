@@ -11,7 +11,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 // Project imports:
 import '../env.dart';
-import '../error_check.dart';
 import '../pump.dart';
 
 /// Long enough for a screen's first load to answer and, if it fails, for the
@@ -109,20 +108,9 @@ class ShellRobot {
 
   /// Waits for [screen], then watches it for [_errorWatch] and fails on the
   /// first error snackbar or alert dialog.
-  ///
-  /// [tolerated] is an exact error code, e.g. `[SY-404-002]`, for an app
-  /// fault already reported: a snackbar carrying it is logged, not failed,
-  /// and once it has closed the screen is watched again, so an error queued
-  /// behind it is still caught.
-  Future<void> expectScreenWithoutError(
-    Finder screen, {
-    String? tolerated,
-  }) async {
+  Future<void> expectScreenWithoutError(Finder screen) async {
     await pumpUntilFound(tester, screen.hitTestable());
-    final sawTolerated = await _watchForErrors(tolerated);
-    if (!sawTolerated) return;
-    await waitForSnackbarToClose();
-    await _watchForErrors(null);
+    await _watchForErrors();
   }
 
   /// Gives the signed-in role time to reach the shell, so that an absence
@@ -134,24 +122,17 @@ class ShellRobot {
     }
   }
 
-  /// Returns whether the tolerated error was shown.
-  Future<bool> _watchForErrors(String? tolerated) async {
-    String? seen;
+  Future<void> _watchForErrors() async {
     final clock = Stopwatch()..start();
     while (true) {
-      final shown = _checkErrors(tolerated);
-      if (shown != null && seen == null) {
-        debugPrint('E2E known finding shown: $shown');
-      }
-      seen ??= shown;
-      if (clock.elapsed >= _errorWatch) return seen != null;
+      _checkErrors();
+      if (clock.elapsed >= _errorWatch) return;
       await tester.pump(_step);
     }
   }
 
-  /// Fails on any alert dialog, or any error snackbar but a [tolerated] one;
-  /// returns the tolerated one if it is showing.
-  String? _checkErrors(String? tolerated) {
+  /// Fails on any alert dialog or error snackbar.
+  void _checkErrors() {
     final alerts = find.byType(AlertDialog);
     if (alerts.evaluate().isNotEmpty) {
       fail('Alert dialog: ${_texts(alerts).join(' | ')}');
@@ -160,9 +141,7 @@ class ShellRobot {
       for (final element in find.byType(SnackBar).evaluate())
         if (_errorText(element) case final text?) text,
     ];
-    final unexpected = unexpectedErrors(errors, tolerated: tolerated);
-    if (unexpected.isNotEmpty) fail('Error snackbar: ${unexpected.first}');
-    return errors.firstOrNull;
+    if (errors.isNotEmpty) fail('Error snackbar: ${errors.first}');
   }
 
   /// The text of an error snackbar (red, or saying "Error:"), else null.
@@ -185,6 +164,9 @@ class ShellRobot {
 
   /// Presses 'ยืนยัน' in the 'แจ้งเตือน' confirm dialog.
   Future<void> confirm() => _pressInDialog(_confirmTitle, 'ยืนยัน');
+
+  /// Presses 'ยกเลิก' in the 'แจ้งเตือน' confirm dialog.
+  Future<void> cancelConfirm() => _pressInDialog(_confirmTitle, 'ยกเลิก');
 
   /// Presses 'ตกลง' in the 'พบข้อผิดพลาด' alert.
   Future<void> dismissAlert() => _pressInDialog(_errorAlertTitle, 'ตกลง');

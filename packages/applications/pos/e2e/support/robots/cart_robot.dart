@@ -15,12 +15,13 @@ import 'package:pos/presentation/home/main/cart_widget.dart';
 import 'package:pos/presentation/home/main/payment_screen.dart';
 import 'package:pos/presentation/home/main/product_search.dart';
 import '../pump.dart';
-import '../selling_faults.dart';
 import 'shell_robot.dart';
 
 const _searchHint = 'ค้นหาชื่อสินค้า หรือสแกนบาร์โค้ด';
 const _emptyCart = 'เลือกสินค้าเพื่อเริ่มขาย';
-const _sold = 'Order success';
+
+/// The success bar after a sale: `ขายสำเร็จ`, then `เลขที่บิล <code>`.
+final _sold = find.textContaining(RegExp(r'^ขายสำเร็จ'));
 
 final _grid = find.byType(ProductSearch);
 final _payment = find.byType(PaymentScreen);
@@ -80,11 +81,7 @@ class CartRobot {
 
   /// Taps the line's `<n>x` and keys [quantity] in the 'จำนวนสินค้า'
   /// keypad dialog.
-  /// The dialog's display overflows (a known finding), let through here.
-  Future<void> setQuantity(String productName, int quantity) =>
-      onQuantityKeypad(() => _setQuantity(productName, quantity));
-
-  Future<void> _setQuantity(String productName, int quantity) async {
+  Future<void> setQuantity(String productName, int quantity) async {
     final current = tester.widget<CartOrderItem>(line(productName)).quantity;
     await tester.tap(lineShows(productName, '${current}x'));
     await tester.pump();
@@ -139,10 +136,14 @@ class CartRobot {
         (w) => w is TextField && w.decoration?.hintText == 'ค้นหา...');
     await tester.enterText(search.hitTestable(), name);
     await tester.pump();
+    // Only the picker's rows have plain Text titles: the cart's own rows
+    // (ReadableTile) title theirs with a semantics label.
     final row = find.byWidgetPredicate((w) =>
         w is ListTile &&
-        (w.title as Text?)?.data == name &&
-        (w.subtitle as Text?)?.data == code);
+        w.title is Text &&
+        (w.title as Text).data == name &&
+        w.subtitle is Text &&
+        (w.subtitle as Text).data == code);
     await pumpUntilFound(tester, row.hitTestable());
     await tester.tap(row.hitTestable());
     await tester.pump();
@@ -154,10 +155,8 @@ class CartRobot {
 
   /// Presses 'ชำระเงิน (n รายการ)'; picks พร้อมเพย์ when [promptPay] and
   /// keys in [tendered] when given (else the exact amount is taken).
-  /// Its amount display overflows (a known finding), let through here.
   Future<void> openPayment({bool promptPay = false, String? tendered}) =>
-      onPaymentDialog(
-          () => _openPayment(promptPay: promptPay, tendered: tendered));
+      _openPayment(promptPay: promptPay, tendered: tendered);
 
   /// The cart's 'ชำระเงิน (n รายการ)' button.
   Finder get payButtonInCart => find
@@ -193,47 +192,41 @@ class CartRobot {
   Finder payButton(String label) =>
       _inPayment(find.widgetWithText(ElevatedButton, label));
 
-  // Every step that pumps while the payment dialog is open lets its known
-  // overflow through: it is reported again whenever the display relays out.
-
-  Future<void> submitPayment() => onPaymentDialog(() async {
-        await tester.tap(_inPayment(find.byType(ElevatedButton)));
-        await tester.pump();
-      });
+  Future<void> submitPayment() async {
+    await tester.tap(_inPayment(find.byType(ElevatedButton)));
+    await tester.pump();
+  }
 
   /// A refused payment: the error snackbar [text] shows over the open
   /// payment, then closes on its own.
-  Future<void> expectRefused(String text) => onPaymentDialog(() async {
-        await shell.expectSnackbar(text);
-        await shell.waitForSnackbarToClose();
-      });
-
-  Future<void> closePayment() => onPaymentDialog(() async {
-        await shell.closeDialog();
-        await pumpUntilGone(tester, _payment);
-      });
-
-  /// "Order success" shows, the payment closes and the cart is empty. The
-  /// snackbar never closes on its own (a known finding), so it is cleared
-  /// the way a user would.
-  Future<void> expectSold() async {
-    await onPaymentDialog(() async {
-      await pumpUntilFound(tester, find.text(_sold).hitTestable(),
-          timeout: const Duration(seconds: 30));
-      await pumpUntilGone(tester, _payment);
-    });
-    expect(isEmpty, isTrue, reason: 'a sold cart is emptied');
-    await tester.tap(find.text('Clear').hitTestable());
-    await tester.pump();
+  Future<void> expectRefused(String text) async {
+    await shell.expectSnackbar(text);
     await shell.waitForSnackbarToClose();
+  }
+
+  Future<void> closePayment() async {
+    await shell.closeDialog();
+    await pumpUntilGone(tester, _payment);
+  }
+
+  /// The sale's success bar shows, the payment closes and the cart is
+  /// empty; returns the bar's text once it has closed by itself.
+  Future<String> expectSold() async {
+    await pumpUntilFound(tester, _sold.hitTestable(),
+        timeout: const Duration(seconds: 30));
+    final message = tester.widget<Text>(_sold.hitTestable().first).data ?? '';
+    await pumpUntilGone(tester, _payment);
+    expect(isEmpty, isTrue, reason: 'a sold cart is emptied');
+    await shell.waitForSnackbarToClose();
+    return message;
   }
 
   /// Opens the payment, takes [tendered] (or the exact amount) and waits
   /// for the sale.
-  Future<void> pay({bool promptPay = false, String? tendered}) async {
+  Future<String> pay({bool promptPay = false, String? tendered}) async {
     await openPayment(promptPay: promptPay, tendered: tendered);
     await submitPayment();
-    await expectSold();
+    return expectSold();
   }
 
   /// Types [text] into the grid's search field, which filters the grid (as

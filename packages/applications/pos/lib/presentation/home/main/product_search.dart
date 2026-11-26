@@ -1,3 +1,6 @@
+// Dart imports:
+import 'dart:async';
+
 // Flutter imports:
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -9,6 +12,7 @@ import 'package:design_system/widgets/search_decoration.dart';
 import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
 
 // Project imports:
+import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/core/core.dart';
 import 'package:pos/domain/model/product/product.dart';
@@ -19,9 +23,14 @@ import 'package:pos/presentation/home/main/product_search_view_model.dart';
 class ProductSearch extends StatefulWidget {
   final Function(String) onSelected;
 
+  /// Each recorded sale reloads the products (it has moved their stock) and
+  /// puts the cursor back in the search field, ready for the next scan.
+  final Stream<Object?>? saleRecorded;
+
   const ProductSearch({
     super.key,
     required this.onSelected,
+    this.saleRecorded,
   });
 
   @override
@@ -36,20 +45,30 @@ class _ProductSearchState extends State<ProductSearch> {
   final _serialNumberNode = FocusNode();
 
   late ProductSearchViewModel _viewModel;
+  StreamSubscription<Object?>? _sales;
 
   @override
   void initState() {
     _viewModel = sl<ProductSearchViewModel>();
     _viewModel.prepareData();
+    _sales = widget.saleRecorded?.listen((_) => _onSaleRecorded());
     super.initState();
   }
 
   @override
   void dispose() {
+    _sales?.cancel();
     _serialNumberEditingController.dispose();
     _serialNumberNode.dispose();
     _viewModel.dispose();
     super.dispose();
+  }
+
+  /// The payment dialog closing does not hand the focus back (on the web it
+  /// stays on the route), so the next scan would go nowhere.
+  void _onSaleRecorded() {
+    _viewModel.refresh();
+    _serialNumberNode.requestFocus();
   }
 
   @override
@@ -76,7 +95,7 @@ class _ProductSearchState extends State<ProductSearch> {
                   suffixIcon: kIsWeb
                       ? null
                       : IconButton(
-                          tooltip: 'สแกนบาร์โค้ด',
+                          tooltip: Languages.of(context).scanBarcode,
                           icon: const Icon(Icons.qr_code_scanner),
                           onPressed: () => _scanBarcode(context),
                         ),

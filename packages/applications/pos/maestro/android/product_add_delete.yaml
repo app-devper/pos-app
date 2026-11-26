@@ -1,0 +1,8 @@
+appId: app.devper.pos
+name: android - add a product by the form, sell it, delete it
+env:
+  LAYOUT: narrow
+---
+- launchApp:
+    clearState: true
+- runFlow: ../shared/product_add_delete.yaml

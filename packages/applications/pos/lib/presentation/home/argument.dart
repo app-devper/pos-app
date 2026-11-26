@@ -1,4 +1,3 @@
-
 class ScannerArgument {
   final String mode;
 

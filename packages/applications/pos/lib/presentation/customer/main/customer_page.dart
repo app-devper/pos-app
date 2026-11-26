@@ -16,6 +16,7 @@ import 'package:pos/presentation/customer/edit/customer_edit_page.dart';
 import 'package:pos/presentation/customer/main/customer_detail_widget.dart';
 import 'package:pos/presentation/customer/main/customer_menu_widget.dart';
 import 'package:pos/presentation/customer/main/customer_view_model.dart';
+import 'package:pos/presentation/customer/main/customers_view_model.dart';
 import 'package:pos/presentation/customer/main/customers_widget.dart';
 
 class CustomerPage extends StatefulWidget {
@@ -29,6 +30,7 @@ class CustomerPage extends StatefulWidget {
 
 class _CustomerPageState extends State<CustomerPage> {
   late CustomerViewModel _viewModel;
+  late CustomersViewModel _customers;
   late StreamSubscription<Customer> _loaded;
   late StreamSubscription<String> _errors;
   PageState _pageState = MainPage();
@@ -37,6 +39,7 @@ class _CustomerPageState extends State<CustomerPage> {
   void initState() {
     super.initState();
     _viewModel = sl<CustomerViewModel>();
+    _customers = sl<CustomersViewModel>();
     _loaded = _viewModel.loaded.listen(_onLoaded);
     _errors = _viewModel.errors.listen(_showError);
   }
@@ -58,6 +61,7 @@ class _CustomerPageState extends State<CustomerPage> {
     _loaded.cancel();
     _errors.cancel();
     _viewModel.dispose();
+    _customers.dispose();
     super.dispose();
   }
 
@@ -72,6 +76,7 @@ class _CustomerPageState extends State<CustomerPage> {
         SizedBox(
           width: 320,
           child: CustomersWidget(
+            viewModel: _customers,
             onAdd: () {
               setState(() {
                 _pageState = AddPage();
@@ -108,6 +113,7 @@ class _CustomerPageState extends State<CustomerPage> {
       final isMobile = Responsive.isMobile(context);
       if (isMobile) {
         return CustomersWidget(
+          viewModel: _customers,
           onAdd: () {
             setState(() {
               _pageState = AddPage();
@@ -158,9 +164,11 @@ class _CustomerPageState extends State<CustomerPage> {
           });
         },
         onEdit: () {
+          _customers.reload();
           _viewModel.getCustomerById(customer.id);
         },
         onRemove: () {
+          _customers.reload();
           setState(() {
             _pageState = MainPage();
           });
@@ -174,6 +182,7 @@ class _CustomerPageState extends State<CustomerPage> {
           });
         },
         onAdd: () {
+          _customers.reload();
           setState(() {
             _pageState = MainPage();
           });

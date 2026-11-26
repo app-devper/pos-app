@@ -20,10 +20,11 @@ import 'support/pump.dart';
 const _hostedApiUrl = 'https://api.devper.app';
 const _localApiUrl = 'http://127.0.0.1:8585';
 
-/// um-api's code for a wrong username or password (errs.ErrWrongCredentials,
-/// HTTP 401). Only a server that checked the password sends it; with no
-/// server the alert carries NETWORK_ERROR instead.
-const _wrongCredentialsCode = '[UM-401-004]';
+/// What the sign-in alert says for a wrong username or password: um-api's
+/// code (errs.ErrWrongCredentials, HTTP 401) after the app's own words. Only
+/// a server that checked the password sends it; with no server the alert
+/// carries NETWORK_ERROR instead.
+const _wrongCredentialsAlert = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง [UM-401-004]';
 
 void main() {
   initE2E();
@@ -76,9 +77,8 @@ void main() {
     );
 
     // Assert
-    expect(refusal, contains(_wrongCredentialsCode),
-        reason:
-            'the alert should carry the server code $_wrongCredentialsCode');
+    expect(refusal, contains(_wrongCredentialsAlert),
+        reason: 'the alert should say the username or password is wrong');
     // The alert's barrier fades out after it is dismissed.
     await pumpUntilFound(tester, find.byKey(const Key('login')).hitTestable());
     expect(find.text('ตะกร้าสินค้า #1'), findsNothing);

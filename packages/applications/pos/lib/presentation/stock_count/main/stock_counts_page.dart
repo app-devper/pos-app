@@ -62,6 +62,7 @@ class _StockCountsPageState extends State<StockCountsPage> {
         Languages.of(context).stockCountsTitle,
         actions: [
           IconButton(
+            tooltip: Languages.of(context).newStockCount,
             splashRadius: 20,
             onPressed: () {
               _nextToStockCountManage(context);

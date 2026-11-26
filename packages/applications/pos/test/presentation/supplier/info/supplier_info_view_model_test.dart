@@ -63,6 +63,28 @@ class FakeSupplierRepository implements SupplierRepository {
       throw UnimplementedError();
 }
 
+/// A shop with no profile yet: loads answer 404 until a save succeeds.
+class _NoProfileYetRepository extends FakeSupplierRepository {
+  Supplier? _saved;
+
+  @override
+  Future<Supplier> getSupplierInfo() async {
+    final saved = _saved;
+    if (saved == null) {
+      throw const NotFoundException(
+          message: 'ไม่พบข้อมูลที่ต้องการ', code: 'SY-404-002');
+    }
+    return saved;
+  }
+
+  @override
+  Future<Supplier> updateSupplierInfo(SupplierParam param) async {
+    final saved = await super.updateSupplierInfo(param);
+    _saved = saved;
+    return saved;
+  }
+}
+
 Supplier buildSupplier(String id) {
   return Supplier(id: id, name: 'name-$id', address: '', phone: '', taxId: '');
 }
@@ -101,6 +123,35 @@ void main() {
 
     expect(vm.state.value.supplier, isNull);
     expect(errors, hasLength(1));
+  });
+
+  test('no shop profile yet is not an error: the form is empty, with a hint',
+      () async {
+    // Arrange: pos-api answers 404 until the profile is first saved
+    final vm = buildViewModel(
+      FakeSupplierRepository(
+          throws: const NotFoundException(
+              message: 'ไม่พบข้อมูลที่ต้องการ', code: 'SY-404-002')),
+    );
+    final errors = <String>[];
+    vm.errors.listen(errors.add);
+
+    // Act
+    await vm.getSupplierInfo();
+    await Future<void>.delayed(Duration.zero);
+
+    // Assert
+    expect(errors, isEmpty);
+    expect(vm.state.value.supplier, isNull);
+    expect(vm.state.value.hint, 'ยังไม่มีข้อมูลร้านค้า กรอกแล้วกดบันทึก');
+  });
+
+  test('a profile that loads shows no hint', () async {
+    final vm = buildViewModel(FakeSupplierRepository(info: buildSupplier('5')));
+
+    await vm.getSupplierInfo();
+
+    expect(vm.state.value.hint, isNull);
   });
 
   test('a save emits the updated record once', () async {
@@ -145,5 +196,33 @@ void main() {
     await Future<void>.delayed(Duration.zero);
 
     expect(updated, hasLength(1));
+  });
+
+  test('the first profile saved takes the no-profile hint away', () async {
+    // Arrange
+    final vm = buildViewModel(_NoProfileYetRepository());
+    await vm.getSupplierInfo();
+    expect(vm.state.value.hint, noShopProfileHint);
+
+    // Act
+    await vm.updateSupplierInfo(buildParam());
+
+    // Assert
+    expect(vm.state.value.hint, isNull);
+  });
+
+  test('a later load that finds the profile takes the hint away', () async {
+    // Arrange
+    final repo = _NoProfileYetRepository();
+    final vm = buildViewModel(repo);
+    await vm.getSupplierInfo();
+    await repo.updateSupplierInfo(buildParam());
+
+    // Act
+    await vm.getSupplierInfo();
+
+    // Assert
+    expect(vm.state.value.hint, isNull);
+    expect(vm.state.value.supplier?.name, 'ร้านยาใหม่');
   });
 }

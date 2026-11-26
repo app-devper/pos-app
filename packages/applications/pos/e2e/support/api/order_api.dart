@@ -64,7 +64,8 @@ class Bill {
   final String id;
   final String code;
 
-  /// The list row's title: `dd/MM/yyyy HH:mm`, then ` Name: <customer>`.
+  /// The list row's line under the bill number: `dd/MM/yyyy HH:mm`, then
+  /// ` Name: <customer>`.
   final String rowTitle;
 
   /// The detail's header: `<code> dd/MM/yyyy HH:mm`.
@@ -83,6 +84,22 @@ Future<Set<String>> fileOrderIds() async =>
 /// cancelled).
 Future<Bill> billNow(String id) async =>
     Bill.of(await getIt()<OrderRepository>().getOrderById(id));
+
+/// What the bills list's ยอดรวม must read for today's bills, `฿ #,##0.00`:
+/// the sum of those pos-api has not cancelled, computed from what it sends.
+Future<String> todaysCountedTotalText() async {
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final orders = await getIt()<OrderRepository>().getOrderRange(
+      GetOrderRangeParam(
+          startDate: today.toUtc().toIso8601String(),
+          endDate:
+              today.add(const Duration(days: 1)).toUtc().toIso8601String()));
+  final counted = orders
+      .where((order) => order.status != 'CANCELLED')
+      .fold(0.0, (sum, order) => sum + order.total);
+  return '฿ ${_money.format(counted)}';
+}
 
 /// The bills recorded since [before] was taken that hold [productName].
 Future<List<OrderDetail>> billsOfProductSince(

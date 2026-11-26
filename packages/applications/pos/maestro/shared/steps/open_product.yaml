@@ -1,0 +1,19 @@
+# From anywhere in the shell: สินค้า, then ${NAME}'s detail and its tab ${TAB}.
+# A tab is found by its identifier, which is its name (ReadableTab): the web
+# writes a tab's name only as an aria-label, never as text.
+appId: app.devper.pos
+---
+- runFlow:
+    file: open_screen.yaml
+    env:
+      SCREEN: "สินค้า"
+- extendedWaitUntil:
+    visible: "${NAME}.*"
+    timeout: 15000
+- tapOn: "${NAME}.*"
+- extendedWaitUntil:
+    visible:
+      id: ${TAB}
+    timeout: 15000
+- tapOn:
+    id: ${TAB}

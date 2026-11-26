@@ -25,6 +25,15 @@ final class AuthException extends AppException {
   });
 }
 
+/// The sign-in call refused the username or password. Any other 401 is an
+/// [AuthException]: the session is gone.
+final class WrongCredentialsException extends AppException {
+  const WrongCredentialsException({
+    required super.message,
+    super.code = "UNAUTHORIZED",
+  });
+}
+
 final class ForbiddenException extends AppException {
   const ForbiddenException({
     required super.message,
