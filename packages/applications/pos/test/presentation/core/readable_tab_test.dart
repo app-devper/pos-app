@@ -49,6 +49,10 @@ void main() {
       expect(label.getSemanticsData().role, isNot(SemanticsRole.tab),
           reason: 'the name is in a node of its own, not on the tab');
       expect(label.parent?.getSemanticsData().role, SemanticsRole.tab);
+      // The web does not write the name node of a tab into the page (it
+      // shows only the tab's aria-label), so the tab carries its name as
+      // its identifier too: a test on the web can find it by that.
+      expect(label.parent?.getSemanticsData().identifier, name);
     }
     semantics.dispose();
   });
