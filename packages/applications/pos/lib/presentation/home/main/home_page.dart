@@ -4,17 +4,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 // Package imports:
-import 'package:design_system/theme/color.dart';
-import 'package:design_system/widgets/app_shell.dart';
 import 'package:um/presentation/constants.dart';
 
 // Project imports:
 import 'package:pos/container.dart';
-import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/home/main/cart_page.dart';
 import 'package:pos/presentation/home/main/home_database_page.dart';
 import 'package:pos/presentation/home/main/home_view_model.dart';
 import 'package:pos/presentation/home/main/menu_event.dart';
+import 'package:pos/presentation/home/main/pos_shell.dart';
 import 'package:pos/presentation/order/main/order_page.dart';
 import 'package:pos/presentation/product/main/product_page.dart';
 
@@ -100,18 +98,12 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => FocusScope.of(context).requestFocus(_viewNode),
-      child: AppShell(
-        brand: posBrand,
-        title: '',
-        // Each section draws its own header already.
-        showTopBar: false,
-        // Keep room for the product picker on shop tablets.
-        initiallyExpanded: MediaQuery.sizeOf(context).width >= 1280,
-        items: posMenuItems(isAdmin: _isAdmin),
+      child: PosShell(
+        isAdmin: _isAdmin,
         selectedId: _selectedId,
         onSelect: _onSelect,
+        onLogout: _viewModel.logout,
         onBack: _onBack,
-        sidebarFooter: _buildFooter,
         child: _buildPage(),
       ),
     );
@@ -127,43 +119,6 @@ class _HomePageState extends State<HomePage> {
 
   void _onSectionBackChanged(VoidCallback? back) {
     if (mounted) setState(() => _sectionBack = back);
-  }
-
-  Widget _buildFooter(bool collapsed) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _footerAction(
-          collapsed: collapsed,
-          icon: Icons.account_circle_outlined,
-          label: Languages.of(context).userInfoTitle,
-          onTap: () => Navigator.pushNamed(context, routeUserInfo),
-        ),
-        _footerAction(
-          collapsed: collapsed,
-          icon: Icons.logout,
-          label: 'ออกจากระบบ',
-          color: CustomColor.error,
-          onTap: _viewModel.logout,
-        ),
-      ],
-    );
-  }
-
-  Widget _footerAction({
-    required bool collapsed,
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    Color? color,
-  }) {
-    return AppSidebarAction(
-      label: label,
-      icon: icon,
-      collapsed: collapsed,
-      onTap: onTap,
-      color: color,
-    );
   }
 
   Widget _buildPage() {

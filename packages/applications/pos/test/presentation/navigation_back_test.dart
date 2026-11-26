@@ -22,7 +22,9 @@ import 'package:pos/presentation/constants.dart';
 import 'package:pos/presentation/customer/add/customer_add_view_model.dart';
 import 'package:pos/presentation/customer/main/customer_view_model.dart';
 import 'package:pos/presentation/customer/main/customers_view_model.dart';
+import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/home/main/home_page.dart';
+import 'package:pos/presentation/home/main/inner_page_frame.dart';
 import 'package:pos/domain/model/order/order_detail.dart';
 import 'package:pos/domain/model/supplier/supplier.dart';
 import 'package:pos/presentation/home/main/home_view_model.dart';
@@ -513,6 +515,46 @@ void main() {
     expect(_managePage.hitTestable(), findsNothing);
     expect(find.byTooltip('ย้อนกลับ').hitTestable(), findsOneWidget);
     expect(sideMenuEntry('ขายสินค้า'), findsNothing);
+  });
+
+  testWidgets(
+      'on a wide screen a list opened from จัดการ has the shell\'s side '
+      'menu, with its user info and sign-out', (tester) async {
+    // Arrange
+    await _openApp(tester, size: desktopSize);
+    await _openSection(tester, 'จัดการ');
+
+    // Act
+    await tester.tap(find.text('ใบรับสินค้า / Goods Receipt'));
+    await _settle(tester);
+
+    // Assert
+    expect(find.text('RC-1').hitTestable(), findsOneWidget);
+    expect(sideMenuEntry('ออกจากระบบ'), findsOneWidget);
+    expect(
+        sideMenuEntry(
+            Languages.of(tester.element(find.text('RC-1'))).userInfoTitle),
+        findsOneWidget);
+  });
+
+  testWidgets('the side menu beside a list shows a non-admin no admin entry',
+      (tester) async {
+    // Arrange
+    useViewSize(tester, desktopSize);
+    _registerApp(role: 'USER');
+
+    // Act
+    await tester.pumpWidget(MaterialApp(
+      theme: CustomTheme.mainTheme,
+      localizationsDelegates: [CommonLocalizationsDelegate(), thaiLanguages],
+      home: const InnerPageFrame(child: Scaffold(body: Text('page'))),
+    ));
+    await _settle(tester);
+
+    // Assert
+    expect(find.text('ขายสินค้า').hitTestable(), findsOneWidget);
+    expect(find.text('สินค้า').hitTestable(), findsNothing);
+    expect(find.text('จัดการ').hitTestable(), findsNothing);
   });
 
   testWidgets('home asked for จัดการ by a non-admin opens selling instead',
