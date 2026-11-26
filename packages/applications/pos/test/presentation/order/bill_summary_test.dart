@@ -1,11 +1,15 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 // Package imports:
+import 'package:design_system/theme/theme.dart';
+import 'package:design_system/widgets/snack_bar.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // Project imports:
 import 'package:pos/presentation/order/bill_summary.dart';
+import '../../support/app_fonts.dart';
 
 Widget _host(Widget child) => MaterialApp(home: Scaffold(body: child));
 
@@ -63,5 +67,71 @@ void main() {
       expect(node.childrenCount, 0, reason: row);
     }
     semantics.dispose();
+  });
+
+  group('the foot\'s look', () {
+    setUpAll(loadAppFonts);
+
+    /// A list over the foot, as the bills list and a bill lay them out.
+    Widget page() => MaterialApp(
+          theme: CustomTheme.mainTheme,
+          home: Scaffold(
+            body: Column(children: [
+              Expanded(child: ListView()),
+              const BillSummary(total: 75, totalCost: 30, showCost: true),
+            ]),
+          ),
+        );
+
+    testWidgets('the foot is a raised surface with a top border',
+        (tester) async {
+      // Arrange / Act
+      await tester.pumpWidget(page());
+
+      // Assert
+      final box = tester.widget<DecoratedBox>(find
+          .descendant(
+              of: find.byType(BillSummary), matching: find.byType(DecoratedBox))
+          .first);
+      final decoration = box.decoration as BoxDecoration;
+      expect((decoration.border as Border).top.width, greaterThan(0));
+      expect(decoration.boxShadow, isNotEmpty);
+    });
+
+    testWidgets('ยอดรวม is emphasised over cost and profit', (tester) async {
+      // Arrange / Act
+      await tester.pumpWidget(page());
+
+      // Assert
+      double sizeOf(String text) => tester
+          .renderObject<RenderParagraph>(find.text(text))
+          .text
+          .style!
+          .fontSize!;
+      expect(sizeOf('฿ 75.00'), greaterThan(sizeOf('฿ 30.00')));
+      expect(sizeOf('ยอดรวม'), greaterThan(sizeOf('ต้นทุน')));
+    });
+
+    testWidgets('a success bar on a wide screen leaves the foot readable',
+        (tester) async {
+      // Arrange
+      useViewSize(tester, desktopSize);
+      await tester.pumpWidget(page());
+
+      // Act
+      CustomSnackBar(
+              key: UniqueKey(),
+              context: tester.element(find.byType(BillSummary)))
+          .showSnackBar(text: 'ขายสำเร็จ เลขที่บิล OD_1');
+      await tester.pumpAndSettle();
+
+      // Assert
+      final bar = tester.getRect(find.byType(SnackBar));
+      for (final text in ['ยอดรวม', '฿ 75.00', 'ต้นทุน', 'กำไร']) {
+        expect(bar.overlaps(tester.getRect(find.text(text))), isFalse,
+            reason: '$text under the bar $bar');
+        expect(find.text(text).hitTestable(), findsOneWidget, reason: text);
+      }
+    });
   });
 }

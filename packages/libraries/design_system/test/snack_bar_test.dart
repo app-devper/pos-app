@@ -31,6 +31,11 @@ class _Harness {
   }
 }
 
+/// The bar as drawn: its surface, inside the margins around it.
+final _barSurface = find
+    .descendant(of: find.byType(SnackBar), matching: find.byType(Material))
+    .first;
+
 void main() {
   testWidgets('a success bar closes by itself after four seconds', (
     tester,
@@ -101,5 +106,58 @@ void main() {
     // Assert
     expect(find.text('Error: ไม่พบสินค้า'), findsOneWidget);
     expect(find.text('Clear'), findsOneWidget);
+  });
+
+  for (final (kind, show) in <(String, void Function(CustomSnackBar))>[
+    ('success', (bar) => bar.showSnackBar(text: 'Add success')),
+    ('error', (bar) => bar.showErrorSnackBar('ไม่พบสินค้า')),
+    ('loading', (bar) => bar.showLoadingSnackBar()),
+  ]) {
+    testWidgets('the $kind bar floats, at most 480 px wide on a wide screen', (
+      tester,
+    ) async {
+      // Arrange
+      tester.view.physicalSize = const Size(1400, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final harness = _Harness();
+      await tester.pumpWidget(harness.app);
+      final context = await harness.pushScreen(tester);
+
+      // Act
+      show(CustomSnackBar(key: UniqueKey(), context: context));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+
+      // Assert
+      final bar = tester.widget<SnackBar>(find.byType(SnackBar));
+      expect(bar.behavior, SnackBarBehavior.floating);
+      expect(tester.getSize(_barSurface).width, lessThanOrEqualTo(480));
+    });
+  }
+
+  testWidgets('a bar on a phone floats across the screen, inside its margins', (
+    tester,
+  ) async {
+    // Arrange
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final harness = _Harness();
+    await tester.pumpWidget(harness.app);
+    final context = await harness.pushScreen(tester);
+
+    // Act
+    CustomSnackBar(
+      key: UniqueKey(),
+      context: context,
+    ).showSnackBar(text: 'Add success');
+    await tester.pumpAndSettle();
+
+    // Assert
+    final rect = tester.getRect(_barSurface);
+    expect(tester.takeException(), isNull);
+    expect(rect.left, greaterThan(0));
+    expect(rect.right, lessThan(360));
   });
 }
