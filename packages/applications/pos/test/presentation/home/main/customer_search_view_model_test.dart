@@ -23,7 +23,8 @@ class FakeCustomerRepository implements CustomerRepository {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
-Customer buildCustomer(String id, String name, String phone) {
+Customer buildCustomer(String id, String name, String phone,
+    {String status = 'ACTIVE'}) {
   return Customer(
     id: id,
     code: 'C$id',
@@ -31,7 +32,7 @@ Customer buildCustomer(String id, String name, String phone) {
     address: '',
     phone: phone,
     email: '',
-    status: 'ACTIVE',
+    status: status,
     type: '',
   );
 }
@@ -55,6 +56,21 @@ void main() {
     await vm.getCacheCustomers();
 
     expect(vm.items.value, hasLength(3));
+  });
+
+  test('the selling screen\'s picker offers no removed customer', () async {
+    // Arrange
+    final vm = buildViewModel(FakeCustomerRepository(customers: [
+      ..._cached,
+      buildCustomer('4', 'สมปอง ลาออก', '0811111111', status: 'ARCHIVED'),
+    ]));
+
+    // Act
+    await vm.getCacheCustomers();
+    vm.searchCustomer('สม');
+
+    // Assert
+    expect(vm.items.value?.map((c) => c.id), ['1', '3']);
   });
 
   test('a failed cache read leaves the list untouched', () async {

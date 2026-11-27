@@ -150,6 +150,7 @@ Future<void> initPos() async {
       orderRepo: sl(),
       supplierRepo: sl(),
       customerRepo: sl(),
+      productRepo: sl(),
     ),
   );
   sl.registerFactory(
@@ -237,6 +238,7 @@ Future<void> initPos() async {
   sl.registerFactory(
     () => StockCountManageViewModel(
       stockCountRepo: sl(),
+      productRepo: sl(),
     ),
   );
   sl.registerFactory(

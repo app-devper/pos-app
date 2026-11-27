@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:common/core/ext/widget_ext.dart';
-import 'package:design_system/widgets/app_bar.dart';
+import 'package:pos/presentation/core/page_bar.dart';
 import 'package:design_system/widgets/buttons.dart';
 import 'package:design_system/widgets/snack_bar.dart';
 
@@ -71,7 +71,8 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
 
   void _onUpdated(Category category) {
     _snackBar.hideAll();
-    _snackBar.showSnackBar(text: "Update ${category.name} success");
+    _snackBar.showSnackBar(
+        text: Languages.of(context).savedNamed(category.name));
   }
 
   void _onRemoved(Category category) {
@@ -107,7 +108,8 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
     _snackBar = CustomSnackBar(key: const Key("snackbar"), context: context);
     return Scaffold(
       key: _scaffoldKey,
-      appBar: buildAppBar(
+      appBar: buildPageBar(
+        context,
         Languages.of(context).categoryEditTitle,
         actions: _buildAction(context),
       ),
@@ -127,6 +129,7 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
   List<Widget> _buildAction(BuildContext context) {
     return [
       IconButton(
+        tooltip: Languages.of(context).deleteCategory,
         splashRadius: 20,
         onPressed: () {
           _showRemoveCategoryConfirm(context, widget.category);
@@ -194,9 +197,7 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
           padding: EdgeInsets.only(top: 12),
         ),
         CheckboxListTile(
-          title: const Text(
-            "Require customer order",
-          ),
+          title: Text(Languages.of(context).requireCustomerOrder),
           value: _requireCustomerOrder,
           onChanged: (newValue) {
             setState(() {
@@ -269,7 +270,7 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
           _viewModel.updateCategoryById(
               widget.category.id, _getCategoryParam());
         },
-        text: "Update",
+        text: Languages.of(context).saveButton,
       ),
     );
   }

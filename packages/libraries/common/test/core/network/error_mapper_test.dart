@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:common/core/error/exception.dart';
+import 'package:common/core/error/failure.dart';
 import 'package:common/core/network/error_mapper.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -8,7 +9,8 @@ import 'package:http/http.dart' as http;
 void main() {
   group('toAppException', () {
     test('maps 401 with um error body to AuthException', () {
-      final e = toAppException(http.Response('{"code":"UM-401","message":"session expired"}', 401));
+      final e = toAppException(
+          http.Response('{"code":"UM-401","message":"session expired"}', 401));
 
       expect(e, isA<AuthException>());
       expect(e.message, 'session expired');
@@ -24,7 +26,8 @@ void main() {
     });
 
     test('maps 409 to ConflictException carrying payload', () {
-      final e = toAppException(http.Response('{"message":"duplicate","extra":1}', 409));
+      final e = toAppException(
+          http.Response('{"message":"duplicate","extra":1}', 409));
 
       expect(e, isA<ConflictException>());
       expect((e as ConflictException).payload?['extra'], 1);
@@ -55,13 +58,16 @@ void main() {
     });
 
     test('prefers errcode when a body carries both keys', () {
-      final e = toAppException(http.Response('{"errcode":"A","code":"B"}', 409));
+      final e =
+          toAppException(http.Response('{"errcode":"A","code":"B"}', 409));
 
       expect(e.code, 'A');
     });
 
-    test('maps 400 to ValidationException with the server code and message', () {
-      final e = toAppException(http.Response('{"errcode":"OR-001","error":"bad sale"}', 400));
+    test('maps 400 to ValidationException with the server code and message',
+        () {
+      final e = toAppException(
+          http.Response('{"errcode":"OR-001","error":"bad sale"}', 400));
 
       expect(e, isA<ValidationException>());
       expect(e.code, 'OR-001');
@@ -69,7 +75,8 @@ void main() {
     });
 
     test('maps 422 to ValidationException', () {
-      final e = toAppException(http.Response('{"code":"UM-422","message":"weak password"}', 422));
+      final e = toAppException(
+          http.Response('{"code":"UM-422","message":"weak password"}', 422));
 
       expect(e, isA<ValidationException>());
       expect(e.code, 'UM-422');
@@ -90,6 +97,48 @@ void main() {
 
       expect(e, isA<ServerException>());
       expect(e.message, 'HTTP 500');
+    });
+  });
+
+  group('a 401 shown to the user', () {
+    http.Response unauthorizedFrom(String path, String code) => http.Response(
+          '{"code":"$code","message":"unauthorized"}',
+          401,
+          request:
+              http.Request('POST', Uri.parse('http://127.0.0.1:8585$path')),
+        );
+
+    test('from the sign-in call says the username or password is wrong', () {
+      // Arrange
+      final response = unauthorizedFrom('/api/um/v1/auth/login', 'UM-401-004');
+
+      // Act
+      final message = toFailure(toAppException(response)).getMessage();
+
+      // Assert
+      expect(message, 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง [UM-401-004]');
+    });
+
+    test('from any other call still says the session has expired', () {
+      // Arrange
+      final response = unauthorizedFrom('/api/um/v1/auth/info', 'UM-401-001');
+
+      // Act
+      final message = toFailure(toAppException(response)).getMessage();
+
+      // Assert
+      expect(message, 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่ [UM-401-001]');
+    });
+
+    test('with no request known still says the session has expired', () {
+      // Arrange
+      final response = http.Response('{"code":"UM-401-004"}', 401);
+
+      // Act
+      final message = toFailure(toAppException(response)).getMessage();
+
+      // Assert
+      expect(message, 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่ [UM-401-004]');
     });
   });
 

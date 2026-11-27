@@ -1,0 +1,14 @@
+# Signs out from any screen of the shell and ends on the sign-in screen.
+# The narrow (phone) layout keeps the menu in a drawer; the wide one shows it.
+appId: app.devper.pos
+---
+- runFlow:
+    when:
+      true: ${LAYOUT == 'narrow'}
+    commands:
+      - tapOn: "เมนู"
+- tapOn: "ออกจากระบบ"
+- extendedWaitUntil:
+    visible: "ยินดีต้อนรับ"
+    timeout: 15000
+- assertVisible: "เข้าสู่ระบบ"

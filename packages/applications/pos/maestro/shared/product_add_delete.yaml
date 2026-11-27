@@ -1,0 +1,150 @@
+# A product is added through the form (shown in the shop, a unit, a price,
+# a cost and a barcode): the server has it and the selling screen's grid
+# shows it. Deleted through its edit form, which asks plainly when it has
+# no stock, it leaves the server and the list. Deleting the run's stocked
+# product asks first, naming the stock on hand (was finding 6); the run
+# answers no, and the product stays. (As product_edit_test.dart does.)
+appId: app.devper.pos
+env:
+  ADDED: MST-${RUN_ID} added
+---
+- runFlow:
+    file: steps/sign_in.yaml
+    env:
+      USERNAME: ${MAESTRO_USERNAME}
+      PASSWORD: ${MAESTRO_PASSWORD}
+- runFlow:
+    file: steps/open_screen.yaml
+    env:
+      SCREEN: "สินค้า"
+- extendedWaitUntil:
+    visible: "${PRODUCT_NAME}.*"
+    timeout: 15000
+# The narrow layout keeps the add entry in the list's menu.
+- runFlow:
+    when:
+      true: ${LAYOUT == 'narrow'}
+    commands:
+      - tapOn: "คำสั่งเพิ่มเติม"
+- tapOn: "เพิ่มสินค้า"
+# The form fills in its category once the categories have loaded, and
+# what was typed before that is lost: wait for it.
+- extendedWaitUntil:
+    visible: "(ประเภทสินค้า\n?)?ไม่ระบุประเภท"
+    timeout: 15000
+- tapOn: "ชื่อสินค้า.*"
+- inputText: ${ADDED}
+- runFlow: steps/hide_keyboard.yaml
+- tapOn: "การแสดงข้อมูลสินค้า.*"
+- runFlow:
+    file: steps/choose_dropdown_option.yaml
+    env:
+      OPTION: "แสดงหน้าร้าน"
+- scrollUntilVisible:
+    element: "ชื่อหน่วยนับ.*"
+    direction: DOWN
+    timeout: 10000
+- tapOn: "ชื่อหน่วยนับ.*"
+- inputText: "pc"
+- runFlow: steps/hide_keyboard.yaml
+- scrollUntilVisible:
+    element: "ราคาขายต่อหน่วย \\(ค่าเริ่มต้น\\).*"
+    direction: DOWN
+    timeout: 10000
+- tapOn: "ราคาขายต่อหน่วย \\(ค่าเริ่มต้น\\).*"
+- inputText: "30"
+- tapOn: "ราคาทุนต่อหน่วย \\(ค่าเริ่มต้น\\).*"
+- inputText: "12"
+- runFlow: steps/hide_keyboard.yaml
+- scrollUntilVisible:
+    element: "บาร์โค้ด.*"
+    direction: DOWN
+    timeout: 10000
+- tapOn: "บาร์โค้ด.*"
+- inputText: 94${RUN_ID}0001
+- runFlow: steps/hide_keyboard.yaml
+- takeScreenshot: add-form
+# The form's title and its action both read เพิ่มสินค้า; the action is the
+# one right of the other.
+- tapOn:
+    text: "เพิ่มสินค้า"
+    rightOf: "เพิ่มสินค้า"
+- evalScript: ${output.productCount = '0'}
+- repeat:
+    times: 15
+    while:
+      true: ${output.productCount != '1'}
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 1000
+      - runScript:
+          file: ../scripts/api.js
+          env:
+            ACTION: productCount
+            NAME: ${ADDED}
+- assertTrue: ${output.productCount == '1'}
+# On the selling screen's grid, found by the run's prefix.
+- runFlow:
+    file: steps/open_screen.yaml
+    env:
+      SCREEN: "ขายสินค้า"
+- runFlow:
+    when:
+      true: ${LAYOUT == 'narrow'}
+    commands:
+      - tapOn: "เลือกสินค้า"
+- runFlow:
+    when:
+      true: ${LAYOUT == 'wide'}
+    commands:
+      - tapOn: "ค้นหาชื่อสินค้า หรือสแกนบาร์โค้ด"
+- inputText: MST-${RUN_ID}
+- extendedWaitUntil:
+    visible: "${ADDED}.*฿30\\.00.*"
+    timeout: 15000
+- runFlow:
+    when:
+      true: ${LAYOUT == 'narrow'}
+    commands:
+      - tapOn: "ปิด"
+# Deleted: it has no stock, so the question is the plain one.
+- runFlow:
+    file: steps/open_product_edit.yaml
+    env:
+      NAME: ${ADDED}
+- extendedWaitUntil:
+    visible: ".*ต้องการลบสินค้าใช่หรือไม่\\?"
+    timeout: 10000
+- tapOn: "ยืนยัน"
+- repeat:
+    times: 15
+    while:
+      true: ${output.productCount != '0'}
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 1000
+      - runScript:
+          file: ../scripts/api.js
+          env:
+            ACTION: productCount
+            NAME: ${ADDED}
+- assertTrue: ${output.productCount == '0'}
+- extendedWaitUntil:
+    visible: "${PRODUCT_NAME}.*"
+    timeout: 15000
+- assertNotVisible: "${ADDED}.*"
+# The run's product holds 1000: the question names its stock; answered no.
+- runFlow:
+    file: steps/open_product_edit.yaml
+    env:
+      NAME: ${PRODUCT_NAME}
+- extendedWaitUntil:
+    visible: "สินค้านี้มีสต็อกคงเหลือ 1000 .* ต้องการลบใช่หรือไม่\\?"
+    timeout: 10000
+- tapOn: "ยกเลิก"
+- runScript:
+    file: ../scripts/api.js
+    env:
+      ACTION: productCount
+      NAME: ${PRODUCT_NAME}
+- assertTrue: ${output.productCount == '1'}

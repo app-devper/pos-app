@@ -27,7 +27,8 @@ class OrderRangeSelection {
 /// three calls in initState.
 @immutable
 class OrderState {
-  final List<ListItem> ranges;
+  /// The ranges offered, in order; the page names each in its language.
+  final List<Range> ranges;
   final List<OrderSummary>? orders;
   final double totalCost;
   final double total;
@@ -42,7 +43,7 @@ class OrderState {
   });
 
   OrderState copyWith({
-    List<ListItem>? ranges,
+    List<Range>? ranges,
     List<OrderSummary>? orders,
     double? totalCost,
     double? total,

@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:common/core/ext/widget_ext.dart';
-import 'package:design_system/widgets/app_bar.dart';
+import 'package:pos/presentation/core/page_bar.dart';
 import 'package:design_system/widgets/snack_bar.dart';
 import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
 
@@ -15,6 +15,7 @@ import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/constants.dart';
 import 'package:pos/presentation/product/argument.dart';
+import 'scanner_actions.dart';
 import 'scanner_view_model.dart';
 
 class ScannerPage extends StatefulWidget {
@@ -82,20 +83,13 @@ class _ScannerPageState extends State<ScannerPage> {
   Widget build(BuildContext context) {
     _snackBar = CustomSnackBar(key: const Key("snackbar"), context: context);
     return Scaffold(
-      appBar: buildAppBar(
+      appBar: buildPageBar(
+        context,
         Languages.of(context).productFindTitle,
         actions: [
-          IconButton(
-            onPressed: () {
-              controller?.toggleFlash();
-            },
-            icon: const Icon(Icons.flash_on),
-          ),
-          IconButton(
-            onPressed: () {
-              controller?.flipCamera();
-            },
-            icon: const Icon(Icons.flip_camera_ios),
+          ScannerActions(
+            onToggleFlash: () => controller?.toggleFlash(),
+            onSwitchCamera: () => controller?.flipCamera(),
           ),
         ],
       ),
@@ -144,7 +138,7 @@ class _ScannerPageState extends State<ScannerPage> {
 
   void _onPermissionSet(QRViewController ctrl, bool p) {
     if (!p) {
-      _snackBar.showErrorSnackBar("No Permission Camera");
+      _snackBar.showErrorSnackBar(Languages.of(context).noCameraPermission);
     }
   }
 

@@ -12,6 +12,7 @@ import 'package:design_system/widgets/title_bar.dart';
 import 'package:design_system/widgets/page_container.dart';
 
 // Project imports:
+import 'package:pos/presentation/core/readable_option.dart';
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/customer/customer.dart';
 import 'package:pos/domain/model/core/core.dart';
@@ -150,7 +151,9 @@ class _CustomerAddPageState extends State<CustomerAddPage> {
                       'โปรดระบุข้อมูลลูกค้า',
                       style: TextStyle(
                         fontSize: 16,
-                        color: AppColors.of(context).textPrimary.withValues(alpha: 0.6),
+                        color: AppColors.of(context)
+                            .textPrimary
+                            .withValues(alpha: 0.6),
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -187,10 +190,7 @@ class _CustomerAddPageState extends State<CustomerAddPage> {
               });
             },
             items: _customers.map((ItemType value) {
-              return DropdownMenuItem<ItemType>(
-                value: value,
-                child: Text(value.name),
-              );
+              return readableOption(value, value.name);
             }).toList(),
           ),
           const SizedBox(height: 16),
@@ -266,7 +266,6 @@ class _CustomerAddPageState extends State<CustomerAddPage> {
       ),
     );
   }
-
 
   CustomerParam _getCustomerParam() {
     return CustomerParam(

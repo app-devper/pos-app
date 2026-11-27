@@ -5,23 +5,29 @@ import 'package:flutter/material.dart';
 import 'package:design_system/widgets/responsive.dart';
 
 // Project imports:
-import 'package:pos/container.dart';
 import 'package:pos/domain/model/customer/customer.dart';
 import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/customer/main/customers_state.dart';
+import 'customer_list_header.dart';
+import 'package:pos/presentation/core/list_empty_state.dart';
+
 import 'package:pos/presentation/customer/main/customers_view_model.dart';
 import 'package:design_system/theme/app_colors.dart';
 import 'package:design_system/widgets/error_state.dart';
 
 // Package imports:
 
+/// The customer list. Its [viewModel] belongs to the page, which reloads it
+/// after an add, a rename or a removal and disposes it.
 class CustomersWidget extends StatefulWidget {
+  final CustomersViewModel viewModel;
   final Function(Customer) onSelected;
   final Function() onBack;
   final Function() onAdd;
 
   const CustomersWidget({
     super.key,
+    required this.viewModel,
     required this.onSelected,
     required this.onBack,
     required this.onAdd,
@@ -32,18 +38,23 @@ class CustomersWidget extends StatefulWidget {
 }
 
 class _CustomersWidgetState extends State<CustomersWidget> {
-  late CustomersViewModel _viewModel;
+  CustomersViewModel get _viewModel => widget.viewModel;
+  late final TextEditingController _search;
 
   @override
   void initState() {
     super.initState();
-    _viewModel = sl<CustomersViewModel>();
-    _viewModel.getCustomers();
+    _search = TextEditingController(text: _viewModel.query);
+    // A narrow layout builds the list afresh each time it is shown; a load
+    // the page already started is not repeated.
+    if (!_viewModel.state.value.loading) {
+      _viewModel.getCustomers();
+    }
   }
 
   @override
   void dispose() {
-    _viewModel.dispose();
+    _search.dispose();
     super.dispose();
   }
 
@@ -56,54 +67,15 @@ class _CustomersWidgetState extends State<CustomersWidget> {
     final isMobile = Responsive.isMobile(context);
     return Column(
       children: <Widget>[
-        Row(
-          children: [
-            InkWell(
-              onTap: () {
-                widget.onBack();
-              },
-              child: Container(
-                width: 40,
-                height: 40,
-                padding: const EdgeInsets.all(8.0),
-                child: Icon(
-                  Icons.arrow_back_ios,
-                  color: AppColors.of(context).textSecondary,
-                  size: 16,
-                ),
-              ),
-            ),
-            Expanded(
-              child: Text(
-                Languages.of(context).customerTitle,
-                maxLines: 1,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: AppColors.of(context).textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            if (isMobile) ...[
-              InkWell(
-                onTap: () {
-                  widget.onAdd();
-                },
-                child: SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: Icon(
-                    Icons.add,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 24,
-                  ),
-                ),
-              ),
-            ] else ...[
-              const SizedBox(width: 40)
-            ]
-          ],
+        CustomerListHeader(
+          title: Languages.of(context).customerTitle,
+          backLabel: Languages.of(context).back,
+          addLabel: Languages.of(context).customerAddTitle,
+          showAdd: isMobile,
+          onBack: () => widget.onBack(),
+          onAdd: () => widget.onAdd(),
+          onSearch: _viewModel.search,
+          searchController: _search,
         ),
         const Divider(height: 1),
         _buildCustomerList(),
@@ -135,6 +107,17 @@ class _CustomersWidgetState extends State<CustomersWidget> {
                 color: Theme.of(context).colorScheme.primary,
                 strokeCap: StrokeCap.round,
               ),
+            ),
+          );
+        }
+        if (state.items.isEmpty) {
+          return Expanded(
+            child: ListEmptyState(
+              searched: _viewModel.isSearching,
+              icon: Icons.people_outline,
+              title: Languages.of(context).noCustomersYet,
+              addLabel: Languages.of(context).addFirstCustomer,
+              onAdd: widget.onAdd,
             ),
           );
         }

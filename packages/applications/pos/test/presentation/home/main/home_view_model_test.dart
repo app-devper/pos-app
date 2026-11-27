@@ -11,7 +11,8 @@ import 'package:um/domain/repositories/login_repository.dart';
 
 class FakeLoginRepository implements LoginRepository {
   @override
-  Future<PasskeyChallenge> passkeyLoginOptions(String system) => throw UnimplementedError();
+  Future<PasskeyChallenge> passkeyLoginOptions(String system) =>
+      throw UnimplementedError();
 
   @override
   Future<Session> loginWithPasskey({
@@ -23,7 +24,8 @@ class FakeLoginRepository implements LoginRepository {
       throw UnimplementedError();
 
   @override
-  Future<Session> exchangeTicket(String ticket, String system) => throw UnimplementedError();
+  Future<Session> exchangeTicket(String ticket, String system) =>
+      throw UnimplementedError();
 
   final String role;
   final bool logoutThrows;

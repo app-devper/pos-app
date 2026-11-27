@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 
 // Package imports:
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Package imports:
 import 'package:um/domain/entities/auth/role.dart';
@@ -20,7 +21,7 @@ class HomeViewModel {
     required this.logoutUseCase,
   });
 
-  final _state = ValueNotifier<HomeState>(const HomeState());
+  final _state = ViewState<HomeState>(const HomeState());
 
   /// Signalled once, when the session ends and the screen should return to
   /// login. Nothing draws it.
@@ -35,8 +36,8 @@ class HomeViewModel {
   }
 
   Future<void> getRole() async {
-    _state.value = _state.value
-        .copyWith(isAdmin: await getRoleUseCase.atLeast(Role.admin));
+    _state.value = _state.value.copyWith(
+        isAdmin: await getRoleUseCase.atLeast(Role.admin), roleKnown: true);
   }
 
   Future<void> logout() async {

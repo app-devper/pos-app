@@ -24,6 +24,9 @@ AppException toAppException(http.Response response) {
   if (statusCode == 400 || statusCode == 422) {
     return ValidationException(message: message, code: code);
   }
+  if (statusCode == 401 && _isSignIn(response)) {
+    return WrongCredentialsException(message: message, code: code);
+  }
   if (statusCode == 401) {
     return AuthException(message: message, code: code);
   }
@@ -39,8 +42,15 @@ AppException toAppException(http.Response response) {
   if (statusCode >= 500) {
     return ServerException(message: message, code: code);
   }
-  return UnknownHttpException(message: message, code: code, statusCode: statusCode);
+  return UnknownHttpException(
+      message: message, code: code, statusCode: statusCode);
 }
+
+/// The password sign-in, the one call whose 401 means "wrong credentials".
+const _signInPath = "/auth/login";
+
+bool _isSignIn(http.Response response) =>
+    response.request?.url.path.endsWith(_signInPath) ?? false;
 
 AppException toNetworkException(Object error) {
   if (error is AppException) {

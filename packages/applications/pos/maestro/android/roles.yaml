@@ -1,0 +1,8 @@
+appId: app.devper.pos
+name: android - each role sees only its menu items and bill tools
+env:
+  LAYOUT: narrow
+---
+- launchApp:
+    clearState: true
+- runFlow: ../shared/roles.yaml

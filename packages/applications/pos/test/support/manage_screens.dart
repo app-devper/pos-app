@@ -1,0 +1,219 @@
+// The bills list, the จัดการ screens the widget tests have fakes for
+// (suppliers, categories, stock counts), a product's sales history, the lot
+// form and the product detail:
+// the accessibility walk and the layout sweep go through them as well.
+
+// Flutter imports:
+import 'package:flutter/material.dart';
+
+// Project imports:
+import 'package:pos/container.dart';
+import 'package:pos/domain/model/product/product.dart';
+import 'package:pos/domain/repositories/product_repository.dart';
+import 'package:pos/presentation/category/edit/category_edit_page.dart';
+import 'package:pos/presentation/category/edit/category_edit_view_model.dart';
+import 'package:pos/presentation/category/main/category_page.dart';
+import 'package:pos/presentation/category/main/category_view_model.dart';
+import 'package:pos/presentation/order/history/order_history_page.dart';
+import 'package:pos/presentation/order/main/order_page.dart';
+import 'package:pos/presentation/order/main/order_view_model.dart';
+import 'package:um/domain/usecase/auth_use_cases.dart';
+import 'package:pos/presentation/order/history/order_history_view_model.dart';
+import 'package:pos/presentation/product/main/product_detail_widget.dart';
+import 'package:pos/presentation/product/stock/product_stock_widget.dart';
+import 'package:pos/presentation/product/stock/stock_adjustment_history_view_model.dart';
+import 'package:pos/presentation/receive/main/receive_page.dart';
+import 'package:pos/presentation/receive/main/receives_view_model.dart';
+import 'package:pos/presentation/stock_count/main/stock_counts_page.dart';
+import 'package:pos/presentation/stock_count/main/stock_counts_view_model.dart';
+import 'package:pos/presentation/stock_count/manage/stock_count_manage_page.dart';
+import 'package:pos/presentation/stock_count/manage/stock_count_manage_view_model.dart';
+import 'package:pos/presentation/supplier/edit/supplier_edit_page.dart';
+import 'package:pos/presentation/supplier/edit/supplier_edit_view_model.dart';
+import 'package:pos/presentation/supplier/main/suppliers_page.dart';
+import 'package:pos/presentation/supplier/main/suppliers_view_model.dart';
+import 'empty_repositories.dart';
+import 'main_screens.dart';
+import '../presentation/category/edit/category_edit_view_model_test.dart'
+    as category_edit;
+import '../presentation/category/main/category_view_model_test.dart'
+    as categories;
+import '../presentation/inventory/product_return_widget_test.dart'
+    as product_return;
+import '../presentation/inventory_history_view_models_test.dart'
+    as history_tabs;
+import '../presentation/order/history/order_history_view_model_test.dart'
+    as history;
+import '../presentation/order/main/order_view_model_test.dart' as bills;
+import '../presentation/product/product_navigation_test.dart' as products;
+import '../presentation/receive/main/receives_view_model_test.dart' as receipts;
+import '../presentation/stock_count/manage/stock_count_manage_view_model_test.dart'
+    as counts;
+import '../presentation/supplier/edit/supplier_edit_view_model_test.dart'
+    as supplier_edit;
+import '../presentation/supplier/main/suppliers_view_model_test.dart'
+    as suppliers;
+
+final _unit = ProductUnit(
+  id: 'u1',
+  productId: 'p-1',
+  costPrice: 5,
+  unit: 'ชิ้น',
+  size: 1,
+  barcode: '',
+  volume: 0,
+  volumeUnit: '',
+);
+
+/// [page] as the app shows it: pushed over another page, so its bar
+/// starts with the back arrow.
+Widget pushedOver(Widget page) => Navigator(
+      onGenerateInitialRoutes: (_, __) => [
+        MaterialPageRoute<void>(builder: (_) => const Scaffold()),
+        MaterialPageRoute<void>(builder: (_) => page),
+      ],
+    );
+
+final manageScreens = <String, Screen>{
+  'the receipts page, opened from จัดการ': () {
+    sl.registerFactory(() => ReceivesViewModel(
+            receiveRepo: receipts.FakeReceiveRepository(receives: [
+          receipts.buildReceive('1', 'RC-1'),
+          receipts.buildReceive('2', 'RC-2'),
+        ])));
+    return pushedOver(const ReceivePage());
+  },
+  'the stock counts list, opened from จัดการ': () {
+    sl.registerFactory(() => StockCountsViewModel(
+        stockCountRepo: counts.FakeStockCountRepository()));
+    return pushedOver(const StockCountsPage());
+  },
+  'the bills list, for an admin': () {
+    sl.registerFactory(() => OrderViewModel(
+          orderRepo: bills.FakeOrderRepository(orders: [
+            bills.order('1', 'Cash'),
+            bills.order('2', 'PromptPay', status: 'CANCELLED'),
+          ]),
+          getRoleUseCase:
+              GetRoleUseCase(bills.FakeLoginRepository(role: 'ADMIN')),
+        ));
+    return const Scaffold(body: OrderPage());
+  },
+  'the suppliers list': () {
+    sl.registerFactory(() => SuppliersViewModel(
+            supplierRepo: suppliers.FakeSupplierRepository(suppliers: [
+          suppliers.buildSupplier('1'),
+          suppliers.buildSupplier('2'),
+        ])));
+    return const SuppliersPage();
+  },
+  'the supplier edit form': () {
+    sl.registerFactory(() => SupplierEditViewModel(
+        supplierRepo: supplier_edit.FakeSupplierRepository()));
+    return SupplierEditPage(supplier: supplier_edit.buildSupplier('1'));
+  },
+  'the categories list': () {
+    sl.registerFactory(() => CategoryViewModel(
+            categoryRepo: categories.FakeCategoryRepository(categories: [
+          categories.buildCategory('1'),
+          categories.buildCategory('2'),
+        ])));
+    return const CategoryPage();
+  },
+  'the category edit form': () {
+    sl.registerFactory(() => CategoryEditViewModel(
+        categoryRepo: category_edit.FakeCategoryRepository()));
+    return CategoryEditPage(category: category_edit.buildCategory('1'));
+  },
+  'the stock counts list': () {
+    sl.registerFactory(() => StockCountsViewModel(
+        stockCountRepo: counts.FakeStockCountRepository()));
+    return const StockCountsPage();
+  },
+  'a new stock count with a line': () {
+    final count = StockCountManageViewModel(
+      stockCountRepo: counts.FakeStockCountRepository(),
+      productRepo: counts.FakeProductRepository(),
+    )..addItem(counts.buildItem());
+    sl.registerFactory(() => count);
+    return const StockCountManagePage();
+  },
+  'a stock count': () {
+    sl.registerFactory(() => StockCountManageViewModel(
+          stockCountRepo: counts.FakeStockCountRepository(),
+          productRepo: counts.FakeProductRepository(),
+        ));
+    return const StockCountManagePage(stockCountId: 'sc1');
+  },
+  'a product sales history': () {
+    sl.registerFactory(() => OrderHistoryViewModel(
+        orderRepo: history.FakeOrderRepository(
+            items: [history.buildItem('i1'), history.buildItem('i2')])));
+    return OrderHistoryPage(product: products.paracetamol());
+  },
+  'the lot form': () {
+    sl.registerFactory<ProductRepository>(() => product_return.Products());
+    return Scaffold(
+      body: ProductStockWidget(
+        unit: _unit,
+        price: ProductPrice(
+            id: 'pr1',
+            unitId: 'u1',
+            productId: 'p-1',
+            price: 10,
+            customerType: 'General'),
+        onComplete: (_) {},
+      ),
+    );
+  },
+  ...emptyManageScreens,
+};
+
+/// The product detail's tabs the widget tests can open: ประวัติ needs a
+/// product history repository no test fakes yet.
+const productDetailTabs = [
+  'ข้อมูลทั่วไป',
+  'หน่วยนับ',
+  'ราคา',
+  'สต็อก',
+  'ปรับสต็อก'
+];
+
+/// A product's detail, on its first tab; open the others by their names.
+Widget productDetail() {
+  sl.registerFactory(() => StockAdjustmentHistoryViewModel(
+      stockAdjustmentRepo: history_tabs.FakeStockAdjustmentRepository()));
+  return Scaffold(
+    body: ProductDetailWidget(
+      product: products.paracetamol(),
+      onBack: () {},
+      onEdit: () {},
+      onClickEdit: () {},
+    ),
+  );
+}
+
+/// The จัดการ lists with nothing in them: each says so and offers its first
+/// add.
+final emptyManageScreens = <String, Screen>{
+  'the receipts page with no receipts': () {
+    sl.registerFactory(
+        () => ReceivesViewModel(receiveRepo: receipts.FakeReceiveRepository()));
+    return pushedOver(const ReceivePage());
+  },
+  'the stock counts list with none': () {
+    sl.registerFactory(
+        () => StockCountsViewModel(stockCountRepo: NoStockCounts()));
+    return pushedOver(const StockCountsPage());
+  },
+  'the suppliers list with none': () {
+    sl.registerFactory(() =>
+        SuppliersViewModel(supplierRepo: suppliers.FakeSupplierRepository()));
+    return const SuppliersPage();
+  },
+  'the categories list with none': () {
+    sl.registerFactory(() =>
+        CategoryViewModel(categoryRepo: categories.FakeCategoryRepository()));
+    return const CategoryPage();
+  },
+};

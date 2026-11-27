@@ -85,3 +85,7 @@ devtools_options.yaml
 # Release keys never enter the repo (see packages/applications/pos/android/app/build.gradle)
 **/*.jks
 **/*.keystore
+
+# E2E credentials (generated or owner-provided); never committed
+.env.e2e*
+!.env.e2e.example

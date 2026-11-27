@@ -35,7 +35,8 @@ void main() {
     pending.complete(1);
     await first;
 
-    expect(sent, 1, reason: 'the quantity and order dialogs used to send twice');
+    expect(sent, 1,
+        reason: 'the quantity and order dialogs used to send twice');
     edit.dispose();
   });
 
@@ -44,11 +45,26 @@ void main() {
     final errors = <String>[];
     edit.errors.listen(errors.add);
 
-    await edit.run(() async => throw const ValidationException(message: 'สต็อกไม่พอ'));
+    await edit.run(
+        () async => throw const ValidationException(message: 'สต็อกไม่พอ'));
     await pumpEventQueue();
 
     expect(errors.single, contains('สต็อกไม่พอ'));
     expect(edit.state.value.loading, isFalse);
     edit.dispose();
+  });
+
+  test('an edit that answers after the dialog is gone does not throw',
+      () async {
+    final edit = CatalogueEdit<String>();
+    final answer = Completer<String>();
+
+    final run = edit.run(() => answer.future);
+    edit.dispose();
+    answer.complete('saved');
+
+    await expectLater(run, completes);
+    expect(edit.state.value.loading, isTrue,
+        reason: 'the last value stays as it was; nothing is published');
   });
 }

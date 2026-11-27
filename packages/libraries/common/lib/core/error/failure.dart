@@ -23,17 +23,26 @@ const _networkErrorMessage = "เชื่อมต่อเซิร์ฟเ�
 Failure toFailure(Object e) {
   return switch (e) {
     Failure() => e,
-    AuthException() => Failure(errorCode: e.code, error: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่"),
-    ForbiddenException() => Failure(errorCode: e.code, error: "ไม่มีสิทธิ์ใช้งานส่วนนี้"),
-    NotFoundException() => Failure(errorCode: e.code, error: "ไม่พบข้อมูลที่ต้องการ"),
-    NetworkException() => Failure(errorCode: e.code, error: _networkErrorMessage),
-    ServerException() => Failure(errorCode: e.code, error: "ระบบขัดข้อง กรุณาลองใหม่ภายหลัง"),
+    AuthException() =>
+      Failure(errorCode: e.code, error: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่"),
+    WrongCredentialsException() =>
+      Failure(errorCode: e.code, error: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง"),
+    ForbiddenException() =>
+      Failure(errorCode: e.code, error: "ไม่มีสิทธิ์ใช้งานส่วนนี้"),
+    NotFoundException() =>
+      Failure(errorCode: e.code, error: "ไม่พบข้อมูลที่ต้องการ"),
+    NetworkException() =>
+      Failure(errorCode: e.code, error: _networkErrorMessage),
+    ServerException() =>
+      Failure(errorCode: e.code, error: "ระบบขัดข้อง กรุณาลองใหม่ภายหลัง"),
     ValidationException() => Failure(errorCode: e.code, error: e.message),
     ConflictException() => Failure(errorCode: e.code, error: e.message),
     UnknownHttpException() => Failure(errorCode: e.code, error: e.message),
     PasskeyException() => Failure(errorCode: e.code, error: e.message),
-    http.ClientException() => const Failure(errorCode: "NETWORK_ERROR", error: _networkErrorMessage),
-    TimeoutException() => const Failure(errorCode: "NETWORK_ERROR", error: _networkErrorMessage),
+    http.ClientException() =>
+      const Failure(errorCode: "NETWORK_ERROR", error: _networkErrorMessage),
+    TimeoutException() =>
+      const Failure(errorCode: "NETWORK_ERROR", error: _networkErrorMessage),
     _ => Failure(errorCode: "UNKNOWN", error: e.toString()),
   };
 }

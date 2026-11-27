@@ -1,0 +1,5 @@
+# Chooses ${OPTION} in the dropdown that was just opened, by its text: each
+# option's name is a text node of its own, on Android and on the web.
+appId: app.devper.pos
+---
+- tapOn: ${OPTION}

@@ -1,0 +1,7 @@
+url: http://127.0.0.1:8090
+name: web - count a lot and the stock becomes the count
+env:
+  LAYOUT: wide
+---
+- launchApp
+- runFlow: ../shared/stock_count.yaml

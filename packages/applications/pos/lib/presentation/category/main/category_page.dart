@@ -4,14 +4,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 // Package imports:
-import 'package:design_system/widgets/app_bar.dart';
+import 'package:pos/presentation/core/page_bar.dart';
 import 'package:design_system/widgets/snack_bar.dart';
+import 'package:design_system/widgets/error_state.dart';
 
 // Project imports:
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/category/category.dart';
 import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/category/argument.dart';
+import 'package:pos/presentation/core/list_empty_state.dart';
 import 'package:pos/presentation/constants.dart';
 import 'category_state.dart';
 import 'category_view_model.dart';
@@ -57,7 +59,8 @@ class _CategoryPageState extends State<CategoryPage> {
     _snackBar = CustomSnackBar(key: const Key("snackbar"), context: context);
     return Scaffold(
       key: _scaffoldKey,
-      appBar: buildAppBar(
+      appBar: buildPageBar(
+        context,
         Languages.of(context).categoryTitle,
         actions: _buildAction(context),
       ),
@@ -68,6 +71,7 @@ class _CategoryPageState extends State<CategoryPage> {
   List<Widget> _buildAction(BuildContext context) {
     return [
       IconButton(
+        tooltip: Languages.of(context).addCategory,
         splashRadius: 20,
         onPressed: () {
           _nextToCategoryAdd(context);
@@ -94,12 +98,30 @@ class _CategoryPageState extends State<CategoryPage> {
     return ValueListenableBuilder<CategoryState>(
       valueListenable: _viewModel.state,
       builder: (BuildContext context, CategoryState state, _) {
+        // A failed load is not an empty shop: it says so, with a retry.
+        if (state.error != null && state.items.isEmpty) {
+          return Expanded(
+            child: ErrorState(
+                message: state.error!, onRetry: _viewModel.getCategories),
+          );
+        }
         if (state.loading && state.items.isEmpty) {
           return Center(
             child: CircularProgressIndicator(
               strokeWidth: 6,
               color: Theme.of(context).colorScheme.primary,
               strokeCap: StrokeCap.round,
+            ),
+          );
+        }
+        if (state.items.isEmpty) {
+          return Expanded(
+            child: ListEmptyState(
+              searched: false,
+              icon: Icons.category_outlined,
+              title: Languages.of(context).noCategoriesYet,
+              addLabel: Languages.of(context).addFirstCategory,
+              onAdd: () => _nextToCategoryAdd(context),
             ),
           );
         }

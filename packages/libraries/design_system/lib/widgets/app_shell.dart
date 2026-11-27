@@ -47,6 +47,17 @@ class AppShell extends StatefulWidget {
   /// on a narrow viewport, where it is the only way to reach the drawer.
   final bool showTopBar;
 
+  /// What system Back (Android's button, the browser's) does once the drawer
+  /// is closed, such as going to the host's first section. Null leaves Back
+  /// to the route: it pops, or on the first route leaves the app. An open
+  /// drawer is always closed first, and nothing else happens.
+  final VoidCallback? onBack;
+
+  /// False for a page pushed over the host's own: a narrow viewport then
+  /// shows the page alone, with no menu bar or drawer (its own bar leads
+  /// back), while a wide one keeps the side menu beside it.
+  final bool showDrawer;
+
   const AppShell({
     super.key,
     required this.title,
@@ -60,6 +71,8 @@ class AppShell extends StatefulWidget {
     this.floatingActionButton,
     this.initiallyExpanded,
     this.showTopBar = true,
+    this.onBack,
+    this.showDrawer = true,
   });
 
   @override
@@ -86,9 +99,20 @@ class _AppShellState extends State<AppShell>
 
   @override
   Widget build(BuildContext context) {
-    return Responsive.isMobile(context)
-        ? _buildMobile(context)
-        : _buildDesktop(context);
+    final isMobile = Responsive.isMobile(context);
+    final drawerOpen = isMobile && widget.showDrawer && _isOpen(true);
+    return PopScope<Object?>(
+      canPop: !drawerOpen && widget.onBack == null,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (drawerOpen) {
+          _toggle(true);
+        } else {
+          widget.onBack?.call();
+        }
+      },
+      child: isMobile ? _buildMobile(context) : _buildDesktop(context),
+    );
   }
 
   Widget _buildDesktop(BuildContext context) {
@@ -97,37 +121,41 @@ class _AppShellState extends State<AppShell>
     return Scaffold(
       backgroundColor: colors.surface,
       floatingActionButton: widget.floatingActionButton,
-      body: Row(
-        children: [
-          AnimatedContainer(
-            duration: _duration,
-            curve: _curve,
-            width: open ? _expandedWidth : _railWidth,
-            child: _Sidebar(
-              brand: widget.brand,
-              items: widget.items,
-              selectedId: widget.selectedId,
-              collapsed: !open,
-              onSelect: widget.onSelect,
-              onToggle: () => _toggle(false),
-              footer: widget.sidebarFooter?.call(!open),
+      // The whole frame keeps clear of the system bars, so no screen has to.
+      body: SafeArea(
+        child: Row(
+          children: [
+            AnimatedContainer(
+              duration: _duration,
+              curve: _curve,
+              width: open ? _expandedWidth : _railWidth,
+              child: _Sidebar(
+                brand: widget.brand,
+                items: widget.items,
+                selectedId: widget.selectedId,
+                collapsed: !open,
+                onSelect: widget.onSelect,
+                onToggle: () => _toggle(false),
+                footer: widget.sidebarFooter?.call(!open),
+              ),
             ),
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                if (widget.showTopBar)
-                  _TopBar(title: widget.title, actions: widget.actions),
-                Expanded(child: widget.child),
-              ],
+            Expanded(
+              child: Column(
+                children: [
+                  if (widget.showTopBar)
+                    _TopBar(title: widget.title, actions: widget.actions),
+                  Expanded(child: widget.child),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildMobile(BuildContext context) {
+    if (!widget.showDrawer) return widget.child;
     final open = _isOpen(true);
     final colors = AppColors.of(context);
     return Scaffold(
@@ -135,55 +163,58 @@ class _AppShellState extends State<AppShell>
       // The drawer sits above the content, so the action must not float over
       // the scrim while it is open.
       floatingActionButton: open ? null : widget.floatingActionButton,
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              _TopBar(
-                title: widget.showTopBar ? widget.title : '',
-                actions: widget.actions,
-                onMenu: () => _toggle(true),
+      // The whole frame keeps clear of the status bar, so no screen has to.
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                _TopBar(
+                  title: widget.showTopBar ? widget.title : '',
+                  actions: widget.actions,
+                  onMenu: () => _toggle(true),
+                ),
+                Expanded(child: widget.child),
+              ],
+            ),
+            // Scrim fades with the panel and swallows taps only while open.
+            IgnorePointer(
+              ignoring: !open,
+              child: AnimatedOpacity(
+                duration: _duration,
+                curve: _curve,
+                opacity: open ? 1 : 0,
+                child: GestureDetector(
+                  onTap: () => _toggle(true),
+                  child: Container(color: Colors.black.withValues(alpha: 0.4)),
+                ),
               ),
-              Expanded(child: widget.child),
-            ],
-          ),
-          // Scrim fades with the panel and swallows taps only while open.
-          IgnorePointer(
-            ignoring: !open,
-            child: AnimatedOpacity(
+            ),
+            AnimatedPositioned(
               duration: _duration,
               curve: _curve,
-              opacity: open ? 1 : 0,
-              child: GestureDetector(
-                onTap: () => _toggle(true),
-                child: Container(color: Colors.black.withValues(alpha: 0.4)),
+              top: 0,
+              bottom: 0,
+              left: open ? 0 : -_expandedWidth,
+              width: _expandedWidth,
+              child: Material(
+                elevation: 8,
+                child: _Sidebar(
+                  brand: widget.brand,
+                  items: widget.items,
+                  selectedId: widget.selectedId,
+                  collapsed: false,
+                  onSelect: (id) {
+                    _toggle(true);
+                    widget.onSelect(id);
+                  },
+                  onToggle: () => _toggle(true),
+                  footer: widget.sidebarFooter?.call(false),
+                ),
               ),
             ),
-          ),
-          AnimatedPositioned(
-            duration: _duration,
-            curve: _curve,
-            top: 0,
-            bottom: 0,
-            left: open ? 0 : -_expandedWidth,
-            width: _expandedWidth,
-            child: Material(
-              elevation: 8,
-              child: _Sidebar(
-                brand: widget.brand,
-                items: widget.items,
-                selectedId: widget.selectedId,
-                collapsed: false,
-                onSelect: (id) {
-                  _toggle(true);
-                  widget.onSelect(id);
-                },
-                onToggle: () => _toggle(true),
-                footer: widget.sidebarFooter?.call(false),
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

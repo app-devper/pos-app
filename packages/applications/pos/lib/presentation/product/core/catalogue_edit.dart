@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 // Package imports:
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 
 /// Whether a catalogue edit is on its way to the server.
 @immutable
@@ -22,7 +23,7 @@ class CatalogueEditState {
 /// way. Its result is delivered once on [completed], a failure once on
 /// [errors]; the dialog closes or explains, and nothing else is drawn.
 class CatalogueEdit<T> {
-  final _state = ValueNotifier<CatalogueEditState>(const CatalogueEditState());
+  final _state = ViewState<CatalogueEditState>(const CatalogueEditState());
   final _completed = OneShot<T>();
   final _errors = OneShot<String>();
 

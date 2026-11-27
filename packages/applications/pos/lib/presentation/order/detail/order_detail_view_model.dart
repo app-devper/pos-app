@@ -5,23 +5,27 @@ import 'package:flutter/foundation.dart';
 import 'package:common/core/error/exception.dart';
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 import 'package:um/domain/entities/auth/role.dart';
 import 'package:um/domain/usecase/auth_use_cases.dart';
 
 // Project imports:
 import 'package:pos/domain/model/customer/customer.dart';
 import 'package:pos/domain/model/order/order_detail.dart';
+import 'package:pos/domain/model/product/product.dart';
 import 'order_detail_state.dart';
 
 import 'package:pos/domain/repositories/customer_repository.dart';
 
 import 'package:pos/domain/repositories/supplier_repository.dart';
 import 'package:pos/domain/repositories/order_repository.dart';
+import 'package:pos/domain/repositories/product_repository.dart';
 
 class OrderDetailViewModel {
   final OrderRepository orderRepo;
   final SupplierRepository supplierRepo;
   final CustomerRepository customerRepo;
+  final ProductRepository productRepo;
   final GetRoleUseCase getRoleUseCase;
 
   OrderDetailViewModel({
@@ -29,9 +33,10 @@ class OrderDetailViewModel {
     required this.getRoleUseCase,
     required this.supplierRepo,
     required this.customerRepo,
+    required this.productRepo,
   });
 
-  final _state = ValueNotifier<OrderDetailState>(const OrderDetailState());
+  final _state = ViewState<OrderDetailState>(const OrderDetailState());
   final _errors = OneShot<String>();
   final _removals = OneShot<OrderDetail>();
   final _receipts = OneShot<SupplierResult>();
@@ -53,9 +58,12 @@ class OrderDetailViewModel {
   /// to create one. This is not a failure — see [getSupplier].
   Stream<void> get supplierSetups => _supplierSetups.stream;
 
+  /// The role is awaited first and then set on the state as it is then:
+  /// reading the state before the `await` would write back a copy from
+  /// before the bill arrived.
   Future<void> checkLogin() async {
-    _state.value = _state.value
-        .copyWith(isAdmin: await getRoleUseCase.atLeast(Role.admin));
+    final isAdmin = await getRoleUseCase.atLeast(Role.admin);
+    _state.value = _state.value.copyWith(isAdmin: isAdmin);
   }
 
   Future<void> getOrderById(String orderId) async {
@@ -100,12 +108,7 @@ class OrderDetailViewModel {
   /// them to the same form, where they would find their profile already filled
   /// in and no explanation.
   Future<void> getSupplier(String customerCode) async {
-    Customer? customer;
-    try {
-      final result = await customerRepo.getLocalCustomers();
-      customer =
-          result.where((element) => element.code == customerCode).firstOrNull;
-    } on Exception catch (_) {}
+    final customer = await _findCustomer(customerCode);
     try {
       final supplier = await supplierRepo.getSupplierInfo();
       _receipts.emit(SupplierResult(supplier: supplier, customer: customer));
@@ -113,6 +116,21 @@ class OrderDetailViewModel {
       _supplierSetups.emit(null);
     } on Exception catch (e) {
       _errors.emit(toFailure(e).getMessage());
+    }
+  }
+
+  /// The customer a bill names by [customerCode], or none: from the listed
+  /// customers, else asked of pos-api by code — an archived customer is left
+  /// out of the list, and an old bill still names it.
+  Future<Customer?> _findCustomer(String customerCode) async {
+    if (customerCode.isEmpty) return null;
+    try {
+      final listed = await customerRepo.getLocalCustomers();
+      final found =
+          listed.where((element) => element.code == customerCode).firstOrNull;
+      return found ?? await customerRepo.getCustomerByCode(customerCode);
+    } on Exception catch (_) {
+      return null;
     }
   }
 
@@ -124,6 +142,31 @@ class OrderDetailViewModel {
       _state.value = _state.value.copyWith(order: order, loading: false);
     } on Exception catch (e) {
       _fail(e);
+      return;
+    }
+    await _loadUnitNames();
+  }
+
+  /// Looks up the name of each line's unit in the product catalogue, so two
+  /// lines of one product in two units are told apart. The bill is already
+  /// shown; a lookup that fails is said, and the lines keep their names
+  /// without the unit.
+  Future<void> _loadUnitNames() async {
+    final productIds = {
+      for (final line in _state.value.items)
+        if (line.product case final product?) product.id,
+    };
+    try {
+      final products = await Future.wait(
+          productIds.map((id) => productRepo.getLocalProductById(id)));
+      final unitNames = {
+        for (final product in products)
+          for (final unit in product?.units ?? const <ProductUnit>[])
+            unit.id: unit.unit,
+      };
+      _state.value = _state.value.copyWith(unitNames: unitNames);
+    } on Exception catch (e) {
+      _errors.emit(toFailure(e).getMessage());
     }
   }
 

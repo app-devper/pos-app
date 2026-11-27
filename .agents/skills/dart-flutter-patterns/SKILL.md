@@ -1,6 +1,6 @@
 ---
 name: dart-flutter-patterns
-description: How Dart and Flutter code is written in pos-app — Clean Architecture + MVVM with ValueNotifier view models and OneShot events, get_it composition in container.dart, http via CustomClient/PosService and jsonOrThrow, sealed AppException → Failure, CachedList, Flutter Hooks only in UM, and tests with fake repositories and MockClient. Use when writing or reviewing Dart/Flutter code in this repo — a screen, view model, use case, repository, mapper or test.
+description: How Dart and Flutter code is written in pos-app — Clean Architecture + MVVM with ViewState (a ValueNotifier that is safe after dispose) view models and OneShot events, get_it composition in container.dart, http via CustomClient/PosService and jsonOrThrow, sealed AppException → Failure, CachedList, Flutter Hooks only in UM, and tests with fake repositories and MockClient. Use when writing or reviewing Dart/Flutter code in this repo — a screen, view model, use case, repository, mapper or test.
 ---
 
 # Dart / Flutter patterns — pos-app
@@ -17,7 +17,7 @@ is an architecture decision (ADR), not a refactor.
 | Need | Use |
 |---|---|
 | DI | `get_it` via `getIt()` — registrations in each app's `container.dart` |
-| Screen state | `ValueNotifier<XState>` exposed as `ValueListenable` |
+| Screen state | `ViewState<XState>` (`common/core/state/view_state.dart`) exposed as `ValueListenable`; it ignores a value set after dispose |
 | One-off outcomes | `OneShot<T>` (`common/core/state/one_shot.dart`) |
 | HTTP | `package:http` through `CustomClient` + a `*Service` class |
 | Errors | `AppException` (sealed) → `toFailure(e)` → Thai message |
@@ -81,7 +81,7 @@ class CategoryEditViewModel {
   final CategoryRepository categoryRepo;
   CategoryEditViewModel({required this.categoryRepo});
 
-  final _state = ValueNotifier<CategoryEditState>(const CategoryEditState());
+  final _state = ViewState<CategoryEditState>(const CategoryEditState());
   final _updated = OneShot<Category>();
   final _errors = OneShot<String>();
 

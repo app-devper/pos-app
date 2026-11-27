@@ -1,0 +1,17 @@
+# Types ${USERNAME} / ${PASSWORD} into the sign-in form and presses sign in.
+# What happens next is the caller's to assert.
+appId: app.devper.pos
+---
+- extendedWaitUntil:
+    visible: "ยินดีต้อนรับ"
+    timeout: 30000
+- tapOn: "ชื่อผู้ใช้"
+- eraseText: 40   # the form keeps what an earlier attempt typed
+- inputText: ${USERNAME}
+- tapOn: "รหัสผ่าน"
+- eraseText: 40
+- inputText: ${PASSWORD}
+- runFlow: hide_keyboard.yaml
+- runFlow: dismiss_save_password.yaml
+- tapOn: "เข้าสู่ระบบ"
+- runFlow: dismiss_save_password.yaml

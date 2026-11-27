@@ -1,0 +1,8 @@
+appId: app.devper.pos
+name: android - adjust a lot up and down with a reason
+env:
+  LAYOUT: narrow
+---
+- launchApp:
+    clearState: true
+- runFlow: ../shared/stock_adjust.yaml

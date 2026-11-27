@@ -8,12 +8,21 @@ class StockCountItem {
   int countedQuantity;
   int delta;
 
+  /// What pos-api names the line by when it is read: empty for what it no
+  /// longer knows, or from a pos-api that does not send them.
+  String productName;
+  String unit;
+  String lotNumber;
+
   StockCountItem({
     required this.productId,
     required this.stockId,
     required this.systemQuantity,
     required this.countedQuantity,
     required this.delta,
+    this.productName = '',
+    this.unit = '',
+    this.lotNumber = '',
   });
 }
 

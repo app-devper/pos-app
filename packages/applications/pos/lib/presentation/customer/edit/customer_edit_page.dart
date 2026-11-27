@@ -12,6 +12,7 @@ import 'package:design_system/widgets/title_bar.dart';
 import 'package:design_system/widgets/page_container.dart';
 
 // Project imports:
+import 'package:pos/presentation/core/readable_option.dart';
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/core/core.dart';
 import 'package:pos/domain/model/customer/customer.dart';
@@ -56,7 +57,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
   late StreamSubscription<Customer> _updated;
   late StreamSubscription<Customer> _removed;
 
-  ItemType? _customer = customerTypes.first;
+  ItemType? _customer;
   final List<ItemType> _customers = customerTypes;
 
   bool _loadingShown = false;
@@ -135,7 +136,10 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
     );
   }
 
+  /// Fills the form from [data], its type included: the type picks the
+  /// customer's prices, so an edit must not reset it.
   void _setupData(Customer data) {
+    _customer = findCustomerType(data.type);
     _nameEditingController.text = data.name;
     _addressEditingController.text = data.address;
     _emailEditingController.text = data.email;
@@ -222,10 +226,7 @@ class _CustomerEditPageState extends State<CustomerEditPage> {
               });
             },
             items: _customers.map((ItemType value) {
-              return DropdownMenuItem<ItemType>(
-                value: value,
-                child: Text(value.name),
-              );
+              return readableOption(value, value.name);
             }).toList(),
           ),
           const SizedBox(height: 16),

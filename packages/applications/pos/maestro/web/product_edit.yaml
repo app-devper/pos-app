@@ -1,0 +1,7 @@
+url: http://127.0.0.1:8090
+name: web - rename a product and see it on the selling screen
+env:
+  LAYOUT: wide
+---
+- launchApp
+- runFlow: ../shared/product_edit.yaml

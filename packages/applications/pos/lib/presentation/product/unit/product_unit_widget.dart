@@ -145,33 +145,33 @@ class _ProductUnitWidgetState extends State<ProductUnitWidget> {
             if (_formKey.currentState!.validate()) {
               if (widget.unit != null) {
                 _viewModel.run(() => _productRepo.updateProductUnitById(
-                  widget.unit!.id,
-                  ProductUnitParam(
-                    unit: _unitController.text,
-                    size: int.parse(_sizeController.text),
-                    costPrice: double.parse(_costPriceController.text),
-                    volume: _volumeController.text.isEmpty
-                        ? 0
-                        : double.parse(_volumeController.text),
-                    barcode: _barcodeController.text,
-                    productId: widget.productId,
-                    volumeUnit: _volumeUnit,
-                  ),
-                ));
+                      widget.unit!.id,
+                      ProductUnitParam(
+                        unit: _unitController.text,
+                        size: int.parse(_sizeController.text),
+                        costPrice: double.parse(_costPriceController.text),
+                        volume: _volumeController.text.isEmpty
+                            ? 0
+                            : double.parse(_volumeController.text),
+                        barcode: _barcodeController.text,
+                        productId: widget.productId,
+                        volumeUnit: _volumeUnit,
+                      ),
+                    ));
               } else {
                 _viewModel.run(() => _productRepo.addProductUnit(
-                  ProductUnitParam(
-                    unit: _unitController.text,
-                    size: int.parse(_sizeController.text),
-                    costPrice: double.parse(_costPriceController.text),
-                    volume: _volumeController.text.isEmpty
-                        ? 0
-                        : double.parse(_volumeController.text),
-                    barcode: _barcodeController.text,
-                    productId: widget.productId,
-                    volumeUnit: _volumeUnit,
-                  ),
-                ));
+                      ProductUnitParam(
+                        unit: _unitController.text,
+                        size: int.parse(_sizeController.text),
+                        costPrice: double.parse(_costPriceController.text),
+                        volume: _volumeController.text.isEmpty
+                            ? 0
+                            : double.parse(_volumeController.text),
+                        barcode: _barcodeController.text,
+                        productId: widget.productId,
+                        volumeUnit: _volumeUnit,
+                      ),
+                    ));
               }
             }
           },
@@ -390,7 +390,8 @@ class _ProductUnitWidgetState extends State<ProductUnitWidget> {
                         onPressed: () {
                           showConfirmDialog(context,
                               'ยืนยันการลบหน่วยนับ ${widget.unit!.unit}', () {
-                            _viewModel.run(() => _productRepo.removeProductUnitById(widget.unit!.id));
+                            _viewModel.run(() => _productRepo
+                                .removeProductUnitById(widget.unit!.id));
                           });
                         },
                         child: Text(

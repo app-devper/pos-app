@@ -287,8 +287,11 @@ class PosService {
         headers: networkConfig.getHeaders(url), body: jsonBody);
   }
 
+  /// The customers that are listed: pos-api leaves the archived ones out
+  /// (one is still found by its id or code).
   Future<http.Response> getCustomers() {
-    var url = Uri.parse('${networkConfig.getHostApp()}/api/pos/v1/customers');
+    var url = Uri.parse(
+        '${networkConfig.getHostApp()}/api/pos/v1/customers?excludeArchived=true');
     return client.get(url, headers: networkConfig.getHeaders(url));
   }
 
@@ -376,9 +379,11 @@ class PosService {
         headers: networkConfig.getHeaders(url), body: jsonBody);
   }
 
+  /// The receipts of a period: pos-api leaves the cancelled ones (deleted
+  /// drafts) out.
   Future<http.Response> getReceives(String startDate, String endDate) {
     var url = Uri.parse(
-        '${networkConfig.getHostApp()}/api/pos/v1/receives?startDate=$startDate&endDate=$endDate');
+        '${networkConfig.getHostApp()}/api/pos/v1/receives?startDate=$startDate&endDate=$endDate&excludeCancelled=true');
     return client.get(url, headers: networkConfig.getHeaders(url));
   }
 

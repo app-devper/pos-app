@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 // Package imports:
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/domain/model/product/param.dart';
@@ -18,8 +19,7 @@ class ProductLotEditViewModel {
     required this.productRepo,
   });
 
-  final _state =
-      ValueNotifier<ProductLotEditState>(const ProductLotEditState());
+  final _state = ViewState<ProductLotEditState>(const ProductLotEditState());
 
   /// The lot the form opens with, and the lot it saved. Each reaches the view
   /// once; neither is drawn from state.

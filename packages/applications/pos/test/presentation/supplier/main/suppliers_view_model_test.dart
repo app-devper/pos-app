@@ -74,7 +74,9 @@ void main() {
     expect(vm.state.value.items, hasLength(2));
   });
 
-  test('getSuppliers a failure is emitted once on the error channel', () async {
+  test(
+      'getSuppliers a failure with nothing listed is held as the page\'s error',
+      () async {
     final vm = buildViewModel(
       FakeSupplierRepository(
           throws: const NetworkException(message: 'offline')),
@@ -87,8 +89,9 @@ void main() {
     await Future<void>.delayed(Duration.zero);
 
     expect(vm.state.value.loading, isFalse);
-    expect(errors, hasLength(1),
-        reason: 'the message goes out once, with nothing left to clear');
+    expect(vm.state.value.error, isNotNull,
+        reason: 'the page shows the failure with a retry, not an empty list');
+    expect(errors, isEmpty, reason: 'no snackbar over the error state');
     expect(vm.state.value.items, isEmpty);
   });
 }

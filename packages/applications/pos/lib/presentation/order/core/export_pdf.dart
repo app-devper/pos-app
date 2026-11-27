@@ -16,15 +16,19 @@ import 'pdf_api.dart';
 
 class ExportPdf {
   static Future<dynamic> generate(Receipt receipt) async {
-    final font = await rootBundle.load("packages/common/assets/font/Sarabun-Regular.ttf");
+    final font = await rootBundle
+        .load("packages/common/assets/font/Sarabun-Regular.ttf");
     final ttf = pw.Font.ttf(font);
-    return await PdfApi.saveDocument(name: '${receipt.info.number}.pdf', doc: genDocument(receipt, ttf));
+    return await PdfApi.saveDocument(
+        name: '${receipt.info.number}.pdf', doc: genDocument(receipt, ttf));
   }
 
   static Future<dynamic> download(Receipt receipt) async {
-    final font = await rootBundle.load("packages/common/assets/font/Sarabun-Regular.ttf");
+    final font = await rootBundle
+        .load("packages/common/assets/font/Sarabun-Regular.ttf");
     final ttf = pw.Font.ttf(font);
-    return PdfApi.downloadDocument(name: '${receipt.info.number}.pdf', doc: genDocument(receipt, ttf));
+    return PdfApi.downloadDocument(
+        name: '${receipt.info.number}.pdf', doc: genDocument(receipt, ttf));
   }
 
   static Document genDocument(Receipt invoice, Font font) {
@@ -123,7 +127,8 @@ class ExportPdf {
         children: [
           Text(
             supplier.name,
-            style: TextStyle(fontWeight: FontWeight.bold, font: font, lineSpacing: 4),
+            style: TextStyle(
+                fontWeight: FontWeight.bold, font: font, lineSpacing: 4),
           ),
           SizedBox(height: 1 * PdfPageFormat.mm),
           Text(
@@ -149,7 +154,13 @@ class ExportPdf {
       );
 
   static Widget buildInvoice(Receipt receipt, Font font) {
-    final headers = ['รายละเอียด', 'จำนวน', 'ราคา/หน่วย', 'ส่วนลด', 'จำนวนเงิน'];
+    final headers = [
+      'รายละเอียด',
+      'จำนวน',
+      'ราคา/หน่วย',
+      'ส่วนลด',
+      'จำนวนเงิน'
+    ];
     final data = receipt.items.map((item) {
       final price = item.price / item.quantity;
       return [
@@ -262,7 +273,8 @@ class ExportPdf {
     bool unite = false,
     Font? font,
   }) {
-    final style = titleStyle ?? TextStyle(fontWeight: FontWeight.bold, font: font, height: 2);
+    final style = titleStyle ??
+        TextStyle(fontWeight: FontWeight.bold, font: font, height: 2);
 
     return Container(
       width: width,

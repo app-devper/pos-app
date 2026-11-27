@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 // Package imports:
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/domain/model/product/param.dart';
@@ -18,7 +19,7 @@ class ProductEditViewModel {
     required this.productRepo,
   });
 
-  final _state = ValueNotifier<ProductEditState>(const ProductEditState());
+  final _state = ViewState<ProductEditState>(const ProductEditState());
   final _loaded = OneShot<Product>();
   final _updated = OneShot<Product>();
   final _removed = OneShot<Product>();

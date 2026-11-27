@@ -2,6 +2,7 @@
 import 'package:intl/intl.dart';
 
 // Project imports:
+import 'package:pos/domain/model/order/order_status.dart';
 import 'order_item_detail.dart';
 
 class OrderDetail {
@@ -22,6 +23,9 @@ class OrderDetail {
   final String createdDate;
   final List<OrderItemDetail> items;
 
+  /// pos-api's status of the bill; empty when it sent none.
+  final String status;
+
   OrderDetail({
     required this.id,
     required this.createdDate,
@@ -39,7 +43,20 @@ class OrderDetail {
     this.prescriberName,
     this.buyerName,
     this.buyerIdCard,
+    this.status = '',
   });
+
+  /// A cancelled bill stays viewable, marked, and cannot be deleted again.
+  bool get isCancelled => status == orderStatusCancelled;
+
+  /// Whether [line] is cancelled: by its own status, or because the whole
+  /// bill is (older data cancelled a bill and left its lines as they were).
+  bool isLineCancelled(OrderItemDetail line) => isCancelled || line.isCancelled;
+
+  /// The lines that count in a total, a receipt or an export: none of a
+  /// cancelled bill's, and of any other bill those not cancelled.
+  List<OrderItemDetail> get countedLines =>
+      isCancelled ? const [] : items.counted;
 
   String getCreatedDate() {
     final date = DateTime.parse(createdDate);

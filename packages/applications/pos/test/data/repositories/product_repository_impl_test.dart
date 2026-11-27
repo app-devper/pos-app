@@ -254,8 +254,7 @@ void main() {
 
     test('clearing Sold first marks the catalogue stale', () async {
       final cached = await _cachedProduct();
-      final recorder =
-          _Recorder(body: jsonEncode(_productJson(soldFirst: 0)));
+      final recorder = _Recorder(body: jsonEncode(_productJson(soldFirst: 0)));
       final built = _build(recorder, cached: [cached]);
 
       await built.repo.clearQuantitySoldFirstById('p1');

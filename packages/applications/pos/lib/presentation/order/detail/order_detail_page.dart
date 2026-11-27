@@ -7,9 +7,8 @@ import 'package:flutter/services.dart';
 
 // Package imports:
 import 'package:common/core/ext/widget_ext.dart';
-import 'package:design_system/widgets/app_bar.dart';
+import 'package:pos/presentation/core/page_bar.dart';
 import 'package:design_system/widgets/snack_bar.dart';
-import 'package:design_system/widgets/status_badge.dart';
 import 'package:intl/intl.dart';
 
 // Project imports:
@@ -18,20 +17,21 @@ import 'package:pos/domain/model/customer/customer.dart';
 import 'package:pos/domain/model/order/order_detail.dart';
 import 'package:pos/domain/model/order/order_item_detail.dart';
 import 'package:pos/domain/model/product/product.dart';
-import 'package:pos/domain/model/receipt/receipt.dart';
-import 'package:pos/domain/model/sale/money.dart';
+import 'package:pos/presentation/order/detail/bill_receipt.dart';
 import 'package:pos/domain/model/supplier/supplier.dart';
 import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/constants.dart';
+import 'package:pos/presentation/order/bill_summary.dart';
 import 'package:design_system/widgets/dialogs.dart';
 import 'package:pos/presentation/order/argument.dart';
 import 'package:pos/presentation/order/core/export_pdf.dart';
 import 'package:pos/presentation/order/return/product_return_widget.dart';
 import 'package:pos/presentation/order/return/product_returns_history_widget.dart';
 import 'package:pos/presentation/product/argument.dart';
-import 'package:design_system/theme/app_colors.dart';
 import 'package:design_system/theme/color.dart';
+import 'order_detail_header.dart';
 import 'order_detail_state.dart';
+import 'order_line_tile.dart';
 import 'order_detail_view_model.dart';
 
 class OrderDetailPage extends StatefulWidget {
@@ -140,7 +140,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     _snackBar = CustomSnackBar(key: const Key("snackbar"), context: context);
     return Scaffold(
       key: _scaffoldKey,
-      appBar: buildAppBar(
+      appBar: buildPageBar(
+        context,
         Languages.of(context).orderDetailTitle,
         actions: _buildAction(context),
       ),
@@ -150,96 +151,38 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         ),
         child: _buildBody(context),
       ),
+      // The foot is the Scaffold's bottom bar, which a floating snack bar
+      // (success, loading, error) rises above instead of covering.
+      bottomNavigationBar: BillSummary(
+          total: _viewModel.state.value.total,
+          totalCost: _viewModel.state.value.totalCost,
+          showCost: isAdmin),
     );
   }
 
   List<Widget> _buildAction(BuildContext context) {
-    if (isAdmin) {
-      return <Widget>[
-        IconButton(
-          splashRadius: 20,
-          onPressed: () {
-            _viewModel.getSupplier(order?.customerCode ?? "");
-          },
-          icon: const Icon(Icons.picture_as_pdf),
-        ),
-        IconButton(
-          splashRadius: 20,
-          onPressed: () {
-            // The sync button refetches. It used to set a "total cost updated"
-            // flag in state that this page read back and turned into exactly
-            // this call.
-            _viewModel.getOrderById(widget.orderId);
-          },
-          icon: const Icon(Icons.sync),
-        ),
-        IconButton(
-          splashRadius: 20,
-          onPressed: () {
-            _showProductReturnsHistoryDialog(context);
-          },
-          icon: const Icon(Icons.assignment_return),
-        ),
-        IconButton(
-          splashRadius: 20,
-          onPressed: () {
-            _showRemoveOrderConfirm(context);
-          },
-          icon: const Icon(Icons.delete),
-        ),
-      ];
-    } else {
-      return <Widget>[
-        IconButton(
-          splashRadius: 20,
-          onPressed: () {
-            _viewModel.getSupplier(order?.customerCode ?? "");
-          },
-          icon: const Icon(Icons.picture_as_pdf),
-        ),
-      ];
-    }
+    return <Widget>[
+      OrderDetailActions(
+        bill: order,
+        isAdmin: isAdmin,
+        onPrint: () => _viewModel.getSupplier(order?.customerCode ?? ""),
+        // The sync button refetches. It used to set a "total cost updated"
+        // flag in state that this page read back and turned into exactly
+        // this call.
+        onSync: () => _viewModel.getOrderById(widget.orderId),
+        onReturns: () => _showProductReturnsHistoryDialog(context),
+        onDelete: () => _showRemoveOrderConfirm(context),
+      ),
+    ];
   }
 
   Widget _buildBody(BuildContext context) {
-    final Size size = MediaQuery.of(context).size;
-    return SizedBox(
-      height: size.height,
-      width: size.width,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          _buildOrderHeader(),
-          _buildOrderItem(context),
-          _buildSummaryTotal(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOrderHeader() {
-    final Size size = MediaQuery.of(context).size;
-    return Container(
-      width: size.width,
-      padding: const EdgeInsets.all(defaultPagePadding),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: <Widget>[
-          Flexible(
-            child: _buildOrderDetail(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOrderDetail() {
-    return Container(
-      height: 50,
-      alignment: Alignment.centerLeft,
-      child: Text(
-        "${order?.code ?? ""} ${(order?.getCreatedDate() ?? "-")}",
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        OrderDetailHeader(bill: order),
+        _buildOrderItem(context),
+      ],
     );
   }
 
@@ -249,144 +192,24 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         itemCount: orderItem.length,
         itemBuilder: (context, index) {
           final content = orderItem[index];
-          return ListTile(
-            leading: _buildListMenu(context, content),
-            title: Text(content.product?.name ?? ""),
-            trailing: Text(format.format(content.paid())),
-            subtitle: isAdmin
-                ? Text(
-                    "Cost : ${format.format(content.costPrice)}  Profit : ${format.format(content.paid() - content.costPrice)}")
-                : null,
+          return OrderLineTile(
+            line: content,
+            unitName: _viewModel.state.value.unitNameOf(content),
+            billCancelled: _viewModel.state.value.order?.isCancelled ?? false,
+            isAdmin: isAdmin,
             onTap: () {
               if (isAdmin) {
                 _nextToProductEdit(context, content.product);
               }
             },
+            onDelete: () => _showRemoveOrderItemConfirm(context, content),
+            onHistory: () => _nextToOrderHistory(context, content.product),
+            onReturn: () => _showProductReturnDialog(context, content),
           );
         },
       ),
     );
   }
-
-  Widget _buildQuantityColumn(OrderItemDetail content) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: <Widget>[
-        Text('${content.quantity}'),
-        if (content.oversoldQty > 0)
-          StatusBadge(
-              label: 'เกิน ${content.oversoldQty}', color: Colors.orange),
-        if (content.returnedQty > 0)
-          StatusBadge(
-              label: 'คืน ${content.returnedQty}',
-              color: AppColors.of(context).textSecondary),
-      ],
-    );
-  }
-
-  Widget _buildListMenu(BuildContext context, OrderItemDetail content) {
-    if (isAdmin) {
-      return SizedBox(
-          width: 130,
-          height: 50,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              InkWell(
-                onTap: () {
-                  _showRemoveOrderItemConfirm(context, content);
-                },
-                child: const Icon(Icons.delete),
-              ),
-              InkWell(
-                onTap: () {
-                  _nextToOrderHistory(context, content.product);
-                },
-                child: const Icon(Icons.history),
-              ),
-              if (content.quantity - content.returnedQty > 0)
-                InkWell(
-                  onTap: () {
-                    _showProductReturnDialog(context, content);
-                  },
-                  child: const Icon(Icons.keyboard_return),
-                ),
-              _buildQuantityColumn(content),
-            ],
-          ));
-    } else {
-      return _buildQuantityColumn(content);
-    }
-  }
-
-  Widget _buildSummaryTotal() {
-    return Container(
-      padding: const EdgeInsets.all(defaultPagePadding),
-      child: Column(
-        children: <Widget>[
-          _buildPrice(),
-          _buildCostPrice(),
-          _buildProfit(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPrice() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: <Widget>[
-        const Text(
-          'Total',
-        ),
-        Text(
-          '฿ ${format.format(getTotalPrice())}',
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCostPrice() {
-    if (isAdmin) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          const Text(
-            'Total Cost',
-          ),
-          Text(
-            '฿ ${format.format(getTotalCostPrice())}',
-          ),
-        ],
-      );
-    } else {
-      return Container();
-    }
-  }
-
-  Widget _buildProfit() {
-    if (isAdmin) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          const Text(
-            'Total Profit',
-          ),
-          Text(
-            '฿ ${format.format(getTotalPrice() - getTotalCostPrice())}',
-          ),
-        ],
-      );
-    } else {
-      return Container();
-    }
-  }
-
-  double getTotalPrice() => saleTotal(orderItem.map((x) => x.paid()));
-
-  double getTotalCostPrice() =>
-      roundMoney(orderItem.fold(0.0, (sum, x) => sum + x.costPrice));
 
   void _showRemoveOrderConfirm(BuildContext context) {
     showConfirmDialog(context, "ต้องการลบรายการใช่หรือไม่?", () {
@@ -452,15 +275,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Future<void> _generateReceipt(Supplier supplier) async {
-    final receipt = Receipt(
-      supplier: supplier,
-      customer: _getCustomer(),
-      info: ReceiptInfo(
-        date: order?.getDate() ?? "",
-        number: order?.code ?? "",
-      ),
-      items: orderItem,
-    );
+    final bill = order;
+    if (bill == null) return;
+    final receipt =
+        billReceipt(order: bill, supplier: supplier, customer: _getCustomer());
 
     if (kIsWeb) {
       ExportPdf.download(receipt);

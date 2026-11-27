@@ -26,7 +26,8 @@ class _ProductVolumeUnitWidgetState extends State<ProductVolumeUnitWidget> {
 
   @override
   void initState() {
-    final index = volumeUnits.indexWhere((element) => element.type == widget.unit);
+    final index =
+        volumeUnits.indexWhere((element) => element.type == widget.unit);
     if (index != -1) {
       _selectedUnit = index;
     }

@@ -40,14 +40,22 @@ class TitleBar extends StatelessWidget {
       children: [
         actionButton('ปิด', () => onBack()),
         Expanded(
+          // The tooltip shows a title cut short; the title is read once, as
+          // a header node of its own (on the web a text merged into a node
+          // with children is not written into the page).
           child: Tooltip(
             message: title,
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium,
+            excludeFromSemantics: true,
+            child: Semantics(
+              container: true,
+              header: true,
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ),
           ),
         ),

@@ -12,12 +12,14 @@ import 'package:design_system/widgets/title_bar.dart';
 import 'package:design_system/widgets/page_container.dart';
 
 // Project imports:
+import 'package:pos/presentation/core/readable_option.dart';
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/core/core.dart';
 import 'package:pos/domain/model/product/param.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/domain/model/product/request_drug_info.dart';
 import 'package:pos/presentation/core/core_widget.dart';
+import 'product_delete_question.dart';
 import 'product_edit_view_model.dart';
 
 class ProductEditPage extends StatefulWidget {
@@ -69,6 +71,9 @@ class _ProductEditPageState extends State<ProductEditPage> {
 
   bool _loadingShown = false;
 
+  /// The product as just loaded: its stock decides what a delete asks.
+  Product? _loaded;
+
   final _subscriptions = <StreamSubscription<void>>[];
 
   @override
@@ -104,6 +109,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
 
   void _onLoaded(Product product) {
     setState(() {
+      _loaded = product;
       _category = findCategoryType(product.category);
       _status = findProductStatus(product.status);
     });
@@ -350,10 +356,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
             });
           },
           items: _categories.map((ItemType value) {
-            return DropdownMenuItem<ItemType>(
-              value: value,
-              child: Text(value.name),
-            );
+            return readableOption(value, value.name);
           }).toList(),
         ),
         const SizedBox(height: 16),
@@ -415,10 +418,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
             });
           },
           items: _productStatus.map((ItemType value) {
-            return DropdownMenuItem<ItemType>(
-              value: value,
-              child: Text(value.name),
-            );
+            return readableOption(value, value.name);
           }).toList(),
         ),
       ],
@@ -615,7 +615,8 @@ class _ProductEditPageState extends State<ProductEditPage> {
   }
 
   void _showConfirmDialog(BuildContext context) {
-    showConfirmDialog(context, "ต้องการลบสินค้าใช่หรือไม่", () {
+    final product = _loaded ?? widget.product;
+    showConfirmDialog(context, productDeleteQuestion(product), () {
       _viewModel.removeProductById(widget.product.id);
     });
   }

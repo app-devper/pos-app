@@ -1,0 +1,32 @@
+# On the bills list of a manager or a user: the menu holds selling and bills
+# only, and the bills show no cost, on a row or in the foot. The row of the
+# run's own bill (${BILL_CODE}, sold by the admin) is waited for first, so
+# what the role hides is checked on a list that holds that bill, never on an
+# empty or loading one.
+appId: app.devper.pos
+---
+- extendedWaitUntil:
+    visible: "\\d+\n?${BILL_CODE}.*"
+    timeout: 15000
+- extendedWaitUntil:
+    visible: "ยอดรวม ฿ .*"
+    timeout: 15000
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertNotVisible: "\\d+\n?${BILL_CODE}.*ต้นทุน: .*"
+- assertNotVisible: "ต้นทุน ฿ .*"
+- assertNotVisible: ".*ต้นทุน: .*"
+- runFlow:
+    when:
+      true: ${LAYOUT == 'narrow'}
+    commands:
+      - tapOn: "เมนู"
+- assertVisible: "ขายสินค้า"
+- assertVisible: "รายการขาย"
+- assertNotVisible: "สินค้า"
+- assertNotVisible: "จัดการ"
+- runFlow:
+    when:
+      true: ${LAYOUT == 'narrow'}
+    commands:
+      - tapOn: "รายการขาย"

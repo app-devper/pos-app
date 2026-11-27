@@ -12,6 +12,7 @@ import 'package:design_system/widgets/title_bar.dart';
 import 'package:design_system/widgets/page_container.dart';
 
 // Project imports:
+import 'package:pos/presentation/core/readable_option.dart';
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/domain/model/core/core.dart';
@@ -173,7 +174,9 @@ class _ProductAddPageState extends State<ProductAddPage> {
                         'โปรดระบุข้อมูลสินค้า',
                         style: TextStyle(
                           fontSize: 16,
-                          color: AppColors.of(context).textPrimary.withValues(alpha: 0.6),
+                          color: AppColors.of(context)
+                              .textPrimary
+                              .withValues(alpha: 0.6),
                         ),
                       ),
                       const SizedBox(height: 32),
@@ -234,10 +237,7 @@ class _ProductAddPageState extends State<ProductAddPage> {
             });
           },
           items: _categories.map((ItemType value) {
-            return DropdownMenuItem<ItemType>(
-              value: value,
-              child: Text(value.name),
-            );
+            return readableOption(value, value.name);
           }).toList(),
         ),
         const SizedBox(height: 16),
@@ -299,10 +299,7 @@ class _ProductAddPageState extends State<ProductAddPage> {
             });
           },
           items: _productStatus.map((ItemType value) {
-            return DropdownMenuItem<ItemType>(
-              value: value,
-              child: Text(value.name),
-            );
+            return readableOption(value, value.name);
           }).toList(),
         ),
       ],

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:design_system/widgets/dialogs.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/domain/model/receive/receive_item.dart';
+import 'package:pos/presentation/stock_count/manage/stock_count_item_picker_widget.dart';
 
 class ReceiveItemDialog extends StatefulWidget {
   final String receiveId;
@@ -18,15 +20,54 @@ class _ReceiveItemDialogState extends State<ReceiveItemDialog> {
   final _cost = TextEditingController();
   final _lot = TextEditingController();
   final _expiry = TextEditingController();
+  final _productName = TextEditingController();
   Product? _product;
 
   @override
   void dispose() {
-    for (final controller in [_quantity, _cost, _lot, _expiry]) {
+    for (final controller in [_quantity, _cost, _lot, _expiry, _productName]) {
       controller.dispose();
     }
     super.dispose();
   }
+
+  /// Opens the app's product picker with its search (the one a stock count
+  /// uses); the chosen product names the field and sets the cost.
+  void _pickProduct() {
+    showCenterDialog(
+      context: context,
+      builder: (_) => StockCountItemPickerWidget.product(
+        onProductSelected: _choose,
+      ),
+    );
+  }
+
+  /// The page's own record of the picked product when it has one, else the
+  /// one the picker loaded: the picker's list may be newer than the page's.
+  void _choose(ProductUnitItem item) {
+    final product = widget.products.where((p) => p.id == item.id).firstOrNull ??
+        _fromPicked(item);
+    setState(() {
+      _product = product;
+      _productName.text = product.name;
+      _cost.text = '${product.costPrice}';
+    });
+  }
+
+  static Product _fromPicked(ProductUnitItem item) => Product(
+        id: item.id,
+        name: item.name,
+        nameEn: item.nameEn,
+        description: item.description,
+        costPrice: item.unit.costPrice,
+        unit: item.unit.unit,
+        status: item.status,
+        category: item.category,
+        createdDate: item.createdDate,
+        units: [item.unit],
+        prices: item.prices,
+        stocks: item.stocks,
+      );
 
   DateTime? _expiryDate(String value) {
     if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(value)) return null;
@@ -45,18 +86,13 @@ class _ReceiveItemDialogState extends State<ReceiveItemDialog> {
                 child: Form(
               key: _form,
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-                DropdownButtonFormField<Product>(
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'สินค้า'),
-                  items: widget.products
-                      .map((p) =>
-                          DropdownMenuItem(value: p, child: Text(p.name)))
-                      .toList(),
-                  onChanged: (p) => setState(() {
-                    _product = p;
-                    _cost.text = '${p?.costPrice ?? 0}';
-                  }),
-                  validator: (p) => p == null ? 'เลือกสินค้า' : null,
+                TextFormField(
+                  controller: _productName,
+                  readOnly: true,
+                  decoration: const InputDecoration(
+                      labelText: 'สินค้า', suffixIcon: Icon(Icons.search)),
+                  onTap: _pickProduct,
+                  validator: (_) => _product == null ? 'เลือกสินค้า' : null,
                 ),
                 TextFormField(
                     controller: _quantity,

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 // Package imports:
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/domain/model/product/product.dart';
@@ -19,7 +20,7 @@ class ProductViewModel {
     required this.productRepo,
   });
 
-  final _state = ValueNotifier<ProductState>(const ProductState());
+  final _state = ViewState<ProductState>(const ProductState());
 
   /// Each is acted on once: the product opens a panel, the tally and the
   /// failures flash a snackbar.

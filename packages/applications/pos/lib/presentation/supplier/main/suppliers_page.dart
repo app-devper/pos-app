@@ -4,13 +4,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 // Package imports:
-import 'package:design_system/widgets/app_bar.dart';
+import 'package:pos/presentation/core/page_bar.dart';
 import 'package:design_system/widgets/snack_bar.dart';
+import 'package:design_system/widgets/error_state.dart';
 
 // Project imports:
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/supplier/supplier.dart';
 import 'package:pos/localizations/language/languages.dart';
+import 'package:pos/presentation/core/list_empty_state.dart';
 import 'package:pos/presentation/constants.dart';
 import 'package:pos/presentation/supplier/argument.dart';
 import 'package:pos/presentation/supplier/main/suppliers_state.dart';
@@ -57,7 +59,8 @@ class _SuppliersPageState extends State<SuppliersPage> {
     _snackBar = CustomSnackBar(key: const Key("snackbar"), context: context);
     return Scaffold(
       key: _scaffoldKey,
-      appBar: buildAppBar(
+      appBar: buildPageBar(
+        context,
         Languages.of(context).suppliersTitle,
         actions: _buildAction(context),
       ),
@@ -68,6 +71,7 @@ class _SuppliersPageState extends State<SuppliersPage> {
   List<Widget> _buildAction(BuildContext context) {
     return [
       IconButton(
+        tooltip: Languages.of(context).addSupplier,
         splashRadius: 20,
         onPressed: () {
           _nextToSupplierAdd(context);
@@ -94,6 +98,13 @@ class _SuppliersPageState extends State<SuppliersPage> {
     return ValueListenableBuilder<SuppliersState>(
       valueListenable: _viewModel.state,
       builder: (BuildContext context, SuppliersState state, _) {
+        // A failed load is not an empty shop: it says so, with a retry.
+        if (state.error != null && state.items.isEmpty) {
+          return Expanded(
+            child: ErrorState(
+                message: state.error!, onRetry: _viewModel.getSuppliers),
+          );
+        }
         if (state.loading && state.items.isEmpty) {
           return Expanded(
             child: Center(
@@ -102,6 +113,17 @@ class _SuppliersPageState extends State<SuppliersPage> {
                 color: Theme.of(context).colorScheme.primary,
                 strokeCap: StrokeCap.round,
               ),
+            ),
+          );
+        }
+        if (state.items.isEmpty) {
+          return Expanded(
+            child: ListEmptyState(
+              searched: false,
+              icon: Icons.store_outlined,
+              title: Languages.of(context).noSuppliersYet,
+              addLabel: Languages.of(context).addFirstSupplier,
+              onAdd: () => _nextToSupplierAdd(context),
             ),
           );
         }

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:common/core/ext/widget_ext.dart';
 import 'package:design_system/widgets/decimal_input.dart';
+import 'package:design_system/widgets/dialogs.dart';
 import 'package:design_system/widgets/title_bar.dart';
 
 // Project imports:
@@ -14,6 +15,23 @@ import 'package:pos/domain/model/product/param.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/presentation/product/core/catalogue_edit.dart';
 import 'package:pos/domain/repositories/product_repository.dart';
+
+/// The stock tab's ปรับจำนวนคงเหลือ dialog for [stock].
+void showStockQuantityDialog(
+  BuildContext context, {
+  required ProductStock stock,
+  required Function(ProductStock) onComplete,
+}) {
+  showCenterDialog(
+    minWidth: 320,
+    minHeight: 430,
+    maxHeight: inputNumberDialogMaxHeight,
+    maxWidth: 320,
+    context: context,
+    builder: (context) =>
+        ProductStockQuantityWidget(stock: stock, onComplete: onComplete),
+  );
+}
 
 class ProductStockQuantityWidget extends StatefulWidget {
   final ProductStock stock;
@@ -29,7 +47,8 @@ class ProductStockQuantityWidget extends StatefulWidget {
   State<StatefulWidget> createState() => _ProductStockQuantityWidgetState();
 }
 
-class _ProductStockQuantityWidgetState extends State<ProductStockQuantityWidget> {
+class _ProductStockQuantityWidgetState
+    extends State<ProductStockQuantityWidget> {
   String number = "";
 
   late CatalogueEdit<ProductStock> _viewModel;
@@ -81,6 +100,7 @@ class _ProductStockQuantityWidgetState extends State<ProductStockQuantityWidget>
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         TitleBar(
           title: "ปรับจำนวนคงเหลือ",
@@ -93,7 +113,7 @@ class _ProductStockQuantityWidgetState extends State<ProductStockQuantityWidget>
           },
         ),
         const Divider(height: 1),
-        Expanded(
+        Flexible(
           child: DecimalInput(
             isShowDot: false,
             maxLength: 3,
@@ -113,10 +133,10 @@ class _ProductStockQuantityWidgetState extends State<ProductStockQuantityWidget>
 
   void _updateProductStockQuantity() {
     _viewModel.run(() => _productRepo.updateProductStockQuantityById(
-      widget.stock.id,
-      UpdateProductStockQuantityParam(
-        quantity: number.isNotEmpty ? int.parse(number) : 0,
-      ),
-    ));
+          widget.stock.id,
+          UpdateProductStockQuantityParam(
+            quantity: number.isNotEmpty ? int.parse(number) : 0,
+          ),
+        ));
   }
 }

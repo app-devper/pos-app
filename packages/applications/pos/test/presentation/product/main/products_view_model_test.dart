@@ -111,14 +111,18 @@ void main() {
 
   test('the list searches again when the catalogue changes, keeping the query',
       () async {
-    final repo = FakeProductRepository(products: [buildProduct('1', 'Paracetamol')]);
+    final repo =
+        FakeProductRepository(products: [buildProduct('1', 'Paracetamol')]);
     final vm = buildViewModel(repo);
     await vm.searchProduct('para', false);
     expect(vm.state.value.items.map((p) => p.id), ['1']);
 
     // Another screen added a Product: the list used to keep its old copy
     // until the search changed.
-    repo.products = [buildProduct('1', 'Paracetamol'), buildProduct('2', 'Paramol')];
+    repo.products = [
+      buildProduct('1', 'Paracetamol'),
+      buildProduct('2', 'Paramol')
+    ];
     repo.changes.add(null);
     await pumpEventQueue();
 

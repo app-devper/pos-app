@@ -4,22 +4,26 @@ import 'package:flutter/foundation.dart';
 // Package imports:
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/domain/model/stock_count/param.dart';
 import 'package:pos/domain/model/stock_count/stock_count.dart';
 import 'package:pos/presentation/stock_count/manage/stock_count_manage_state.dart';
+import 'package:pos/domain/repositories/product_repository.dart';
 import 'package:pos/domain/repositories/stock_count_repository.dart';
 
 class StockCountManageViewModel {
   final StockCountRepository stockCountRepo;
+  final ProductRepository productRepo;
 
   StockCountManageViewModel({
     required this.stockCountRepo,
+    required this.productRepo,
   });
 
   final _state =
-      ValueNotifier<StockCountManageState>(const StockCountManageState());
+      ViewState<StockCountManageState>(const StockCountManageState());
 
   /// A finished count closes the screen; a rejected edit flashes a message.
   /// Neither is drawn, so neither sits in state waiting to be cleared.
@@ -39,11 +43,27 @@ class StockCountManageViewModel {
     _state.value = _state.value.copyWith(loading: true);
     try {
       final stockCount = await stockCountRepo.getStockCountById(stockCountId);
-      _state.value = _state.value.copyWith(stockCount: stockCount);
+      // Awaited first: the state is read after the lookup, not before it.
+      final productNames = await _productNames();
+      _state.value = _state.value
+          .copyWith(stockCount: stockCount, productNames: productNames);
     } on Exception catch (e) {
       _errors.emit(toFailure(e).getMessage());
     } finally {
       _state.value = _state.value.copyWith(loading: false);
+    }
+  }
+
+  /// The products' names by id, from the cached catalogue. A failed lookup
+  /// is not worth an error over a count that did load: its lines fall back
+  /// to the product id.
+  Future<Map<String, String>> _productNames() async {
+    try {
+      final products = await productRepo.getLocalProducts();
+      return Map.unmodifiable(
+          {for (final product in products) product.id: product.name});
+    } on Exception catch (_) {
+      return const {};
     }
   }
 

@@ -4,7 +4,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 // Package imports:
-import 'package:design_system/widgets/app_bar.dart';
+import 'package:pos/presentation/core/page_bar.dart';
 import 'package:design_system/widgets/snack_bar.dart';
 import 'package:intl/intl.dart';
 
@@ -64,7 +64,8 @@ class _ProductsExpiredPageState extends State<ProductsExpiredPage> {
     _snackBar = CustomSnackBar(key: const Key("snackbar"), context: context);
     return Scaffold(
       key: _scaffoldKey,
-      appBar: buildAppBar(
+      appBar: buildPageBar(
+        context,
         Languages.of(context).productsExpiredTitle,
       ),
       body: _buildBody(context),
@@ -196,9 +197,7 @@ class _ProductsExpiredPageState extends State<ProductsExpiredPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          const Text(
-            'Total Cost',
-          ),
+          Text(Languages.of(context).totalCost),
           ValueListenableBuilder<ProductsExpiredState>(
             valueListenable: _viewModel.state,
             builder: (BuildContext context, ProductsExpiredState state, _) {

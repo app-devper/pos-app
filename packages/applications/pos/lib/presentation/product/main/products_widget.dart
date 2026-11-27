@@ -5,22 +5,29 @@ import 'package:flutter/material.dart';
 import 'package:design_system/widgets/responsive.dart';
 
 // Project imports:
+import 'package:pos/presentation/core/list_empty_state.dart';
+import 'package:pos/presentation/core/more_commands_button.dart';
 import 'package:pos/container.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:design_system/theme/app_colors.dart';
 import 'package:design_system/widgets/error_state.dart';
+import 'product_list_row.dart';
 import 'products_state.dart';
 import 'products_view_model.dart';
+import 'package:pos/localizations/language/languages.dart';
 
 class ProductsWidget extends StatefulWidget {
   final Function(Product) onSelected;
   final Function() onMenu;
 
+  /// Adds the first one, offered while the list is empty.
+  final VoidCallback onAdd;
 
   const ProductsWidget({
     super.key,
     required this.onSelected,
     required this.onMenu,
+    required this.onAdd,
   });
 
   @override
@@ -42,7 +49,6 @@ class _ProductsWidgetState extends State<ProductsWidget> {
     _viewModel = sl<ProductsViewModel>();
     _viewModel.searchProduct('', _sortBalance);
   }
-
 
   @override
   void dispose() {
@@ -82,6 +88,7 @@ class _ProductsWidgetState extends State<ProductsWidget> {
                     fillColor: AppColors.of(context).border,
                     filled: true,
                     suffixIcon: IconButton(
+                      tooltip: Languages.of(context).clearSearch,
                       splashRadius: 20,
                       onPressed: () {
                         FocusScope.of(context).requestFocus(_viewNode);
@@ -99,6 +106,9 @@ class _ProductsWidgetState extends State<ProductsWidget> {
               ),
             ),
             IconButton(
+              tooltip: _sortBalance
+                  ? Languages.of(context).sortByName
+                  : Languages.of(context).sortByBalance,
               splashRadius: 20,
               onPressed: () {
                 setState(() {
@@ -112,14 +122,7 @@ class _ProductsWidgetState extends State<ProductsWidget> {
             ),
             const SizedBox(width: 8),
             if (isMobile) ...[
-              IconButton(
-                splashRadius: 20,
-                onPressed: () {
-                  widget.onMenu();
-                },
-                icon: const Icon(Icons.menu),
-                color: Theme.of(context).colorScheme.primary,
-              ),
+              MoreCommandsButton(onPressed: () => widget.onMenu()),
               const SizedBox(width: 8),
             ]
           ],
@@ -158,43 +161,32 @@ class _ProductsWidgetState extends State<ProductsWidget> {
             ),
           );
         }
+        if (state.items.isEmpty) {
+          return Expanded(
+            child: ListEmptyState(
+              searched: _searchEditingController.text.isNotEmpty,
+              icon: Icons.inventory_2_outlined,
+              title: Languages.of(context).noProductsYet,
+              addLabel: Languages.of(context).addFirstProduct,
+              onAdd: widget.onAdd,
+            ),
+          );
+        }
         return _buildProducts(state.items);
       },
     );
   }
 
   Expanded _buildProducts(List<Product> item) {
-    getSubTitle(Product content) {
-      if (_sortBalance) {
-        return "คงเหลือ ${content.getQuantity()} ${content.units.isNotEmpty ? content.units.first.unit : ""}";
-      } else {
-        return content.units.isNotEmpty ? content.units.first.unit : "";
-      }
-    }
-
     return Expanded(
       child: ListView.builder(
         itemCount: item.length,
         itemBuilder: (context, index) {
           final content = item[index];
           return Column(children: [
-            ListTile(
-              title: Text(content.name),
-              subtitle: Text(
-                getSubTitle(content),
-                style: TextStyle(
-                  color: AppColors.of(context).textSecondary,
-                  fontSize: 14,
-                ),
-              ),
-              trailing: Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: AppColors.of(context).textSecondary,
-              ),
-              onTap: () {
-                widget.onSelected(content);
-              },
+            ProductListRow(
+              product: content,
+              onTap: () => widget.onSelected(content),
             ),
             const Divider(height: 1),
           ]);

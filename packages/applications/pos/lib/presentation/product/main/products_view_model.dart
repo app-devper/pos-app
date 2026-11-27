@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 
 // Package imports:
 import 'package:common/core/error/failure.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/domain/model/product/product.dart';
@@ -19,7 +20,9 @@ class ProductsViewModel {
     required this.productRepo,
   });
 
-  final _state = ValueNotifier<ProductsState>(const ProductsState());
+  /// Loading from the start: the page's first frame comes before its first
+  /// load, and must not say the list is empty.
+  final _state = ViewState<ProductsState>(const ProductsState(loading: true));
   StreamSubscription<void>? _changes;
   String _query = '';
   bool _sortBalance = false;

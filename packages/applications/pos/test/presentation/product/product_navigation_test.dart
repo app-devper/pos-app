@@ -4,6 +4,8 @@ import 'package:common/localizations/localizations_delegate.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pos/container.dart';
+import 'package:pos/presentation/home/main/home_view_model.dart';
+import 'package:um/domain/usecase/auth_use_cases.dart';
 import 'package:pos/domain/model/core/core.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/domain/repositories/product_repository.dart';
@@ -15,6 +17,8 @@ import 'package:pos/presentation/product/main/product_page.dart';
 import 'package:pos/presentation/product/main/product_view_model.dart';
 import 'package:pos/presentation/product/main/products_view_model.dart';
 import 'package:pos/presentation/router.dart';
+import '../../support/app_languages.dart';
+import '../home/main/home_view_model_test.dart' as home;
 
 /// The shop's catalogue, in memory. Removing a Product takes it out and says
 /// the catalogue changed, the way the real repository does with its cache.
@@ -46,7 +50,7 @@ class Catalogue implements ProductRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-Product _paracetamol() {
+Product paracetamol() {
   return Product(
     id: 'p-1',
     name: 'Paracetamol',
@@ -82,7 +86,7 @@ void main() {
   late Catalogue catalogue;
 
   setUp(() {
-    catalogue = Catalogue([_paracetamol()]);
+    catalogue = Catalogue([paracetamol()]);
     sl.registerFactory<ProductViewModel>(() => ProductViewModel(
           productRepo: catalogue,
         ));
@@ -91,6 +95,12 @@ void main() {
         ));
     sl.registerFactory<ProductEditViewModel>(() => ProductEditViewModel(
           productRepo: catalogue,
+        ));
+    // The edit form is an admin's page.
+    final admin = home.FakeLoginRepository(role: 'ADMIN');
+    sl.registerFactory(() => HomeViewModel(
+          getRoleUseCase: GetRoleUseCase(admin),
+          logoutUseCase: LogoutUseCase(admin),
         ));
   });
 
@@ -115,13 +125,13 @@ void main() {
       timeout: const Timeout(Duration(seconds: 60)), (tester) async {
     useWideScreen(tester);
     await tester.pumpWidget(MaterialApp(
-      localizationsDelegates: [CommonLocalizationsDelegate()],
+      localizationsDelegates: [CommonLocalizationsDelegate(), thaiLanguages],
       onGenerateRoute: RouterApp.generateRoute,
       home: Builder(
         builder: (context) => Scaffold(
           body: TextButton(
             onPressed: () => Navigator.pushNamed(context, productEditRoute,
-                arguments: ProductArgument(_paracetamol())),
+                arguments: ProductArgument(paracetamol())),
             child: const Text('open'),
           ),
         ),
@@ -140,7 +150,7 @@ void main() {
       timeout: const Timeout(Duration(seconds: 60)), (tester) async {
     useWideScreen(tester);
     await tester.pumpWidget(MaterialApp(
-      localizationsDelegates: [CommonLocalizationsDelegate()],
+      localizationsDelegates: [CommonLocalizationsDelegate(), thaiLanguages],
       // In the app this panel sits inside HomePage's Scaffold.
       home: const Scaffold(body: ProductsPage()),
     ));

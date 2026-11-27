@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12 and later draw their own splash (the launcher icon at its
+         centre) instead of the window background: on the app's light
+         surface, so the first Flutter frame follows without a flash. -->
+    <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">@drawable/launch_background</item>
+        <item name="android:colorBackground">@color/launch_surface</item>
+        <item name="android:windowSplashScreenBackground">@color/launch_surface</item>
+    </style>
+</resources>

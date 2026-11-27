@@ -1,0 +1,7 @@
+url: http://127.0.0.1:8090
+name: web - sell two for cash and find the bill by its number
+env:
+  LAYOUT: wide
+---
+- launchApp
+- runFlow: ../shared/sell_and_bill.yaml

@@ -2,8 +2,10 @@
 import 'package:flutter/foundation.dart';
 
 // Package imports:
+import 'package:common/core/error/exception.dart';
 import 'package:common/core/error/failure.dart';
 import 'package:common/core/state/one_shot.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/domain/model/supplier/supplier.dart';
@@ -12,6 +14,9 @@ import 'package:pos/presentation/supplier/info/supplier_info_state.dart';
 
 import 'package:pos/domain/repositories/supplier_repository.dart';
 
+/// What the empty shop-profile form says when there is no profile yet.
+const noShopProfileHint = 'ยังไม่มีข้อมูลร้านค้า กรอกแล้วกดบันทึก';
+
 class SupplierInfoViewModel {
   final SupplierRepository supplierRepo;
 
@@ -19,7 +24,7 @@ class SupplierInfoViewModel {
     required this.supplierRepo,
   });
 
-  final _state = ValueNotifier<SupplierInfoState>(const SupplierInfoState());
+  final _state = ViewState<SupplierInfoState>(const SupplierInfoState());
 
   /// Delivered once: the screen closes on it, nothing draws it.
   final _updated = OneShot<Supplier>();
@@ -32,11 +37,15 @@ class SupplierInfoViewModel {
   Stream<String> get errors => _errors.stream;
 
   /// Loading the record is not a command with an outcome — the supplier lands
-  /// in state, where the form renders it.
+  /// in state, where the form renders it. A shop with no profile yet (pos-api
+  /// answers 404) is not an error: this is the screen that creates it, so the
+  /// empty form gets a hint instead.
   Future<void> getSupplierInfo() async {
     try {
       final supplier = await supplierRepo.getSupplierInfo();
-      _state.value = _state.value.copyWith(supplier: supplier);
+      _state.value = _state.value.copyWith(supplier: supplier).withoutHint();
+    } on NotFoundException {
+      _state.value = _state.value.copyWith(hint: noShopProfileHint);
     } on Exception catch (e) {
       _errors.emit(toFailure(e).getMessage());
     }
@@ -46,6 +55,7 @@ class SupplierInfoViewModel {
     _state.value = _state.value.copyWith(saving: true);
     try {
       final updated = await supplierRepo.updateSupplierInfo(param);
+      _state.value = _state.value.withoutHint();
       _updated.emit(updated);
     } on Exception catch (e) {
       _errors.emit(toFailure(e).getMessage());

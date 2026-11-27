@@ -1,0 +1,106 @@
+# Two of the run's product are sold; one is returned from the bill's line
+# (the stock goes back by 1: 999) and the line is marked คืน 1; then the
+# bill is cancelled: the server marks it CANCELLED and puts the rest back
+# (1000), the bills list marks its row ยกเลิกแล้ว, and the list's ยอดรวม is
+# today's bills without the cancelled ones, which is not what the server's
+# own sum of the day comes to (was finding 1). As selling_test.dart does.
+appId: app.devper.pos
+env:
+  REASON: MST-${RUN_ID} return
+---
+- runFlow:
+    file: steps/sign_in.yaml
+    env:
+      USERNAME: ${MAESTRO_USERNAME}
+      PASSWORD: ${MAESTRO_PASSWORD}
+- runFlow: steps/sell_two.yaml
+- repeat:
+    times: 15
+    while:
+      true: ${output.onHand != '998'}
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 1000
+      - runScript:
+          file: ../scripts/api.js
+          env:
+            ACTION: productOnHand
+            NAME: ${PRODUCT_NAME}
+- assertTrue: ${output.onHand == '998'}
+- runFlow:
+    file: steps/open_screen.yaml
+    env:
+      SCREEN: "รายการขาย"
+- extendedWaitUntil:
+    visible: "\\d+\n?${output.billCode}.*"
+    timeout: 15000
+- tapOn: "\\d+\n?${output.billCode}.*"
+- extendedWaitUntil:
+    visible: "2x ${PRODUCT_NAME} .*฿50\\.00"
+    timeout: 15000
+# Return 1 from the line: its menu and its return item name the line
+# (quantity, product, unit, amount).
+- tapOn: "คำสั่งเพิ่มเติมของ 2x ${PRODUCT_NAME} ชิ้น ฿50\\.00"
+- tapOn: "คืนสินค้า 2x ${PRODUCT_NAME} ชิ้น ฿50\\.00"
+- extendedWaitUntil:
+    visible: "รับคืนสินค้า"
+    timeout: 10000
+- assertVisible: "คืนได้สูงสุด 2"
+# The quantity starts at 2, left-aligned: a tap puts the cursor after it.
+- tapOn: "จำนวนที่คืน.*"
+- eraseText: 5
+- inputText: "1"
+- tapOn: "เหตุผลการคืน.*"
+- inputText: ${REASON}
+- runFlow: steps/hide_keyboard.yaml
+- tapOn: "ยืนยัน"
+- extendedWaitUntil:
+    visible: "2x คืน 1 ${PRODUCT_NAME} .*"
+    timeout: 15000
+- repeat:
+    times: 15
+    while:
+      true: ${output.onHand != '999'}
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 1000
+      - runScript:
+          file: ../scripts/api.js
+          env:
+            ACTION: productOnHand
+            NAME: ${PRODUCT_NAME}
+- assertTrue: ${output.onHand == '999'}
+- takeScreenshot: returned
+# Cancel the bill from its app bar's menu.
+- tapOn: "คำสั่งเพิ่มเติมของบิล"
+- tapOn: "ลบบิล"
+- extendedWaitUntil:
+    visible: "ต้องการลบรายการใช่หรือไม่\\?"
+    timeout: 10000
+- tapOn: "ยืนยัน"
+- extendedWaitUntil:
+    visible: "\\d+\n?${output.billCode}.*ยกเลิกแล้ว.*"
+    timeout: 15000
+- runScript:
+    file: ../scripts/api.js
+    env:
+      ACTION: billStatus
+      CODE: ${output.billCode}
+- assertTrue: ${output.billStatus == 'CANCELLED'}
+- runScript:
+    file: ../scripts/api.js
+    env:
+      ACTION: productOnHand
+      NAME: ${PRODUCT_NAME}
+- assertTrue: ${output.onHand == '1000'}
+# The day's total leaves the cancelled bill out; the server's own sum keeps
+# it.
+- runScript:
+    file: ../scripts/api.js
+    env:
+      ACTION: dayTotal
+- assertTrue: ${output.dayTotal != output.dayTotalAll}
+- extendedWaitUntil:
+    visible: "ยอดรวม ฿ ${output.dayTotal}"
+    timeout: 15000
+- takeScreenshot: cancelled

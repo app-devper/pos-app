@@ -1,0 +1,72 @@
+# Sells two of the run's product, paid with the exact amount, and finds that
+# bill, by the number the row shows, in the bills list: the cart line, the
+# totals, the payment, the next scan going into the search field (web), what
+# the server recorded and what the bill's own page shows.
+appId: app.devper.pos
+---
+- runFlow:
+    file: steps/sign_in.yaml
+    env:
+      USERNAME: ${MAESTRO_USERNAME}
+      PASSWORD: ${MAESTRO_PASSWORD}
+- runFlow: steps/add_product_twice.yaml
+- extendedWaitUntil:
+    visible: "ยอดรวมสุทธิ\n?฿50\\.00"
+    timeout: 10000
+# The cart line reads as one node: quantity, product, unit, amount and the
+# price's kind, on the web too.
+- assertVisible: "2x ${PRODUCT_NAME} .*฿50\\.00.*"
+- takeScreenshot: cart
+# The newest bill before paying: the sale must add one after it, or an earlier
+# run's bill of the same amount would pass for this one.
+- runScript:
+    file: ../scripts/api.js
+    env:
+      ACTION: newestBill
+- evalScript: ${output.billBefore = output.billCode}
+- tapOn: "ชำระเงิน \\(1 รายการ\\)\n?฿50\\.00"
+- tapOn: "รับชำระพอดี ไม่มีเงินทอน"
+- extendedWaitUntil:
+    visible: "ยอดรวมสุทธิ\n?฿0\\.00"
+    timeout: 15000
+# After the payment the search field has the focus again: a scan typed
+# without touching it adds a line. Only the wide layout shows the field.
+- runFlow:
+    when:
+      true: ${LAYOUT == 'wide'}
+    commands:
+      - inputText: 93${RUN_ID}0001
+      - pressKey: Enter
+      - extendedWaitUntil:
+          visible: "1x ${PRODUCT_NAME} .*"
+          timeout: 10000
+- repeat:
+    times: 15
+    while:
+      true: ${output.billCode == output.billBefore}
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 1000
+      - runScript:
+          file: ../scripts/api.js
+          env:
+            ACTION: newestBill
+- assertTrue: ${output.billCode != output.billBefore}
+- assertTrue: ${output.billTotal == '50'}
+- runFlow:
+    file: steps/open_screen.yaml
+    env:
+      SCREEN: "รายการขาย"
+# The row shows the bill's number as text (and is read as one node with it).
+- extendedWaitUntil:
+    visible: "\\d+\n?${output.billCode}.*"
+    timeout: 15000
+- tapOn: "\\d+\n?${output.billCode}.*"
+- extendedWaitUntil:
+    visible: "${output.billCode} .*"
+    timeout: 10000
+- assertVisible: "ยอดรวม ฿ 50\\.00"
+# The bill's line reads as one node: quantity, product, (for an admin) cost
+# and profit, amount.
+- assertVisible: "2x ${PRODUCT_NAME} .*฿50\\.00"
+- takeScreenshot: bill

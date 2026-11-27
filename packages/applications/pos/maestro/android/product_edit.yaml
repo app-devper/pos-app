@@ -1,0 +1,8 @@
+appId: app.devper.pos
+name: android - rename a product and see it on the selling screen
+env:
+  LAYOUT: narrow
+---
+- launchApp:
+    clearState: true
+- runFlow: ../shared/product_edit.yaml

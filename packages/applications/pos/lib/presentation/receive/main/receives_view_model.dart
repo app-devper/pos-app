@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 
 // Package imports:
 import 'package:common/core/error/failure.dart';
+import 'package:common/core/state/view_state.dart';
 
 // Project imports:
 import 'package:pos/domain/model/receive/param.dart';
@@ -18,7 +19,7 @@ class ReceivesViewModel {
     required this.receiveRepo,
   });
 
-  final _state = ValueNotifier<ReceivesState>(const ReceivesState());
+  final _state = ViewState<ReceivesState>(const ReceivesState());
 
   ValueListenable<ReceivesState> get state => _state;
 
@@ -44,7 +45,10 @@ class ReceivesViewModel {
         startDate: startDate.toUtc().toIso8601String(),
         endDate: now.toUtc().toIso8601String(),
       );
-      _all = await receiveRepo.getReceives(param);
+      final receives = await receiveRepo.getReceives(param);
+      // The list asks pos-api to leave cancelled receipts (deleted drafts)
+      // out; a pos-api from before that filter still returns them.
+      _all = List.unmodifiable(receives.where((r) => !r.isCancelled));
       _state.value =
           _state.value.copyWith(loading: false, items: _filter(_query));
     } on Exception catch (e) {

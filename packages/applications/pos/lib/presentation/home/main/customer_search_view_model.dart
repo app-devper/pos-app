@@ -1,6 +1,9 @@
 // Flutter imports:
 import 'package:flutter/foundation.dart';
 
+// Package imports:
+import 'package:common/core/state/view_state.dart';
+
 // Project imports:
 import 'package:pos/domain/model/customer/customer.dart';
 
@@ -13,7 +16,7 @@ class CustomerSearchViewModel {
     required this.customerRepo,
   });
 
-  final _items = ValueNotifier<List<Customer>?>(null);
+  final _items = ViewState<List<Customer>?>(null);
 
   ValueListenable<List<Customer>?> get items => _items;
 
@@ -21,7 +24,10 @@ class CustomerSearchViewModel {
 
   Future<void> getCacheCustomers() async {
     try {
-      _customers = await customerRepo.getLocalCustomers();
+      final customers = await customerRepo.getLocalCustomers();
+      // A removed (archived) customer is not offered for a new sale.
+      _customers = List.unmodifiable(
+          customers.where((customer) => !customer.isArchived));
       _items.value = _customers;
     } on Exception catch (_) {}
   }

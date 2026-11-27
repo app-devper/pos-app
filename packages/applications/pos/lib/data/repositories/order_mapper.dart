@@ -66,6 +66,7 @@ extension OrderJson on Map<String, dynamic> {
       totalCost: json.readDouble("totalCost"),
       discount: json.readDouble("discount"),
       type: json["type"] ?? "Cash",
+      status: json["status"] ?? "",
     );
   }
 
@@ -89,6 +90,7 @@ extension OrderJson on Map<String, dynamic> {
       prescriberName: json["prescriberName"],
       buyerName: json["buyerName"],
       buyerIdCard: json["buyerIdCard"],
+      status: json["status"] ?? "",
     );
   }
 
@@ -103,6 +105,7 @@ extension OrderJson on Map<String, dynamic> {
     return OrderItemDetail(
       id: json["id"],
       product: product,
+      unitId: json["unitId"] ?? "",
       quantity: json["quantity"],
       price: json.readDouble("price"),
       costPrice: json.readDouble("costPrice"),
@@ -111,6 +114,7 @@ extension OrderJson on Map<String, dynamic> {
       order: order,
       oversoldQty: json["oversoldQty"] ?? 0,
       returnedQty: json["returnedQty"] ?? 0,
+      status: json["status"] ?? "",
     );
   }
 }
