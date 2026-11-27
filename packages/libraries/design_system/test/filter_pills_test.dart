@@ -1,5 +1,6 @@
+import 'dart:ui' show Tristate;
+
 import 'package:design_system/design_system.dart';
-import 'package:design_system/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -51,7 +52,7 @@ void main() {
     }
     final selected = tester.getSemantics(find.ancestor(
         of: find.text('ใกล้หมด 4'), matching: find.byType(InkWell)));
-    expect(selected.flagsCollection.isSelected.toString(), contains('true'));
+    expect(selected.flagsCollection.isSelected, Tristate.isTrue);
   });
 
   testWidgets('scrollable pills stay on one row in a narrow space',

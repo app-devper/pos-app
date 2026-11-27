@@ -2,8 +2,11 @@
 import 'package:flutter/material.dart';
 
 // Project imports:
-import 'package:design_system/theme/radius.dart';
+import 'package:design_system/theme/color.dart';
+import 'package:design_system/widgets/app_tag.dart';
 
+/// A status drawn as an [AppTag]. [color] is the status colour callers have
+/// always passed; it picks the tag's tone.
 class StatusBadge extends StatelessWidget {
   final String label;
   final Color color;
@@ -14,22 +17,14 @@ class StatusBadge extends StatelessWidget {
     required this.color,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppRadius.md),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-          color: color,
-        ),
-      ),
-    );
+  static AppTagTone toneOf(Color color) {
+    if (color == CustomColor.error) return AppTagTone.danger;
+    if (color == CustomColor.warning) return AppTagTone.warning;
+    if (color == CustomColor.success) return AppTagTone.success;
+    return AppTagTone.neutral;
   }
+
+  @override
+  Widget build(BuildContext context) =>
+      AppTag(label: label, tone: toneOf(color));
 }

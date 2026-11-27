@@ -30,8 +30,8 @@ class CustomTheme {
       brightness: brightness,
       error: CustomColor.error,
       surface: colors.surface,
-      primary: colors.textPrimary,
-      onPrimary: colors.surface,
+      primary: colors.primaryFill,
+      onPrimary: colors.onPrimaryFill,
       secondary: colors.textPrimary,
       onSecondary: colors.surface,
     ),
@@ -86,8 +86,8 @@ class CustomTheme {
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: colors.textPrimary,
-        foregroundColor: colors.surface,
+        backgroundColor: colors.primaryFill,
+        foregroundColor: colors.onPrimaryFill,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.button),
         ),
