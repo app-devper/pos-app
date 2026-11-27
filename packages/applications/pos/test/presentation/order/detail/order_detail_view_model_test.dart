@@ -135,7 +135,20 @@ class FakeCustomerRepository implements CustomerRepository {
   final List<Customer> customers;
   final Object? throws;
 
-  FakeCustomerRepository({this.customers = const [], this.throws});
+  /// What pos-api resolves by code: every customer, archived ones too.
+  final Map<String, Customer> byCode;
+  final List<String> codesAsked = [];
+
+  FakeCustomerRepository(
+      {this.customers = const [], this.throws, this.byCode = const {}});
+
+  @override
+  Future<Customer> getCustomerByCode(String customerCode) async {
+    codesAsked.add(customerCode);
+    final customer = byCode[customerCode];
+    if (customer == null) throw const NotFoundException(message: 'not found');
+    return customer;
+  }
 
   @override
   Future<List<Customer>> getLocalCustomers() async {
@@ -579,6 +592,47 @@ void main() {
       expect(receipts, hasLength(1));
       expect(receipts.single.customer!.code, 'CUST-1');
       expect(receipts.single.supplier.id, 's1');
+    });
+
+    test('names an archived customer, which the list leaves out', () async {
+      // Arrange
+      final customerRepo = FakeCustomerRepository(
+          customers: [_buildCustomer('OTHER')],
+          byCode: {'CUST-1': _buildCustomer('CUST-1')});
+      final vm = _buildViewModel(
+        customerRepo: customerRepo,
+        supplierRepo: FakeSupplierRepository(supplier: _buildSupplier()),
+      );
+      final receipts = <SupplierResult>[];
+      vm.receipts.listen(receipts.add);
+
+      // Act
+      await vm.getSupplier('CUST-1');
+      await _pump();
+
+      // Assert
+      expect(receipts.single.customer!.code, 'CUST-1');
+      expect(customerRepo.codesAsked, ['CUST-1']);
+    });
+
+    test('a bill without a customer looks none up', () async {
+      // Arrange
+      final customerRepo =
+          FakeCustomerRepository(customers: [_buildCustomer('OTHER')]);
+      final vm = _buildViewModel(
+        customerRepo: customerRepo,
+        supplierRepo: FakeSupplierRepository(supplier: _buildSupplier()),
+      );
+      final receipts = <SupplierResult>[];
+      vm.receipts.listen(receipts.add);
+
+      // Act
+      await vm.getSupplier('');
+      await _pump();
+
+      // Assert
+      expect(receipts.single.customer, isNull);
+      expect(customerRepo.codesAsked, isEmpty);
     });
 
     test('prints without a customer when no code matches', () async {

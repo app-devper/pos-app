@@ -34,6 +34,9 @@ extension StockCountJson on Map<String, dynamic> {
       systemQuantity: json['systemQuantity'],
       countedQuantity: json['countedQuantity'],
       delta: json['delta'],
+      productName: json['productName'] ?? '',
+      unit: json['unit'] ?? '',
+      lotNumber: json['lotNumber'] ?? '',
     );
   }
 }

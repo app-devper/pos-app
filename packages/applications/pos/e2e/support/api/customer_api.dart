@@ -24,6 +24,11 @@ Future<void> removeCustomersNamed(String name) async {
   }
 }
 
+/// The customer with [id] as the server has it now, listed or not: an
+/// archived one is still found by its id.
+Future<Customer> customerById(String id) =>
+    getIt()<CustomerRepository>().getCustomerById(id);
+
 /// Creates a customer the way the add form does, without the screens; for
 /// arranging a test that starts from an existing customer.
 /// It carries the suite's marker as its address, like every customer the

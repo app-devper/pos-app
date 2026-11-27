@@ -82,6 +82,11 @@ class StockCountRobot {
   Finder detailShows(String text) =>
       find.descendant(of: _manage, matching: find.text(text)).hitTestable();
 
+  /// A text of the detail that matches [pattern] from start to end.
+  Finder detailMatches(RegExp pattern) => find
+      .descendant(of: _manage, matching: find.textContaining(pattern))
+      .hitTestable();
+
   /// The AppBar back arrow: the form or detail back to the list, or the
   /// list back to จัดการ.
   Future<void> leave() async {

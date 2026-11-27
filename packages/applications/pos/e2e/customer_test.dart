@@ -70,9 +70,9 @@ void main() {
     await customers.delete();
     await customers.reenterList();
 
-    // Assert: pos-api only archives a removed customer and still returns
-    // it; the app leaves archived customers out of the list. The server
-    // shows the removal was recorded.
+    // Assert: pos-api only archives a removed customer, and leaves it out
+    // of the list the app asks for. By its id the server shows the removal
+    // was recorded.
     expect(
         await customers.scrollListTo(plan.name, code: customer.code), isFalse,
         reason: 'a removed customer leaves the list');
@@ -278,8 +278,5 @@ Future<void> _changePhone(CustomerRobot customers, Customer customer) async {
   expect(customers.detailRow('ชื่อลูกค้า', customer.name), findsOneWidget);
 }
 
-Future<String?> _statusOf(Customer customer) async =>
-    (await customersNamed(customer.name))
-        .where((c) => c.id == customer.id)
-        .firstOrNull
-        ?.status;
+Future<String> _statusOf(Customer customer) async =>
+    (await customerById(customer.id)).status;

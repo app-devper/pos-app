@@ -18,7 +18,8 @@ const _lookBack = Duration(days: 365);
 /// Covers a server clock a little ahead of this one.
 const _lookAhead = Duration(days: 1);
 
-/// Every receipt with exactly [reference], cancelled ones included.
+/// Every listed receipt with exactly [reference]: the list leaves cancelled
+/// ones out.
 Future<List<Receive>> receivesWithReference(String reference) async =>
     (await _recentReceives()).where((r) => r.reference == reference).toList();
 
@@ -33,9 +34,15 @@ Future<String> receiveCodeFor(String reference) async {
   return receives.single.code;
 }
 
-/// The server's status of the receipt with [code], or null if none.
+/// The server's status of the listed receipt with [code], or null if none
+/// is listed.
 Future<String?> receiveStatus(String code) async =>
     (await _recentReceives()).where((r) => r.code == code).firstOrNull?.status;
+
+/// The server's status of the receipt with [id], listed or not: a cancelled
+/// one is still found by its id.
+Future<String> receiveStatusById(String id) async =>
+    (await getIt()<ReceiveRepository>().getReceiveById(id)).status;
 
 /// What the receipt list loads, as the server has it now.
 Future<List<Receive>> _recentReceives() {

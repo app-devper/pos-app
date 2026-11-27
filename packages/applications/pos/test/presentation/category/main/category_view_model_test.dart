@@ -73,8 +73,7 @@ CategoryViewModel buildViewModel(CategoryRepository repo) {
 }
 
 void main() {
-  test('initial state is empty and loading, before the first load answers',
-      () {
+  test('initial state is empty and loading, before the first load answers', () {
     final vm = buildViewModel(FakeCategoryRepository());
 
     expect(vm.state.value.items, isEmpty);

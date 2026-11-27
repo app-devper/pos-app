@@ -158,19 +158,20 @@ void main() {
       await receives.create(
           supplierName: keptSupplierName, reference: _draftReference);
       await receives.leave();
-      final code = await receiveCodeFor(_draftReference);
+      final draft = (await receivesWithReference(_draftReference)).single;
+      final code = draft.code;
       expect(await receives.isListed(code), isTrue);
 
       // Act
       await receives.openListed(code);
       await receives.deleteDraft();
 
-      // Assert: pos-api only cancels a deleted receipt and still returns
-      // it; the app leaves cancelled receipts out of the list. The server
-      // shows the deletion was recorded.
+      // Assert: pos-api only cancels a deleted receipt, and leaves it out
+      // of the list the app asks for. By its id the server shows the
+      // deletion was recorded.
       expect(await receives.isListed(code), isFalse,
           reason: 'a deleted draft receipt leaves the list');
-      expect(await receiveStatus(code), cancelledReceiveStatus);
+      expect(await receiveStatusById(draft.id), cancelledReceiveStatus);
     });
   }, timeout: e2eTestTimeout);
 
@@ -188,8 +189,9 @@ void main() {
       // Act
       await receives.create(
           supplierName: keptSupplierName, reference: reference);
-      await receives.deleteDraft();
+      // Its code is read while it is still listed.
       final code = await receiveCodeFor(reference);
+      await receives.deleteDraft();
 
       // Assert
       expect(await receives.isListed(code), isFalse);
