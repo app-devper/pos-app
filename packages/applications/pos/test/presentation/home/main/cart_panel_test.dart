@@ -5,6 +5,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pos/presentation/home/main/cart_panel.dart';
+import 'package:pos/presentation/home/main/cart_widget.dart';
 
 import '../../../support/app_fonts.dart';
 import '../../../support/app_languages.dart';
@@ -16,6 +17,7 @@ Future<List<String>> _pump(
   Size size = const Size(400, 800),
   double textScale = 1,
   bool showSearchButton = false,
+  IndexedWidgetBuilder? lineBuilder,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -31,11 +33,13 @@ Future<List<String>> _pump(
         body: CartPanel(
           cartNumber: 2,
           lineCount: lines,
-          lineBuilder: (context, i) => SizedBox(
+          lineBuilder: lineBuilder ??
+              (context, i) => SizedBox(
             height: 56,
             child: Align(
-                alignment: Alignment.centerLeft, child: Text('บรรทัด $i')),
-          ),
+                    alignment: Alignment.centerLeft,
+                    child: Text('บรรทัด $i')),
+              ),
           total: total,
           customer: null,
           complianceSummary: null,
@@ -145,5 +149,39 @@ void main() {
     expect(pay.bottom, lessThanOrEqualTo(640));
     expect(find.text('บรรทัด 11').hitTestable(), findsNothing);
     expect(find.byType(Scrollable), findsWidgets);
+  });
+
+  testWidgets('a real line in its card: its round buttons and its splash '
+      'paint inside the card, and it draws no rule of its own', (tester) async {
+    await _pump(
+      tester,
+      lines: 1,
+      total: 20,
+      lineBuilder: (context, i) => CartOrderItem(
+        title: 'พาราเซตามอล',
+        quantity: 2,
+        price: 10,
+        unit: 'แผง',
+        discount: 0,
+        priceDetail: 'ราคาปลีก',
+        allowOversell: false,
+        onToggleOversell: () {},
+        onRemove: () {},
+        onAdd: () {},
+        onEdit: () {},
+        onEditPrice: () {},
+      ),
+    );
+
+    final card = _cardAround(find.byType(CartOrderItem));
+    expect(card, findsOneWidget);
+    expect(find.descendant(of: card, matching: find.byType(Divider)),
+        findsNothing);
+    final ink = find.descendant(of: card, matching: find.byType(Ink));
+    expect(ink, findsWidgets);
+    final material =
+        find.ancestor(of: ink.first, matching: find.byType(Material)).first;
+    expect(find.descendant(of: card, matching: material), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }

@@ -41,19 +41,20 @@ class AppCard extends StatelessWidget {
           color: selected ? colors.textPrimary : colors.border,
         ),
       ),
-      child: onTap == null
-          ? content
-          : Material(
-              type: MaterialType.transparency,
-              child: Semantics(
+      // A Material of the card's own, so ink inside it (a tile's splash, a
+      // round button's fill) paints over the card's fill and within its
+      // corners, not on the page underneath.
+      child: Material(
+        type: MaterialType.transparency,
+        borderRadius: radius,
+        clipBehavior: Clip.antiAlias,
+        child: onTap == null
+            ? content
+            : Semantics(
                 button: true,
-                child: InkWell(
-                  borderRadius: radius,
-                  onTap: onTap,
-                  child: content,
-                ),
+                child: InkWell(onTap: onTap, child: content),
               ),
-            ),
+      ),
     );
   }
 }

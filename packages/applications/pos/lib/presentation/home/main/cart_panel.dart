@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:common/core/ext/number_ext.dart';
 import 'package:design_system/theme/app_colors.dart';
+import 'package:design_system/theme/radius.dart';
 import 'package:design_system/theme/text_styles.dart';
 import 'package:design_system/widgets/app_card.dart';
 
@@ -73,7 +74,8 @@ class CartPanel extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _CartInfoCard(
+              AppCard(
+                padding: EdgeInsets.zero,
                 child: CartCustomerTile(
                   customer: customer,
                   onChoose: onChooseCustomer,
@@ -81,7 +83,7 @@ class CartPanel extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: _lineGap),
-              _CartInfoCard(child: _complianceTile()),
+              AppCard(padding: EdgeInsets.zero, child: _complianceTile()),
               const SizedBox(height: 8),
               _CartTotalRow(label: 'ราคาเฉพาะสินค้า', value: _money(total)),
               const _CartTotalRow(label: 'ส่วนลด (%)', value: '-'),
@@ -199,7 +201,9 @@ class CartPanel extends StatelessWidget {
         disabledBackgroundColor: colors.surfaceSunken,
         disabledForegroundColor: colors.textSecondary,
         minimumSize: const Size(double.infinity, _payHeight),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.card),
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -217,27 +221,6 @@ class CartPanel extends StatelessWidget {
             )),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// A card around one of the cart's tiles; the tile keeps its own tap.
-class _CartInfoCard extends StatelessWidget {
-  final Widget child;
-
-  const _CartInfoCard({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      padding: EdgeInsets.zero,
-      // The tile's ink and its rounded corners stay inside the card.
-      child: Material(
-        type: MaterialType.transparency,
-        clipBehavior: Clip.antiAlias,
-        borderRadius: BorderRadius.circular(10),
-        child: child,
       ),
     );
   }

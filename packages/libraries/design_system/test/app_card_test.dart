@@ -54,4 +54,27 @@ void main() {
 
     expect(decorationOf(tester).color, AppColors.dark.surfaceRaised);
   });
+
+  // Ink paints on the nearest Material. Without one inside the card it
+  // would paint on the page's, under the card's own fill, and never show.
+  testWidgets('ink inside a card paints inside it, with or without onTap',
+      (tester) async {
+    for (final onTap in <VoidCallback?>[null, () {}]) {
+      await tester.pumpWidget(themed(AppCard(
+        onTap: onTap,
+        child: Ink(color: Colors.red, child: const Text('หมึก')),
+      )));
+
+      final material = find.ancestor(
+          of: find.text('หมึก'), matching: find.byType(Material));
+      expect(
+          find.descendant(
+              of: find.byType(AppCard), matching: material.first),
+          findsOneWidget,
+          reason: 'onTap: ${onTap != null}');
+      final inner = tester.widget<Material>(material.first);
+      expect(inner.type, MaterialType.transparency);
+      expect(inner.borderRadius, BorderRadius.circular(AppRadius.card));
+    }
+  });
 }

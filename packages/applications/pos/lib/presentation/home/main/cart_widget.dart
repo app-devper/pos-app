@@ -200,14 +200,7 @@ class CartOrderItem extends StatelessWidget {
       ),
     );
 
-    return Column(
-      children: [
-        tile,
-        const Divider(
-          height: 1,
-        ),
-      ],
-    );
+    return tile;
   }
 
   /// The width of the quantity controls and the price, side by side.
@@ -255,9 +248,6 @@ class CartOrderItem extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: _controls(context),
           ),
-        ),
-        const Divider(
-          height: 1,
         ),
       ],
     );
