@@ -42,6 +42,30 @@ class AppColors extends ThemeExtension<AppColors> {
   /// Sidebar labels and icons.
   final Color sidebarForeground;
 
+  /// Fill of the one primary action on a screen, and of a selected pill.
+  final Color primaryFill;
+
+  /// Text and icons on [primaryFill].
+  final Color onPrimaryFill;
+
+  /// Fill behind a warning: low stock.
+  final Color statusWarningFill;
+
+  /// Text on [statusWarningFill].
+  final Color statusWarningText;
+
+  /// Fill behind a danger status: cancelled, dangerous drug.
+  final Color statusDangerFill;
+
+  /// Text on [statusDangerFill].
+  final Color statusDangerText;
+
+  /// Fill behind a success status.
+  final Color statusSuccessFill;
+
+  /// Text on [statusSuccessFill]; also change due.
+  final Color statusSuccessText;
+
   const AppColors({
     required this.surface,
     required this.surfaceRaised,
@@ -53,19 +77,35 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.sidebarSurface,
     required this.sidebarSelected,
     required this.sidebarForeground,
+    required this.primaryFill,
+    required this.onPrimaryFill,
+    required this.statusWarningFill,
+    required this.statusWarningText,
+    required this.statusDangerFill,
+    required this.statusDangerText,
+    required this.statusSuccessFill,
+    required this.statusSuccessText,
   });
 
   static const light = AppColors(
     surface: Color(0xFFFFFFFF),
     surfaceRaised: Color(0xFFFFFFFF),
-    surfaceSunken: Color(0xFFF4F4F4),
-    border: Color(0xFFE0E0E0),
-    textPrimary: Color(0xFF202020),
-    textSecondary: Color(0xFF676767),
+    surfaceSunken: Color(0xFFF7F7F5),
+    border: Color(0xFFE8E8E6),
+    textPrimary: Color(0xFF111111),
+    textSecondary: Color(0xFF6F6F6C),
     textHint: Color(0x99000000),
     sidebarSurface: Color(0xFFF9F9F9),
     sidebarSelected: Color(0xFFECECEC),
     sidebarForeground: Color(0xFF303030),
+    primaryFill: Color(0xFF111111),
+    onPrimaryFill: Color(0xFFFFFFFF),
+    statusWarningFill: Color(0xFFFAEEDA),
+    statusWarningText: Color(0xFF633806),
+    statusDangerFill: Color(0xFFFCEBEB),
+    statusDangerText: Color(0xFF791F1F),
+    statusSuccessFill: Color(0xFFE1F5EE),
+    statusSuccessText: Color(0xFF085041),
   );
 
   static const dark = AppColors(
@@ -79,6 +119,14 @@ class AppColors extends ThemeExtension<AppColors> {
     sidebarSurface: Color(0xFF171717),
     sidebarSelected: Color(0xFF303030),
     sidebarForeground: Color(0xFFECECEC),
+    primaryFill: Color(0xFFECECEC),
+    onPrimaryFill: Color(0xFF111111),
+    statusWarningFill: Color(0xFF412402),
+    statusWarningText: Color(0xFFFAC775),
+    statusDangerFill: Color(0xFF501313),
+    statusDangerText: Color(0xFFF7C1C1),
+    statusSuccessFill: Color(0xFF04342C),
+    statusSuccessText: Color(0xFF9FE1CB),
   );
 
   /// Falls back to the light set so a widget still renders if a host forgot
@@ -98,6 +146,14 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? sidebarSurface,
     Color? sidebarSelected,
     Color? sidebarForeground,
+    Color? primaryFill,
+    Color? onPrimaryFill,
+    Color? statusWarningFill,
+    Color? statusWarningText,
+    Color? statusDangerFill,
+    Color? statusDangerText,
+    Color? statusSuccessFill,
+    Color? statusSuccessText,
   }) {
     return AppColors(
       surface: surface ?? this.surface,
@@ -110,6 +166,14 @@ class AppColors extends ThemeExtension<AppColors> {
       sidebarSurface: sidebarSurface ?? this.sidebarSurface,
       sidebarSelected: sidebarSelected ?? this.sidebarSelected,
       sidebarForeground: sidebarForeground ?? this.sidebarForeground,
+      primaryFill: primaryFill ?? this.primaryFill,
+      onPrimaryFill: onPrimaryFill ?? this.onPrimaryFill,
+      statusWarningFill: statusWarningFill ?? this.statusWarningFill,
+      statusWarningText: statusWarningText ?? this.statusWarningText,
+      statusDangerFill: statusDangerFill ?? this.statusDangerFill,
+      statusDangerText: statusDangerText ?? this.statusDangerText,
+      statusSuccessFill: statusSuccessFill ?? this.statusSuccessFill,
+      statusSuccessText: statusSuccessText ?? this.statusSuccessText,
     );
   }
 
@@ -131,6 +195,14 @@ class AppColors extends ThemeExtension<AppColors> {
         other.sidebarForeground,
         t,
       )!,
+      primaryFill: Color.lerp(primaryFill, other.primaryFill, t)!,
+      onPrimaryFill: Color.lerp(onPrimaryFill, other.onPrimaryFill, t)!,
+      statusWarningFill: Color.lerp(statusWarningFill, other.statusWarningFill, t)!,
+      statusWarningText: Color.lerp(statusWarningText, other.statusWarningText, t)!,
+      statusDangerFill: Color.lerp(statusDangerFill, other.statusDangerFill, t)!,
+      statusDangerText: Color.lerp(statusDangerText, other.statusDangerText, t)!,
+      statusSuccessFill: Color.lerp(statusSuccessFill, other.statusSuccessFill, t)!,
+      statusSuccessText: Color.lerp(statusSuccessText, other.statusSuccessText, t)!,
     );
   }
 }

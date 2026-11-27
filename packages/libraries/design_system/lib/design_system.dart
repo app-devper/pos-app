@@ -1,5 +1,6 @@
 library;
 
+export 'theme/app_colors.dart';
 export 'theme/color.dart';
 export 'theme/theme.dart';
 export 'theme/motion.dart';
@@ -21,3 +22,7 @@ export 'widgets/page_container.dart';
 export 'widgets/empty_state.dart';
 export 'widgets/app_shell.dart';
 export 'widgets/error_state.dart';
+export 'widgets/app_card.dart';
+export 'widgets/app_tag.dart';
+export 'widgets/filter_pills.dart';
+export 'widgets/figure_tile.dart';

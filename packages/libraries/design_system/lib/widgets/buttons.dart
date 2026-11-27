@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 // Project imports:
+import 'package:design_system/theme/app_colors.dart';
 import 'package:design_system/theme/radius.dart';
 
 class ButtonWidget extends StatelessWidget {
@@ -109,10 +110,12 @@ class ButtonSecondary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextButton(
-      style: TextButton.styleFrom(
+    final colors = AppColors.of(context);
+    return OutlinedButton(
+      style: OutlinedButton.styleFrom(
         splashFactory: NoSplash.splashFactory,
         minimumSize: const Size.fromHeight(40),
+        side: BorderSide(color: colors.border),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.button),
         ),
@@ -124,7 +127,7 @@ class ButtonSecondary extends StatelessWidget {
         style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.normal,
-          color: Theme.of(context).colorScheme.primary,
+          color: colors.textPrimary,
         ),
       ),
     );

@@ -30,8 +30,8 @@ class CustomTheme {
       brightness: brightness,
       error: CustomColor.error,
       surface: colors.surface,
-      primary: colors.textPrimary,
-      onPrimary: colors.surface,
+      primary: colors.primaryFill,
+      onPrimary: colors.onPrimaryFill,
       secondary: colors.textPrimary,
       onSecondary: colors.surface,
     ),
@@ -86,8 +86,8 @@ class CustomTheme {
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: colors.textPrimary,
-        foregroundColor: colors.surface,
+        backgroundColor: colors.primaryFill,
+        foregroundColor: colors.onPrimaryFill,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.button),
         ),
@@ -96,8 +96,8 @@ class CustomTheme {
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: colors.textPrimary,
-        foregroundColor: colors.surface,
+        backgroundColor: colors.primaryFill,
+        foregroundColor: colors.onPrimaryFill,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.button),
@@ -124,8 +124,8 @@ class CustomTheme {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: colors.textPrimary,
-      foregroundColor: colors.surface,
+      backgroundColor: colors.primaryFill,
+      foregroundColor: colors.onPrimaryFill,
       elevation: 0,
     ),
     textTheme: TextTheme(

@@ -3,31 +3,51 @@ import 'package:flutter/material.dart';
 
 // Project imports:
 import 'package:design_system/theme/radius.dart';
+import 'package:design_system/widgets/app_tag.dart';
 
+/// A status label.
+///
+/// [StatusBadge.tone] is the redesign's form: an [AppTag]. The form that
+/// takes a [color] keeps that colour, in the tag's shape, for callers that
+/// tell things apart by colour (movement types, roles) until their screen
+/// moves to tones.
 class StatusBadge extends StatelessWidget {
-  final String label;
-  final Color color;
+  static const double _tintAlpha = 0.1;
 
-  const StatusBadge({
+  final String label;
+  final Color? color;
+  final AppTagTone? tone;
+
+  const StatusBadge({super.key, required this.label, required Color this.color})
+      : tone = null;
+
+  const StatusBadge.tone({
     super.key,
     required this.label,
-    required this.color,
-  });
+    required AppTagTone this.tone,
+  }) : color = null;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    final tone = this.tone;
+    if (tone != null) return AppTag(label: label, tone: tone);
+    final color = this.color!;
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        color: color.withValues(alpha: _tintAlpha),
+        borderRadius: BorderRadius.circular(AppRadius.tag),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-          color: color,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: AppTag.fontSize,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
         ),
       ),
     );
