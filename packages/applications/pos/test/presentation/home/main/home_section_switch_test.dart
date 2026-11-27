@@ -23,12 +23,12 @@ import 'package:pos/domain/model/sale/till.dart';
 import 'package:pos/domain/usecase/order/checkout_sale_use_case.dart';
 import 'package:pos/presentation/home/main/cart_view_model.dart';
 import 'package:pos/presentation/home/main/home_page.dart';
+import 'package:pos/presentation/home/main/product_card.dart';
 import 'package:pos/presentation/home/main/home_view_model.dart';
 import 'package:pos/presentation/home/main/product_search_view_model.dart';
 import 'package:pos/presentation/home/main/section_switcher.dart';
 import 'package:pos/presentation/order/main/order_page.dart';
 import 'package:pos/presentation/order/main/order_view_model.dart';
-import 'package:pos/presentation/home/main/cart_widget.dart';
 import 'package:pos/presentation/product/main/product_view_model.dart';
 import 'package:pos/presentation/product/main/products_view_model.dart';
 import '../../../support/app_fonts.dart';
@@ -146,7 +146,7 @@ void main() {
     await _tapSection(tester, 'ขายสินค้า');
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
-    await tester.tap(find.byType(ProductItem));
+    await tester.tap(find.byType(ProductCard));
     await _settle(tester);
 
     // Assert

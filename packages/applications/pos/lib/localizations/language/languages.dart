@@ -206,6 +206,20 @@ abstract class Languages {
   /// Said beside a product's stock when it is at or below its minimum.
   String get lowStock;
 
+  /// The selling screen's category pill for every category.
+  String get allCategories;
+
+  /// The selling screen's figures: how many products, and their stock.
+  String get catalogueProducts;
+
+  String get catalogueTotalStock;
+
+  /// A product card's cue: a tap adds it to the cart.
+  String get addToCart;
+
+  /// A product card's cue once the open cart holds [count] of it.
+  String inCartCount(int count);
+
   /// A wide list page's pane while nothing in the list is chosen.
   String get chooseProductHint;
 
