@@ -1,5 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/presentation/home/main/product_card.dart';
@@ -115,7 +116,13 @@ void main() {
 
     final node = tester.getSemantics(find.byType(ProductCard));
     expect(node.flagsCollection.isButton, isTrue);
-    expect(node.label, contains('พาราเซตามอล 500 มก.'));
+    // The name comes first: an end-to-end flow finds the card by a label
+    // that begins with it.
+    expect(node.label, startsWith('พาราเซตามอล 500 มก.'));
+    expect(node.label, contains('ยารักษาโรค'));
+    expect(node.label, contains('฿12.00'));
+    expect(node.label, contains('เพิ่มลงตะกร้า'));
+    expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
     expect(node.label, contains('คงเหลือ 48 ชิ้น'));
   });
 

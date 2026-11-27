@@ -45,7 +45,14 @@ class ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return MergeSemantics(
+    // One button, named name first: an end-to-end flow finds the card by a
+    // label that begins with the product's name.
+    return Semantics(
+      container: true,
+      button: true,
+      label: _semanticLabel,
+      onTap: onAdd,
+      excludeSemantics: true,
       child: AppCard(
         onTap: onAdd,
         muted: !_available,
@@ -118,7 +125,7 @@ class ProductCard extends StatelessWidget {
         ],
         Flexible(
           child: Text(
-            _available ? 'คงเหลือ $_quantity ${item.unit.unit}' : 'สินค้าหมด',
+            _stockText,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(fontSize: 12, color: color),
@@ -127,6 +134,17 @@ class ProductCard extends StatelessWidget {
       ],
     );
   }
+
+  String get _stockText =>
+      _available ? 'คงเหลือ $_quantity ${item.unit.unit}' : 'สินค้าหมด';
+
+  String get _semanticLabel => [
+        item.name,
+        findCategoryType(item.category).name,
+        '฿${formatDouble(item.getPrice(priceTypeStock).price)}',
+        _stockText,
+        _cueLabel,
+      ].join('\n');
 
   String get _cueLabel {
     if (inCart > 0) return 'ในตะกร้า $inCart';
@@ -188,7 +206,6 @@ class ProductCard extends StatelessWidget {
       child: inCartNow
           ? Text(
               '$inCart',
-              semanticsLabel: 'ในตะกร้า $inCart',
               style: TextStyle(fontSize: 13, color: colors.onPrimaryFill),
             )
           : Icon(Icons.add, size: 16, color: colors.textPrimary),
