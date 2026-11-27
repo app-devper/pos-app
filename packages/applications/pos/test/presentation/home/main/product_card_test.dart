@@ -6,6 +6,7 @@ import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/presentation/home/main/product_card.dart';
 
 import '../../../support/app_fonts.dart';
+import '../../../support/app_languages.dart';
 import '../../../support/selling_products.dart';
 
 ProductUnitItem _item({
@@ -34,6 +35,7 @@ Future<List<int>> _pump(
   final taps = <int>[];
   await tester.pumpWidget(MaterialApp(
     theme: CustomTheme.mainTheme,
+    localizationsDelegates: const [thaiLanguages],
     home: MediaQuery(
       data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
       child: Scaffold(
@@ -108,6 +110,19 @@ void main() {
     final left = tester.widget<Text>(find.text('คงเหลือ 3 ชิ้น'));
     expect(left.style?.color, AppColors.light.statusWarningText);
     expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
+  });
+
+  testWidgets('the price says which unit it is for', (tester) async {
+    await _pump(tester, _item());
+
+    expect(find.text('/ ชิ้น'), findsOneWidget);
+  });
+
+  testWidgets('a screen reader hears that stock is low', (tester) async {
+    await _pump(tester, _item(quantity: 3, minStock: 5));
+
+    expect(tester.getSemantics(find.byType(ProductCard)).label,
+        contains('ใกล้หมด'));
   });
 
   testWidgets('the card is one button whose name says what a tap does',

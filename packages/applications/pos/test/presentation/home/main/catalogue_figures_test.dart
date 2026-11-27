@@ -53,6 +53,27 @@ void main() {
       expect(figures.totalStock, 1);
     });
 
+    // The สินค้า list decides low on the product's total over its units;
+    // the selling screen must say the same.
+    test('low is the product as a whole, not one of its units', () {
+      final plenty = CatalogueFigures.of(unitItems([
+        twoUnitProduct('a', pieces: 100, boxes: 3, minStock: 10),
+      ]));
+      final low = CatalogueFigures.of(unitItems([
+        twoUnitProduct('b', pieces: 5, boxes: 2, minStock: 10),
+      ]));
+
+      expect(plenty.lowStock, 0);
+      expect(plenty.products, 1);
+      expect(plenty.totalStock, 103);
+      expect(low.lowStock, 1);
+      for (final item in unitItems([
+        twoUnitProduct('b', pieces: 5, boxes: 2, minStock: 10),
+      ])) {
+        expect(item.isLowStock, isTrue);
+      }
+    });
+
     test('a product of two units is one product', () {
       final twoUnits = sellingProduct('a', quantity: 4);
       final item = twoUnits.toProductItems().single;
@@ -71,12 +92,13 @@ void main() {
           minStock: 3),
     ];
 
-    test('lists the categories the catalogue holds, by Thai name', () async {
+    test('lists the categories the catalogue holds, in the app\'s order',
+        () async {
       final vm = ProductSearchViewModel(productRepo: _Repository(products));
       await vm.prepareData();
 
-      // ผลิตภัณฑ์เสริมอาหาร, ยารักษาโรค, สินค้าอื่นๆ
-      expect(vm.categories.value, ['DietarySupplement', 'Medicine', 'General']);
+      // ยารักษาโรค, ผลิตภัณฑ์เสริมอาหาร, สินค้าอื่นๆ
+      expect(vm.categories.value, ['Medicine', 'DietarySupplement', 'General']);
       expect(vm.selectedCategory.value, isNull);
     });
 
@@ -111,6 +133,41 @@ void main() {
       vm.selectCategory('General');
 
       expect(identical(vm.figures.value, figures), isTrue);
+    });
+
+    test('a chosen category that a reload no longer holds is let go',
+        () async {
+      final repo = _Repository(List.of(products));
+      final vm = ProductSearchViewModel(productRepo: repo);
+      await vm.prepareData();
+      vm.selectCategory('Medicine');
+      repo.products.removeWhere((p) => p.category == 'Medicine');
+
+      await vm.refresh();
+
+      expect(vm.selectedCategory.value, isNull);
+      expect(vm.items.value, hasLength(2));
+    });
+
+    test('codes that read as the same category are one pill and one filter',
+        () async {
+      final vm = ProductSearchViewModel(
+          productRepo: _Repository([
+        sellingProduct('a', category: 'Medicine'),
+        sellingProduct('b', category: 'medicine'),
+        sellingProduct('c', category: 'None'),
+        sellingProduct('d', category: ''),
+        sellingProduct('e', category: 'Zzz'),
+      ]));
+      await vm.prepareData();
+
+      // ไม่ระบุประเภท (None and every unknown code), ยารักษาโรค
+      expect(vm.categories.value, ['None', 'Medicine']);
+
+      vm.selectCategory('Medicine');
+      expect(vm.items.value, hasLength(2));
+      vm.selectCategory('None');
+      expect(vm.items.value, hasLength(3));
     });
 
     test('a reload keeps the chosen category', () async {

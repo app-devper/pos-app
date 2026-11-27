@@ -159,7 +159,12 @@ class _ProductSearchState extends State<ProductSearch> {
         builder: (context, selected, _) => FilterPills<String?>(
           scrollable: scrollable,
           selected: selected,
-          onSelected: _viewModel.selectCategory,
+          // A tap outside the field takes its focus on the web and a
+          // desktop; the next scan must still land in it.
+          onSelected: (category) {
+            _viewModel.selectCategory(category);
+            _serialNumberNode.requestFocus();
+          },
           items: [
             FilterPill<String?>(
               value: null,
@@ -279,7 +284,10 @@ class _ProductSearchState extends State<ProductSearch> {
           item: items[i],
           inCart: widget.inCart[barcode] ?? 0,
           compact: compact,
-          onAdd: () => widget.onSelected(barcode),
+          onAdd: () {
+            widget.onSelected(barcode);
+            _serialNumberNode.requestFocus();
+          },
         );
       },
     );

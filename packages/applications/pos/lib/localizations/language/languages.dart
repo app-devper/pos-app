@@ -214,6 +214,12 @@ abstract class Languages {
 
   String get catalogueTotalStock;
 
+  /// A product card's cue: a tap adds it to the cart.
+  String get addToCart;
+
+  /// A product card's cue once the open cart holds [count] of it.
+  String inCartCount(int count);
+
   /// A wide list page's pane while nothing in the list is chosen.
   String get chooseProductHint;
 

@@ -2,6 +2,7 @@
 // figures and the grid of cards, on a wide panel and a phone's.
 
 import 'package:design_system/design_system.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pos/container.dart';
@@ -155,6 +156,26 @@ void main() {
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pump();
     expect(selected, ['bar-b', 'bar-a']);
+  });
+
+  // On the web and a desktop a tap outside a text field takes its focus;
+  // a scan after it would type into nothing.
+  testWidgets('on a desktop, a pill or a card tap leaves the cursor in the '
+      'search field', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    await _pump(tester, _wide);
+    final field = tester.widget<TextField>(find.byType(TextField));
+
+    await tester.tap(find.widgetWithText(InkWell, 'ยารักษาโรค').first);
+    await tester.pump();
+    final afterPill = field.focusNode!.hasFocus;
+    await tester.tap(find.text('Paracetamol'));
+    await tester.pump();
+    final afterCard = field.focusNode!.hasFocus;
+    debugDefaultTargetPlatformOverride = null;
+
+    expect(afterPill, isTrue);
+    expect(afterCard, isTrue);
   });
 
   testWidgets('3,000 products build only the cards in view', (tester) async {

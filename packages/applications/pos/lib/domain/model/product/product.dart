@@ -59,6 +59,7 @@ class Product {
         status: status,
         createdDate: createdDate,
         minStock: minStock,
+        productQuantity: getQuantity(),
         unit: unit,
         prices: prices,
         stocks: stocks,
@@ -107,6 +108,10 @@ class ProductUnitItem {
 
   /// The product's "low at" level; 0 when the shop set none.
   final int minStock;
+
+  /// What the product has on hand over all of its units; null when the
+  /// item was made on its own, and then this unit's stock stands for it.
+  final int? productQuantity;
   final ProductUnit unit;
   final List<ProductPrice> prices;
   List<ProductStock> stocks;
@@ -120,15 +125,17 @@ class ProductUnitItem {
     required this.status,
     required this.createdDate,
     this.minStock = 0,
+    this.productQuantity,
     required this.unit,
     required this.prices,
     required this.stocks,
   });
 
-  /// Some is left, and no more than the level the shop set to be warned at.
+  /// The product as a whole has some left, and no more than the level the
+  /// shop set to be warned at: the rule the สินค้า list marks ใกล้หมด by.
   bool get isLowStock {
-    final quantity = getQuantity();
-    return minStock > 0 && quantity > 0 && quantity <= minStock;
+    final onHand = productQuantity ?? getQuantity();
+    return minStock > 0 && onHand > 0 && onHand <= minStock;
   }
 
   /// The price at this customer type, drawing from the Stock that sells

@@ -29,7 +29,7 @@ class ProductSearchViewModel {
 
   ValueListenable<String?> get error => _error;
 
-  /// The categories the catalogue holds, by their Thai name; a pill each.
+  /// The categories the catalogue holds, in the app's own order; a pill each.
   final _categories = ViewState<List<String>>(const []);
 
   ValueListenable<List<String>> get categories => _categories;
@@ -84,6 +84,9 @@ class ProductSearchViewModel {
           if (item.status == productStatusActive) ...item.toProductItems(),
       ]);
       _categories.value = _categoriesOf(_products);
+      if (!_categories.value.contains(_selectedCategory.value)) {
+        _selectedCategory.value = null;
+      }
       _figures.value = CatalogueFigures.of(_products);
       _error.value = null;
       searchProduct(_query);
@@ -110,7 +113,7 @@ class ProductSearchViewModel {
     final lower = _query.toLowerCase();
     _items.value = [
       for (final item in _products)
-        if ((category == null || item.category == category) &&
+        if ((category == null || categoryCodeOf(item) == category) &&
             (_query.isEmpty ||
                 item.name.toLowerCase().contains(lower) ||
                 item.unit.barcode.contains(_query)))
@@ -118,12 +121,19 @@ class ProductSearchViewModel {
     ];
   }
 
-  /// The category codes of [items], once each, in the order of their names.
+  /// The category [item] reads as: codes that differ only in case, and
+  /// every code the app does not know, are one category.
+  static String categoryCodeOf(ProductUnitItem item) =>
+      findCategoryType(item.category).type;
+
+  /// The categories of [items], once each, in the order the app lists its
+  /// categories everywhere else ([categoryTypes]).
   static List<String> _categoriesOf(List<ProductUnitItem> items) {
-    final codes = {for (final item in items) item.category}.toList()
-      ..sort((a, b) =>
-          findCategoryType(a).name.compareTo(findCategoryType(b).name));
-    return List.unmodifiable(codes);
+    final held = {for (final item in items) categoryCodeOf(item)};
+    return List.unmodifiable([
+      for (final category in categoryTypes)
+        if (held.contains(category.type)) category.type,
+    ]);
   }
 
   void dispose() {

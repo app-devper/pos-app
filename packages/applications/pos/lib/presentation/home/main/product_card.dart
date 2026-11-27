@@ -11,6 +11,7 @@ import 'package:design_system/widgets/app_tag.dart';
 // Project imports:
 import 'package:pos/domain/model/core/core.dart';
 import 'package:pos/domain/model/product/product.dart';
+import 'package:pos/localizations/language/languages.dart';
 
 /// A product on the selling grid: its category, name, price and what is
 /// left, and what a tap does. The whole card is the button that adds it.
@@ -45,12 +46,13 @@ class ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final strings = Languages.of(context);
     // One button, named name first: an end-to-end flow finds the card by a
     // label that begins with the product's name.
     return Semantics(
       container: true,
       button: true,
-      label: _semanticLabel,
+      label: _semanticLabel(strings),
       onTap: onAdd,
       excludeSemantics: true,
       child: AppCard(
@@ -81,13 +83,18 @@ class ProductCard extends StatelessWidget {
             const SizedBox(height: 2),
             Row(
               children: [
-                Expanded(child: _price(colors)),
-                if (compact) _compactCue(colors),
+                Flexible(child: _price(colors)),
+                if (!compact) ...[
+                  const SizedBox(width: 4),
+                  _unitOfPrice(colors),
+                ],
+                const Spacer(),
+                if (compact) _compactCue(colors, strings),
               ],
             ),
             if (!compact) ...[
               const SizedBox(height: 8),
-              _cue(colors),
+              _cue(colors, strings),
             ],
           ],
         ),
@@ -138,21 +145,32 @@ class ProductCard extends StatelessWidget {
   String get _stockText =>
       _available ? 'คงเหลือ $_quantity ${item.unit.unit}' : 'สินค้าหมด';
 
-  String get _semanticLabel => [
+  String _semanticLabel(Languages strings) => [
         item.name,
         findCategoryType(item.category).name,
-        '฿${formatDouble(item.getPrice(priceTypeStock).price)}',
+        '฿${formatDouble(item.getPrice(priceTypeStock).price)} '
+            '/ ${item.unit.unit}',
         _stockText,
-        _cueLabel,
+        if (item.isLowStock && _available) strings.lowStock,
+        _cueLabel(strings),
       ].join('\n');
 
-  String get _cueLabel {
-    if (inCart > 0) return 'ในตะกร้า $inCart';
-    return _available ? 'เพิ่มลงตะกร้า' : 'หมด';
+  /// Which unit the price is for: a product sold by several units has a
+  /// card for each.
+  Widget _unitOfPrice(AppColors colors) => Text(
+        '/ ${item.unit.unit}',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(fontSize: 12, color: colors.textSecondary),
+      );
+
+  String _cueLabel(Languages strings) {
+    if (inCart > 0) return strings.inCartCount(inCart);
+    return _available ? strings.addToCart : strings.outOfStock;
   }
 
   /// What a tap on the card does, drawn as the card's own outline button.
-  Widget _cue(AppColors colors) {
+  Widget _cue(AppColors colors, Languages strings) {
     final inCartNow = inCart > 0;
     final foreground = _available ? colors.textPrimary : colors.textSecondary;
     return Container(
@@ -174,7 +192,7 @@ class ProductCard extends StatelessWidget {
           ],
           Flexible(
             child: Text(
-              _cueLabel,
+              _cueLabel(strings),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(fontSize: 13, color: foreground),
@@ -186,10 +204,10 @@ class ProductCard extends StatelessWidget {
   }
 
   /// The phone's cue: a plus, or how many the cart holds.
-  Widget _compactCue(AppColors colors) {
+  Widget _compactCue(AppColors colors, Languages strings) {
     if (!_available) {
       return Text(
-        'หมด',
+        strings.outOfStock,
         style: TextStyle(fontSize: 12, color: colors.textSecondary),
       );
     }

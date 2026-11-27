@@ -54,3 +54,48 @@ Product sellingProduct(
 /// The unit items of [products], as the selling grid holds them.
 List<ProductUnitItem> unitItems(List<Product> products) =>
     [for (final product in products) ...product.toProductItems()];
+
+/// A product sold by the piece and by the box, with [pieces] and [boxes]
+/// on hand, low at [minStock] over both.
+Product twoUnitProduct(
+  String id, {
+  required int pieces,
+  required int boxes,
+  int minStock = 0,
+}) {
+  ProductUnit unit(String name) => ProductUnit(
+        id: '$name-$id',
+        productId: id,
+        costPrice: 5,
+        unit: name,
+        size: 1,
+        barcode: 'bar-$name-$id',
+        volume: 0,
+        volumeUnit: '',
+      );
+  ProductStock stock(String name, int quantity) => ProductStock(
+        id: 'stock-$name-$id',
+        unitId: '$name-$id',
+        productId: id,
+        receiveCode: '',
+        sequence: 1,
+        lotNumber: 'LOT-$id',
+        costPrice: 5,
+        price: 10,
+        import: quantity,
+        quantity: quantity,
+        expireDate: '',
+        importDate: '',
+      );
+  return Product(
+    id: id,
+    name: 'สินค้า $id',
+    status: productStatusActive,
+    category: 'General',
+    minStock: minStock,
+    createdDate: '',
+    units: [unit('ชิ้น'), unit('กล่อง')],
+    prices: const [],
+    stocks: [stock('ชิ้น', pieces), stock('กล่อง', boxes)],
+  );
+}

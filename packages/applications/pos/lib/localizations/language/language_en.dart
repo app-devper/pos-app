@@ -291,6 +291,12 @@ class LanguageEn extends Languages {
   String get catalogueTotalStock => "Total stock";
 
   @override
+  String get addToCart => "Add to cart";
+
+  @override
+  String inCartCount(int count) => "In cart: $count";
+
+  @override
   String get chooseProductHint => "Choose a product to see its details";
 
   @override
