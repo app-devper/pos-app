@@ -53,13 +53,17 @@ class FigureTile extends StatelessWidget {
                 ),
               ],
             ),
-            Text(
-              value,
-              maxLines: 1,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: tones.text,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                value,
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: tones.text,
+                ),
               ),
             ),
           ],

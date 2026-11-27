@@ -97,30 +97,36 @@ class _Pill extends StatelessWidget {
     final foreground = selected ? colors.onPrimaryFill : tones.text;
     final outlined = !selected && tone == AppTagTone.neutral;
     return Semantics(
+      button: true,
       selected: selected,
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.pill),
         onTap: onTap,
         // The pill is drawn smaller than the box that takes the tap.
-        child: SizedBox(
-          height: AppSpacing.minTouchTarget,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            minHeight: AppSpacing.minTouchTarget,
+          ),
           child: Center(
             widthFactor: 1,
+            heightFactor: 1,
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: fill,
                 borderRadius: BorderRadius.circular(AppRadius.pill),
                 border: outlined ? Border.all(color: colors.border) : null,
               ),
-              child: SizedBox(
-                height: _height,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: _height),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Center(
                     widthFactor: 1,
+                    heightFactor: 1,
                     child: Text(
                       text,
                       maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 14, color: foreground),
                     ),
                   ),

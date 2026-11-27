@@ -96,8 +96,8 @@ class CustomTheme {
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: colors.textPrimary,
-        foregroundColor: colors.surface,
+        backgroundColor: colors.primaryFill,
+        foregroundColor: colors.onPrimaryFill,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.button),
@@ -124,8 +124,8 @@ class CustomTheme {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: colors.textPrimary,
-      foregroundColor: colors.surface,
+      backgroundColor: colors.primaryFill,
+      foregroundColor: colors.onPrimaryFill,
       elevation: 0,
     ),
     textTheme: TextTheme(

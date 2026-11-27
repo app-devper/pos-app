@@ -53,6 +53,7 @@ void main() {
     final selected = tester.getSemantics(find.ancestor(
         of: find.text('ใกล้หมด 4'), matching: find.byType(InkWell)));
     expect(selected.flagsCollection.isSelected, Tristate.isTrue);
+    expect(selected.flagsCollection.isButton, isTrue);
   });
 
   testWidgets('scrollable pills stay on one row in a narrow space',
@@ -66,5 +67,27 @@ void main() {
     expect(tester.takeException(), isNull);
     final tops = [for (final i in items) tester.getTopLeft(find.textContaining(i.label).first).dy];
     expect(tops.toSet(), hasLength(1));
+  });
+
+  testWidgets('a long label at a large text size shortens instead of overflowing',
+      (tester) async {
+    await tester.pumpWidget(themed(MediaQuery(
+      data: const MediaQueryData(textScaler: TextScaler.linear(1.3)),
+      child: SizedBox(
+        width: 200,
+        child: FilterPills<String>(
+          items: const [
+            FilterPill(
+                value: 'a',
+                label: 'ผลิตภัณฑ์เสริมอาหารและวิตามินสำหรับผู้สูงอายุ',
+                count: 1200),
+          ],
+          selected: 'a',
+          onSelected: (_) {},
+        ),
+      ),
+    )));
+
+    expect(tester.takeException(), isNull);
   });
 }

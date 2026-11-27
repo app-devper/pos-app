@@ -34,13 +34,29 @@ void main() {
     });
   }
 
-  testWidgets('a status badge draws as a tag with the same label',
-      (tester) async {
-    await tester.pumpWidget(
-        themed(const StatusBadge(label: 'ยกเลิก', color: CustomColor.error)));
+  testWidgets('a status badge given a tone draws as that tag', (tester) async {
+    await tester.pumpWidget(themed(
+        const StatusBadge.tone(label: 'ยกเลิก', tone: AppTagTone.danger)));
 
-    expect(find.byType(AppTag), findsOneWidget);
     expect(tester.widget<AppTag>(find.byType(AppTag)).tone, AppTagTone.danger);
     expect(find.text('ยกเลิก'), findsOneWidget);
   });
+
+  // Callers that tell things apart by colour (movement types, roles) keep
+  // their colour until their own screen moves to tones.
+  for (final color in [Colors.blue, Colors.purple, CustomColor.warning]) {
+    testWidgets('a status badge given colour $color keeps it', (tester) async {
+      await tester.pumpWidget(themed(StatusBadge(label: 'ขาย', color: color)));
+
+      expect(find.byType(AppTag), findsNothing);
+      expect(tagTextColor(tester, 'ขาย'), color);
+      final box = tester
+          .widget<DecoratedBox>(find.descendant(
+              of: find.byType(StatusBadge),
+              matching: find.byType(DecoratedBox)))
+          .decoration as BoxDecoration;
+      expect(box.color, color.withValues(alpha: 0.1));
+      expect(box.borderRadius, BorderRadius.circular(AppRadius.tag));
+    });
+  }
 }

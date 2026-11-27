@@ -33,4 +33,18 @@ void main() {
     expect(tester.widget<Text>(find.text('4')).style?.color,
         AppColors.light.statusWarningText);
   });
+
+  testWidgets('a long value in a narrow tile shrinks instead of being cut',
+      (tester) async {
+    await tester.pumpWidget(themed(const SizedBox(
+      width: 70,
+      child: FigureTile(
+          icon: Icons.layers_outlined, label: 'สต็อกรวม', value: '1,234,567.50'),
+    )));
+
+    expect(tester.takeException(), isNull);
+    final value = tester.getRect(find.text('1,234,567.50'));
+    final tile = tester.getRect(find.byType(FigureTile));
+    expect(value.right, lessThanOrEqualTo(tile.right));
+  });
 }
