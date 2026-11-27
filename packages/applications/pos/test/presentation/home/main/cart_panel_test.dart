@@ -98,7 +98,8 @@ void main() {
     expect(tester.getSemantics(find.text('ราคาเฉพาะสินค้า')).label,
         'ราคาเฉพาะสินค้า\n฿50.00');
     expect(tester.getSemantics(find.text('ส่วนลด (%)')).label, 'ส่วนลด (%)\n-');
-    final total = tester.widgetList<Text>(find.text('฿50.00')).last;
+    final total = tester.widget<Text>(find.byKey(CartPanel.netTotalKey));
+    expect(total.data, '฿50.00');
     expect(total.style?.fontFeatures,
         contains(const FontFeature.tabularFigures()));
   });

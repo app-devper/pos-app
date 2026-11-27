@@ -19,6 +19,9 @@ import 'package:pos/presentation/home/main/cart_widget.dart';
 /// It draws what it is given: the selling page owns the cart and what each
 /// tap does.
 class CartPanel extends StatelessWidget {
+  /// The net total's amount, for a test to read what the cart prints.
+  static const Key netTotalKey = Key('cart-net-total');
+
   static const double _gutter = 12;
   static const double _lineGap = 6;
   static const double _payHeight = 64;
@@ -90,6 +93,7 @@ class CartPanel extends StatelessWidget {
               _CartTotalRow(
                 label: 'ยอดรวมสุทธิ',
                 value: _money(total),
+                valueKey: netTotalKey,
                 emphasised: true,
               ),
               const SizedBox(height: 8),
@@ -230,11 +234,13 @@ class CartPanel extends StatelessWidget {
 class _CartTotalRow extends StatelessWidget {
   final String label;
   final String value;
+  final Key? valueKey;
   final bool emphasised;
 
   const _CartTotalRow({
     required this.label,
     required this.value,
+    this.valueKey,
     this.emphasised = false,
   });
 
@@ -253,7 +259,7 @@ class _CartTotalRow extends StatelessWidget {
           children: [
             Expanded(child: Text(label, style: style)),
             const SizedBox(width: 8),
-            Text(value, style: AppText.money(style)),
+            Text(value, key: valueKey, style: AppText.money(style)),
           ],
         ),
       ),
