@@ -6,7 +6,12 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 // Package imports:
+import 'package:common/core/ext/number_ext.dart';
 import 'package:design_system/theme/app_colors.dart';
+import 'package:design_system/theme/spacing.dart';
+import 'package:design_system/widgets/app_tag.dart';
+import 'package:design_system/widgets/figure_tile.dart';
+import 'package:design_system/widgets/filter_pills.dart';
 import 'package:design_system/widgets/error_state.dart';
 import 'package:design_system/widgets/search_decoration.dart';
 import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
@@ -17,7 +22,8 @@ import 'package:pos/container.dart';
 import 'package:pos/domain/model/core/core.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/presentation/constants.dart';
-import 'package:pos/presentation/home/main/cart_widget.dart';
+import 'package:pos/presentation/home/main/catalogue_figures.dart';
+import 'package:pos/presentation/home/main/product_card.dart';
 import 'package:pos/presentation/home/main/product_search_view_model.dart';
 
 class ProductSearch extends StatefulWidget {
@@ -27,10 +33,14 @@ class ProductSearch extends StatefulWidget {
   /// puts the cursor back in the search field, ready for the next scan.
   final Stream<Object?>? saleRecorded;
 
+  /// How many of each product the open cart holds, by the unit's barcode.
+  final Map<String, int> inCart;
+
   const ProductSearch({
     super.key,
     required this.onSelected,
     this.saleRecorded,
+    this.inCart = const {},
   });
 
   @override
@@ -40,7 +50,13 @@ class ProductSearch extends StatefulWidget {
 }
 
 class _ProductSearchState extends State<ProductSearch> {
-  final _widthCard = 300;
+  /// A panel narrower than this is a phone's: two compact cards per row,
+  /// pills on one scrolling row, and no figures.
+  static const double _compactBelow = 600;
+  static const double _cardWidth = 230;
+  static const int _compactColumns = 2;
+  static const double _gap = 12;
+
   final _serialNumberEditingController = TextEditingController();
   final _serialNumberNode = FocusNode();
 
@@ -79,103 +95,191 @@ class _ProductSearchState extends State<ProductSearch> {
   LayoutBuilder _buildProducts() {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        int countRow = constraints.maxWidth ~/ _widthCard;
-        if (countRow == 0) countRow = 1;
+        final compact = constraints.maxWidth < _compactBelow;
+        final columns = compact
+            ? _compactColumns
+            : (constraints.maxWidth ~/ _cardWidth).clamp(1, 12);
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: TextField(
-                autofocus: true,
-                focusNode: _serialNumberNode,
-                controller: _serialNumberEditingController,
-                decoration: buildSearchDecoration(
-                  context,
-                  hintText: 'ค้นหาชื่อสินค้า หรือสแกนบาร์โค้ด',
-                  suffixIcon: kIsWeb
-                      ? null
-                      : IconButton(
-                          tooltip: Languages.of(context).scanBarcode,
-                          icon: const Icon(Icons.qr_code_scanner),
-                          onPressed: () => _scanBarcode(context),
-                        ),
-                ),
-                onChanged: (value) {
-                  _viewModel.searchProduct(value);
-                },
-                onSubmitted: (value) {
-                  if (value.isNotEmpty) {
-                    widget.onSelected(value);
-                    _serialNumberEditingController.text = "";
-                    _serialNumberNode.requestFocus();
-                    _viewModel.searchProduct("");
-                  }
-                },
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: _buildSearchField(context),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildCategoryPills(scrollable: compact),
+            ),
+            if (!compact)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: _buildFigures(),
+              ),
+            const SizedBox(height: _gap),
+            Expanded(child: _buildGridArea(columns, compact)),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSearchField(BuildContext context) {
+    return TextField(
+      autofocus: true,
+      focusNode: _serialNumberNode,
+      controller: _serialNumberEditingController,
+      decoration: buildSearchDecoration(
+        context,
+        hintText: 'ค้นหาชื่อสินค้า หรือสแกนบาร์โค้ด',
+        suffixIcon: kIsWeb
+            ? null
+            : IconButton(
+                tooltip: Languages.of(context).scanBarcode,
+                icon: const Icon(Icons.qr_code_scanner),
+                onPressed: () => _scanBarcode(context),
+              ),
+      ),
+      onChanged: _viewModel.searchProduct,
+      onSubmitted: (value) {
+        if (value.isEmpty) return;
+        widget.onSelected(value);
+        _serialNumberEditingController.text = "";
+        _serialNumberNode.requestFocus();
+        _viewModel.searchProduct("");
+      },
+    );
+  }
+
+  /// ทั้งหมด and a pill for each category the catalogue holds.
+  Widget _buildCategoryPills({required bool scrollable}) {
+    return ValueListenableBuilder<List<String>>(
+      valueListenable: _viewModel.categories,
+      builder: (context, categories, _) => ValueListenableBuilder<String?>(
+        valueListenable: _viewModel.selectedCategory,
+        builder: (context, selected, _) => FilterPills<String?>(
+          scrollable: scrollable,
+          selected: selected,
+          onSelected: _viewModel.selectCategory,
+          items: [
+            FilterPill<String?>(
+              value: null,
+              label: Languages.of(context).allCategories,
+            ),
+            for (final category in categories)
+              FilterPill<String?>(
+                value: category,
+                label: findCategoryType(category).name,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// How many products are on sale, their stock, and how many run low.
+  Widget _buildFigures() {
+    return ValueListenableBuilder<CatalogueFigures>(
+      valueListenable: _viewModel.figures,
+      builder: (context, figures, _) {
+        final strings = Languages.of(context);
+        return Row(
+          children: [
+            Expanded(
+              child: FigureTile(
+                icon: Icons.inventory_2_outlined,
+                label: strings.catalogueProducts,
+                value: formatDecimal(figures.products.toDouble()),
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(width: AppSpacing.sm),
             Expanded(
-              // A failed inventory load has to say so. Without this the grid
-              // spun forever and every scan reported "ไม่พบสินค้า", which reads
-              // as "we do not stock that" rather than "we are offline".
-              child: ValueListenableBuilder<String?>(
-                valueListenable: _viewModel.error,
-                builder: (context, error, child) {
-                  if (error != null) {
-                    return ErrorState(
-                      message: error,
-                      onRetry: () => _viewModel.getProducts(),
-                    );
-                  }
-                  return child!;
-                },
-                child: ValueListenableBuilder<List<ProductUnitItem>?>(
-                  valueListenable: _viewModel.items,
-                  builder: (context, items, _) {
-                    if (items == null) {
-                      return const Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 3,
-                          strokeCap: StrokeCap.round,
-                        ),
-                      );
-                    }
-                    if (items.isEmpty) {
-                      return Center(
-                          child: Text(
-                              "ไม่พบสินค้า\nลองค้นหาด้วยชื่อหรือบาร์โค้ดอื่น",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  color: AppColors.of(context).textSecondary,
-                                  height: 1.8)));
-                    }
-                    return GridView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: countRow,
-                        childAspectRatio: 2,
-                        mainAxisExtent: 158,
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                      ),
-                      shrinkWrap: true,
-                      itemBuilder: (context, i) => ProductItem(
-                        name: items[i].name,
-                        price: items[i].getPrice(priceTypeStock).price,
-                        quantity: items[i].getQuantity(),
-                        unit: items[i].unit.unit,
-                        barcode: items[i].unit.barcode,
-                        onTap: () {
-                          widget.onSelected(items[i].unit.barcode);
-                        },
-                      ),
-                      itemCount: items.length,
-                    );
-                  },
-                ),
+              child: FigureTile(
+                icon: Icons.layers_outlined,
+                label: strings.catalogueTotalStock,
+                value: formatDecimal(figures.totalStock.toDouble()),
               ),
-            )
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: FigureTile(
+                icon: Icons.warning_amber_rounded,
+                label: strings.lowStock,
+                value: formatDecimal(figures.lowStock.toDouble()),
+                tone: figures.lowStock > 0
+                    ? AppTagTone.warning
+                    : AppTagTone.neutral,
+              ),
+            ),
           ],
+        );
+      },
+    );
+  }
+
+  Widget _buildGridArea(int columns, bool compact) {
+    // A failed inventory load has to say so. Without this the grid spun
+    // forever and every scan reported "ไม่พบสินค้า", which reads as "we do
+    // not stock that" rather than "we are offline".
+    return ValueListenableBuilder<String?>(
+      valueListenable: _viewModel.error,
+      builder: (context, error, child) {
+        if (error != null) {
+          return ErrorState(
+            message: error,
+            onRetry: () => _viewModel.getProducts(),
+          );
+        }
+        return child!;
+      },
+      child: ValueListenableBuilder<List<ProductUnitItem>?>(
+        valueListenable: _viewModel.items,
+        builder: (context, items, _) {
+          if (items == null) {
+            return const Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                strokeCap: StrokeCap.round,
+              ),
+            );
+          }
+          if (items.isEmpty) return _buildNoMatch(context);
+          return _buildGrid(items, columns, compact);
+        },
+      ),
+    );
+  }
+
+  Widget _buildNoMatch(BuildContext context) {
+    return Center(
+      child: Text(
+        "ไม่พบสินค้า\nลองค้นหาด้วยชื่อหรือบาร์โค้ดอื่น",
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: AppColors.of(context).textSecondary,
+          height: 1.8,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGrid(List<ProductUnitItem> items, int columns, bool compact) {
+    return GridView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: columns,
+        mainAxisExtent:
+            compact ? ProductCard.compactHeight : ProductCard.height,
+        mainAxisSpacing: _gap,
+        crossAxisSpacing: _gap,
+      ),
+      itemCount: items.length,
+      itemBuilder: (context, i) {
+        final barcode = items[i].unit.barcode;
+        return ProductCard(
+          item: items[i],
+          inCart: widget.inCart[barcode] ?? 0,
+          compact: compact,
+          onAdd: () => widget.onSelected(barcode),
         );
       },
     );

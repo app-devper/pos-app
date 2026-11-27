@@ -282,6 +282,15 @@ class LanguageEn extends Languages {
   String get lowStock => "Low stock";
 
   @override
+  String get allCategories => "All";
+
+  @override
+  String get catalogueProducts => "Products";
+
+  @override
+  String get catalogueTotalStock => "Total stock";
+
+  @override
   String get chooseProductHint => "Choose a product to see its details";
 
   @override

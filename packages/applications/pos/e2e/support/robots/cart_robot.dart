@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 // Project imports:
 import 'package:pos/presentation/home/main/cart_widget.dart';
+import 'package:pos/presentation/home/main/product_card.dart';
 import 'package:pos/presentation/home/main/payment_screen.dart';
 import 'package:pos/presentation/home/main/product_search.dart';
 import '../pump.dart';
@@ -258,7 +259,7 @@ class CartRobot {
       .descendant(
           of: find.ancestor(
               of: find.descendant(of: _grid, matching: find.text(productName)),
-              matching: find.byType(ProductItem)),
+              matching: find.byType(ProductCard)),
           matching: find.text(text))
       .hitTestable();
 

@@ -20,6 +20,8 @@ import 'package:pos/domain/model/order/order_item.dart';
 import 'package:design_system/widgets/dialogs.dart';
 import 'package:pos/presentation/core/dialog_widget.dart';
 import 'package:pos/presentation/customer/add/customer_add_page.dart';
+import 'package:pos/presentation/home/main/cart_quantities.dart';
+import 'package:pos/presentation/home/main/cart_state.dart';
 import 'package:pos/presentation/home/main/cart_widget.dart';
 import 'package:pos/presentation/home/main/customer_search.dart';
 import 'package:pos/presentation/home/main/payment_screen.dart';
@@ -162,6 +164,7 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
               _viewModel.addOrderItem(serialNumber);
             },
             saleRecorded: _viewModel.orderPlaced,
+            inCart: cartQuantities(_orderItems),
           ),
         ),
         Container(width: 1, color: AppColors.of(context).border),
@@ -187,6 +190,7 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
               _viewModel.addOrderItem(serialNumber);
             },
             saleRecorded: _viewModel.orderPlaced,
+            inCart: cartQuantities(_orderItems),
           ),
         ),
         Container(width: 1, color: AppColors.of(context).border),
@@ -610,11 +614,16 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
           ),
           const Divider(height: 1),
           Expanded(
-            child: ProductSearch(
-              onSelected: (serialNumber) {
-                _viewModel.addOrderItem(serialNumber);
-              },
-              saleRecorded: _viewModel.orderPlaced,
+            // The dialog outlives a tap, so it follows the cart itself.
+            child: ValueListenableBuilder<CartState>(
+              valueListenable: _viewModel.state,
+              builder: (context, state, _) => ProductSearch(
+                onSelected: (serialNumber) {
+                  _viewModel.addOrderItem(serialNumber);
+                },
+                saleRecorded: _viewModel.orderPlaced,
+                inCart: cartQuantities(state.orderItems ?? const []),
+              ),
             ),
           ),
         ],

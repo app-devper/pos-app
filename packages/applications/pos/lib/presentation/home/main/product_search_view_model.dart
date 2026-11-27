@@ -9,6 +9,7 @@ import 'package:common/core/state/view_state.dart';
 import 'package:pos/domain/model/core/core.dart';
 import 'package:pos/domain/model/product/product.dart';
 import 'package:pos/domain/repositories/product_repository.dart';
+import 'package:pos/presentation/home/main/catalogue_figures.dart';
 
 class ProductSearchViewModel {
   final ProductRepository productRepo;
@@ -27,6 +28,21 @@ class ProductSearchViewModel {
   final _error = ViewState<String?>(null);
 
   ValueListenable<String?> get error => _error;
+
+  /// The categories the catalogue holds, by their Thai name; a pill each.
+  final _categories = ViewState<List<String>>(const []);
+
+  ValueListenable<List<String>> get categories => _categories;
+
+  /// The category the grid is narrowed to; null shows every category.
+  final _selectedCategory = ViewState<String?>(null);
+
+  ValueListenable<String?> get selectedCategory => _selectedCategory;
+
+  /// The figures of the whole catalogue, worked out once per load.
+  final _figures = ViewState<CatalogueFigures>(CatalogueFigures.empty);
+
+  ValueListenable<CatalogueFigures> get figures => _figures;
 
   List<ProductUnitItem> _products = const [];
   String _query = '';
@@ -67,6 +83,8 @@ class ProductSearchViewModel {
         for (final item in products)
           if (item.status == productStatusActive) ...item.toProductItems(),
       ]);
+      _categories.value = _categoriesOf(_products);
+      _figures.value = CatalogueFigures.of(_products);
       _error.value = null;
       searchProduct(_query);
     } on Exception catch (e) {
@@ -77,20 +95,42 @@ class ProductSearchViewModel {
 
   void searchProduct(String text) {
     _query = text;
-    if (text.isEmpty) {
-      _items.value = List<ProductUnitItem>.of(_products);
-    } else {
-      final lower = text.toLowerCase();
-      _items.value = _products
-          .where((item) =>
-              item.name.toLowerCase().contains(lower) ||
-              item.unit.barcode.contains(text))
-          .toList();
-    }
+    _showMatches();
+  }
+
+  /// Narrows the grid to [category], or to every category when null. What
+  /// was typed in the search still applies.
+  void selectCategory(String? category) {
+    _selectedCategory.value = category;
+    _showMatches();
+  }
+
+  void _showMatches() {
+    final category = _selectedCategory.value;
+    final lower = _query.toLowerCase();
+    _items.value = [
+      for (final item in _products)
+        if ((category == null || item.category == category) &&
+            (_query.isEmpty ||
+                item.name.toLowerCase().contains(lower) ||
+                item.unit.barcode.contains(_query)))
+          item,
+    ];
+  }
+
+  /// The category codes of [items], once each, in the order of their names.
+  static List<String> _categoriesOf(List<ProductUnitItem> items) {
+    final codes = {for (final item in items) item.category}.toList()
+      ..sort((a, b) =>
+          findCategoryType(a).name.compareTo(findCategoryType(b).name));
+    return List.unmodifiable(codes);
   }
 
   void dispose() {
     _items.dispose();
     _error.dispose();
+    _categories.dispose();
+    _selectedCategory.dispose();
+    _figures.dispose();
   }
 }

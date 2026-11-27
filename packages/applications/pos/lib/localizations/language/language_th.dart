@@ -286,6 +286,15 @@ class LanguageTh extends Languages {
   String get lowStock => "ใกล้หมด";
 
   @override
+  String get allCategories => "ทั้งหมด";
+
+  @override
+  String get catalogueProducts => "สินค้า";
+
+  @override
+  String get catalogueTotalStock => "สต็อกรวม";
+
+  @override
   String get chooseProductHint => "เลือกสินค้าเพื่อดูรายละเอียด";
 
   @override

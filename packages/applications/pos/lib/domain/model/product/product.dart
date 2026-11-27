@@ -58,6 +58,7 @@ class Product {
         category: category,
         status: status,
         createdDate: createdDate,
+        minStock: minStock,
         unit: unit,
         prices: prices,
         stocks: stocks,
@@ -103,6 +104,9 @@ class ProductUnitItem {
   final String category;
   final String status;
   final String createdDate;
+
+  /// The product's "low at" level; 0 when the shop set none.
+  final int minStock;
   final ProductUnit unit;
   final List<ProductPrice> prices;
   List<ProductStock> stocks;
@@ -115,10 +119,17 @@ class ProductUnitItem {
     required this.category,
     required this.status,
     required this.createdDate,
+    this.minStock = 0,
     required this.unit,
     required this.prices,
     required this.stocks,
   });
+
+  /// Some is left, and no more than the level the shop set to be warned at.
+  bool get isLowStock {
+    final quantity = getQuantity();
+    return minStock > 0 && quantity > 0 && quantity <= minStock;
+  }
 
   /// The price at this customer type, drawing from the Stock that sells
   /// first.
