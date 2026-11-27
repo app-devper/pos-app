@@ -222,4 +222,21 @@ void main() {
     expect('${node.label}${node.tooltip}', 'บัญชี');
     expect(node.flagsCollection.isButton, isTrue);
   });
+
+  // Flutter web writes a menuitem's name as an aria-label only, which a
+  // find by text in the page (Maestro's) cannot read; a button's name it
+  // writes as text.
+  testWidgets('an account action reads as a button named by its label',
+      (tester) async {
+    await pumpShell(tester, wide, accountMenu: [
+      AppShellAction(label: 'ออกจากระบบ', icon: Icons.logout, onTap: () {}),
+    ]);
+    await tester.tap(find.byTooltip('บัญชี'));
+    await tester.pumpAndSettle();
+
+    final node = tester.getSemantics(find.text('ออกจากระบบ'));
+    expect(node.label, 'ออกจากระบบ');
+    expect(node.flagsCollection.isButton, isTrue);
+    expect(node.role.name, isNot('menuItem'));
+  });
 }

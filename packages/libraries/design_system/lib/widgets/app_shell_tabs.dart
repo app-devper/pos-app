@@ -265,10 +265,7 @@ class AppShellAccountButton extends StatelessWidget {
       onSelected: (action) => action.onTap(),
       itemBuilder: (context) => [
         for (final action in actions)
-          PopupMenuItem<AppShellAction>(
-            value: action,
-            child: _item(action, colors),
-          ),
+          _AccountMenuItem(value: action, child: _item(action, colors)),
       ],
       child: Semantics(
         button: true,
@@ -316,4 +313,22 @@ class AppShellAccountButton extends StatelessWidget {
           ],
         ),
       );
+}
+
+/// An account action read as a plain button. Flutter web writes a
+/// menuitem's name as an aria-label only, which a find by text in the page
+/// (an end-to-end driver's) cannot read; a button's name it writes as text.
+class _AccountMenuItem extends PopupMenuItem<AppShellAction> {
+  const _AccountMenuItem({super.value, required super.child});
+
+  @override
+  PopupMenuItemState<AppShellAction, _AccountMenuItem> createState() =>
+      _AccountMenuItemState();
+}
+
+class _AccountMenuItemState
+    extends PopupMenuItemState<AppShellAction, _AccountMenuItem> {
+  @override
+  Widget buildSemantics({required Widget child}) =>
+      Semantics(enabled: widget.enabled, button: true, child: child);
 }
