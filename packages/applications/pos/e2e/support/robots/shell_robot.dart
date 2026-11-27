@@ -41,7 +41,7 @@ class ShellRobot {
 
   /// The shell's tab [label], found by the widget that draws it (a phone's
   /// bottom bar shows a shorter name).
-  Finder sidebarItem(String label) => find
+  Finder tab(String label) => find
       .byWidgetPredicate((w) => w is AppShellTab && w.label == label)
       .hitTestable();
 
@@ -57,24 +57,24 @@ class ShellRobot {
   }
 
   Future<void> openSelling() =>
-      _openFromSidebar('ขายสินค้า', find.text('ตะกร้าสินค้า #1'));
+      _openFromTab('ขายสินค้า', find.text('ตะกร้าสินค้า #1'));
 
   Future<void> openOrders() =>
-      _openFromSidebar('รายการขาย', find.text('สรุปรายการ'));
+      _openFromTab('รายการขาย', find.text('สรุปรายการ'));
 
   Future<void> openProducts() =>
-      _openFromSidebar('สินค้า', searchField('ค้นหาสิ่งที่คุณต้องการ...'));
+      _openFromTab('สินค้า', searchField('ค้นหาสิ่งที่คุณต้องการ...'));
 
   Future<void> openManage() =>
-      _openFromSidebar('จัดการ', find.text('ร้านค้าของฉัน'));
+      _openFromTab('จัดการ', find.text('ร้านค้าของฉัน'));
 
   Future<void> openUserInfo() async {
     await chooseFromAccountMenu('ข้อมูลผู้ใช้งาน');
     await pumpUntilFound(tester, find.text('ข้อมูลของฉัน').hitTestable());
   }
 
-  Future<void> _openFromSidebar(String label, Finder arrived) async {
-    await tester.tap(sidebarItem(label));
+  Future<void> _openFromTab(String label, Finder arrived) async {
+    await tester.tap(tab(label));
     await tester.pump();
     await pumpUntilFound(tester, arrived.hitTestable());
   }

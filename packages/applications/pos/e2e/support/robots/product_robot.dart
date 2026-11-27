@@ -61,7 +61,7 @@ class ProductRobot {
 
   // --- The list -------------------------------------------------------------
 
-  /// From anywhere in the shell: the sidebar's สินค้า, until the list has
+  /// From anywhere in the shell: the สินค้า tab, until the list has
   /// loaded without an error.
   Future<void> openList() async {
     await shell.openProducts();

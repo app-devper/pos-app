@@ -35,7 +35,7 @@ class CartRobot {
 
   WidgetTester get tester => shell.tester;
 
-  /// From anywhere in the shell: the sidebar's ขายสินค้า, until the grid
+  /// From anywhere in the shell: the ขายสินค้า tab, until the grid
   /// has loaded without an error. The cart must be empty: the slots are a
   /// singleton and outlive the screen.
   Future<void> open() async {

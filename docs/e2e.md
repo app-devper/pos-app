@@ -18,7 +18,7 @@ emulator and in a browser: see [e2e-maestro.md](e2e-maestro.md).
   `.hitTestable()` or scoped to a screen. The suite never calls
   `pumpAndSettle`: the app has spinners that never settle, so every wait is a
   bounded pump-until (`support/pump.dart`).
-- The window is 1400×900 (wide layout: sidebar expanded, list and detail side
+- The window is 1400×900 (wide layout: tabs across the top, list and detail side
   by side). The app's Sarabun and Roboto fonts are loaded so that Thai text
   is measured the way it is on a real screen.
 - Each file signs in once, as admin unless it tests roles
@@ -46,7 +46,7 @@ What it cannot see:
 ## 2. Coverage
 
 One row per feature of the app, built from `presentation/router.dart`, the
-shell's sidebar (`home_page.dart`), the จัดการ tiles
+shell's tabs (`pos_shell.dart`), the จัดการ tiles
 (`home_database_page.dart`), the products and receipts menus
 (`product_menu_widget.dart`, `receive_menu_widget.dart`) and every dialog
 the screens open (`showCenterDialog`, `showConfirmDialog` and the named
@@ -62,7 +62,7 @@ listed under "Features no automated test drives yet" in
 |---|---|---|---|---|
 | Sign-in | sign in, sign out, a wrong password refused (`[UM-401-004]`), each role signs in | `auth_test.dart` | `auth` | |
 | Sign-in | passkey sign-in | — | — | cannot be automated: the browser's or OS's own passkey prompt |
-| Shell | every sidebar area opens its screen, and back to selling | `navigation_test.dart` | `navigation` | |
+| Shell | every tab opens its screen, and back to selling | `navigation_test.dart` | `navigation` | |
 | Shell | what each role sees: admin all areas and bill costs; manager and user selling and bills only, no cost, no store filter, no date range | `navigation_test.dart` | `roles` | the store filter is checked by Dart only: a chip's label is not text on the web |
 | Shell | ข้อมูลผู้ใช้งาน (UM's profile page) | `navigation_test.dart` (opens, returns) | `navigation` (opens, returns) | its content is UM's own screen, tested in um-api / the um package |
 | ขายสินค้า | a product added from the grid and its search | `selling_test.dart`, `product_edit_test.dart` | `sell_and_bill`, `product_add_delete`, `bill_cancel_return` | |

@@ -37,8 +37,8 @@ import 'package:pos/presentation/supplier/info/supplier_info_page.dart';
 import 'package:pos/presentation/supplier/main/suppliers_page.dart';
 
 class RouterApp {
-  /// A list opened from จัดการ: pushed over it, with the side menu kept
-  /// beside it on a wide screen.
+  /// A list opened from จัดการ: pushed over it, with the shell's tabs kept
+  /// above it on a wide screen.
   static Route<dynamic> _manageList(RouteSettings settings,
       {required WidgetBuilder builder}) {
     return MaterialPageRoute(
@@ -47,7 +47,7 @@ class RouterApp {
   }
 
   /// A form or record opened from จัดการ or one of its lists: pushed over
-  /// it with its back arrow only. A side menu there would leave the form,
+  /// it with its back arrow only. Tabs there would leave the form,
   /// and its unsaved work, without asking.
   static Route<dynamic> _manageForm(RouteSettings settings,
           {required WidgetBuilder builder}) =>

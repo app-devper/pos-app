@@ -32,7 +32,7 @@ import 'sign_in_pacing.dart';
 /// enough for the hosted target's sign-in pacing and one rate-limit wait.
 const e2eTestTimeout = Timeout(Duration(minutes: 5));
 
-/// 1400 wide keeps the sidebar expanded (labels shown) and the grid inline.
+/// 1400 wide shows the tabs across the top and the grid inline.
 const _surfaceSize = Size(1400, 900);
 
 /// The fonts pubspec.yaml declares. Without them flutter_test draws every

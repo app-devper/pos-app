@@ -15,8 +15,8 @@ import 'package:pos/presentation/home/main/menu_event.dart';
 import 'package:pos/presentation/home/main/pos_shell.dart';
 
 /// A list opened from จัดการ, pushed over it. A wide screen keeps the
-/// shell's side menu beside the list, with จัดการ chosen: an admin's
-/// entries and the footer's user info and sign-out, as home shows them. A
+/// shell's tabs above the list, with จัดการ chosen: an admin's tabs and
+/// the account button's user info and sign-out, as home shows them. A
 /// narrow one shows the list alone, its bar's back arrow leading back.
 ///
 /// Only an admin sees it ([AdminOnly]): until the role is known a progress

@@ -72,8 +72,9 @@ class AppShell extends StatefulWidget {
   /// back), while a wide one keeps the side menu beside it.
   final bool showDrawer;
 
-  /// Sidebar or tabs. The tabs take no [sidebarFooter]; they show
-  /// [accountMenu] behind an account button instead.
+  /// Sidebar or tabs. The tabs draw no title bar and no sidebar, so
+  /// [title], [showTopBar], [initiallyExpanded] and [sidebarFooter] do
+  /// nothing there; [accountMenu] sits behind an account button instead.
   final AppShellNavigation navigation;
   final List<AppShellAction> accountMenu;
 

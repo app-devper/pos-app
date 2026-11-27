@@ -54,7 +54,7 @@ class OrderRobot {
 
   // --- The list -------------------------------------------------------------
 
-  /// From anywhere in the shell: the sidebar's รายการขาย, until today's
+  /// From anywhere in the shell: the รายการขาย tab, until today's
   /// bills have loaded without an error.
   Future<void> openList() async {
     await shell.openOrders();

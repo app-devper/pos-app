@@ -182,4 +182,44 @@ void main() {
     expect(bar.bottom, lessThanOrEqualTo(844 - 30));
     expect(tester.getRect(find.text('เนื้อหา')).top, greaterThanOrEqualTo(40));
   });
+
+  testWidgets('phone: a snackbar shows above the bottom bar, not over it',
+      (tester) async {
+    await pumpShell(tester, phone);
+
+    ScaffoldMessenger.of(tester.element(find.text('เนื้อหา'))).showSnackBar(
+        const SnackBar(
+            behavior: SnackBarBehavior.floating, content: Text('ขายสำเร็จ')));
+    await tester.pumpAndSettle();
+
+    final bar = tester.getRect(tab('ขายสินค้า'));
+    expect(tester.getRect(find.byType(SnackBar)).bottom,
+        lessThanOrEqualTo(bar.top));
+    expect(tab('ขายสินค้า').hitTestable(), findsOneWidget);
+  });
+
+  testWidgets('phone: the keyboard covers the bottom bar; the page keeps '
+      'the height above the keyboard', (tester) async {
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    addTearDown(tester.view.resetViewInsets);
+    await pumpShell(tester, phone);
+
+    // The bar stays at the bottom, behind the keyboard, and takes no height
+    // from the page.
+    expect(tester.getRect(tab('ขายสินค้า')).top, greaterThanOrEqualTo(844 - 300));
+    final page = tester.getRect(find
+        .ancestor(of: find.text('เนื้อหา'), matching: find.byType(Center))
+        .first);
+    expect(page.bottom, 844 - 300);
+  });
+
+  testWidgets('phone: the account button says its name once', (tester) async {
+    await pumpShell(tester, phone, accountMenu: [
+      AppShellAction(label: 'ออกจากระบบ', icon: Icons.logout, onTap: () {}),
+    ]);
+
+    final node = tester.getSemantics(find.byTooltip('บัญชี'));
+    expect('${node.label}${node.tooltip}', 'บัญชี');
+    expect(node.flagsCollection.isButton, isTrue);
+  });
 }

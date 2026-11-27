@@ -57,13 +57,17 @@ class AppShellTabsFrame extends StatelessWidget {
     return Scaffold(
       backgroundColor: colors.surface,
       floatingActionButton: floatingActionButton,
+      // The bar is the scaffold's own, so a snackbar rises above it and the
+      // keyboard covers it instead of lifting it over the page.
+      bottomNavigationBar: isMobile
+          ? SafeArea(top: false, child: _BottomTabs(frame: this))
+          : null,
       // The whole frame keeps clear of the system bars, so no screen has to.
       body: SafeArea(
         child: Column(
           children: [
             if (!isMobile) _TopTabs(frame: this),
             Expanded(child: child),
-            if (isMobile) _BottomTabs(frame: this),
           ],
         ),
       ),
@@ -218,6 +222,7 @@ class AppShellTab extends StatelessWidget {
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: _bottomHeight),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, size: 22, color: foreground),
@@ -265,7 +270,10 @@ class AppShellAccountButton extends StatelessWidget {
             child: _item(action, colors),
           ),
       ],
-      child: compact ? _compactFace(colors) : _wideFace(colors),
+      child: Semantics(
+        button: true,
+        child: compact ? _compactFace(colors) : _wideFace(colors),
+      ),
     );
   }
 
@@ -289,17 +297,21 @@ class AppShellAccountButton extends StatelessWidget {
   Widget _compactFace(AppColors colors) => ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 56),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.account_circle_outlined,
               size: 22,
               color: colors.textSecondary,
             ),
-            Text(
-              tooltip,
-              maxLines: 1,
-              style: TextStyle(fontSize: 12, color: colors.textSecondary),
+            // The button already says its name through the tooltip.
+            ExcludeSemantics(
+              child: Text(
+                tooltip,
+                maxLines: 1,
+                style: TextStyle(fontSize: 12, color: colors.textSecondary),
+              ),
             ),
           ],
         ),
