@@ -457,12 +457,14 @@ class CartCustomerTile extends StatelessWidget {
     final subtitle = chosen == null ? 'เลือกลูกค้า' : chosen.code;
     return ReadableTile(
       label: '$title\n$subtitle',
-      leading: const CircleAvatar(
-        radius: 20,
-        child: Icon(Icons.person),
+      leading: CircleAvatar(
+        radius: 18,
+        backgroundColor: AppColors.of(context).surfaceSunken,
+        foregroundColor: AppColors.of(context).textPrimary,
+        child: const Icon(Icons.person, size: 20),
       ),
-      title: Text(title, style: const TextStyle(fontSize: 18)),
-      subtitle: Text(subtitle, style: const TextStyle(fontSize: 14)),
+      title: Text(title, style: const TextStyle(fontSize: 15)),
+      subtitle: Text(subtitle, style: const TextStyle(fontSize: 13)),
       trailing: chosen == null
           ? const Icon(Icons.arrow_forward_ios, size: 16)
           : CartCustomerRemoveButton(

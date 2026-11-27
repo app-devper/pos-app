@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:common/core/ext/date_ext.dart';
-import 'package:common/core/ext/number_ext.dart';
 import 'package:common/core/ext/widget_ext.dart';
 import 'package:design_system/widgets/snack_bar.dart';
 import 'package:design_system/widgets/title_bar.dart';
@@ -20,6 +19,7 @@ import 'package:pos/domain/model/order/order_item.dart';
 import 'package:design_system/widgets/dialogs.dart';
 import 'package:pos/presentation/core/dialog_widget.dart';
 import 'package:pos/presentation/customer/add/customer_add_page.dart';
+import 'package:pos/presentation/home/main/cart_panel.dart';
 import 'package:pos/presentation/home/main/cart_quantities.dart';
 import 'package:pos/presentation/home/main/cart_state.dart';
 import 'package:pos/presentation/home/main/cart_widget.dart';
@@ -207,175 +207,21 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
     );
   }
 
-  Column _buildCart({bool showSearchIcon = false}) {
-    final showCustomer = _viewModel.customer != null;
-    return Column(
-      children: [
-        Row(children: [
-          if (showSearchIcon) ...[
-            const SizedBox(width: 4),
-            CartSearchButton(onPressed: _showProductDialog),
-          ],
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              // A header node of its own: on the web a text merged into a
-              // node with children is not written into the page.
-              child: Semantics(
-                container: true,
-                header: true,
-                child: Text(
-                  'ตะกร้าสินค้า #${_viewModel.openCart + 1}',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ]),
-        const Divider(height: 1),
-        const ListTile(
-          visualDensity: VisualDensity(vertical: -4),
-          dense: true,
-          title: Text(
-            'รายการ',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          trailing: SizedBox(
-            width: 200,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                SizedBox(
-                  width: 100,
-                  child: Text(
-                    'จำนวน',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      height: 1.4,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: 100,
-                  child: Text(
-                    'ราคา',
-                    textAlign: TextAlign.end,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                )
-              ],
-            ),
-          ),
-        ),
-        const Divider(height: 1),
-        _buildCartOrderItems(),
-        const Divider(height: 1),
-        CartCustomerTile(
-          customer: showCustomer ? _viewModel.customer : null,
-          onChoose: _showCustomerDialog,
-          onRemove: () => _viewModel.setCustomer(null),
-        ),
-        const Divider(height: 1),
-        ListTile(
-          leading: const CircleAvatar(
-            radius: 20,
-            child: Icon(Icons.medical_information_outlined),
-          ),
-          title: const Text(
-            'ข้อมูลยาควบคุม',
-            style: TextStyle(fontSize: 18),
-          ),
-          subtitle: Text(
-            _hasComplianceInfo()
-                ? 'ระบุแล้ว: ${_getComplianceSummary()}'
-                : 'ไม่บังคับ ระบุเมื่อจำเป็น',
-            style: const TextStyle(fontSize: 14),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-          onTap: () {
-            _showComplianceDialog();
-          },
-        ),
-        const Divider(height: 1),
-        ListTile(
-          title: const Text('ราคาเฉพาะสินค้า'),
-          trailing: Text('฿${formatDouble(_total)}'),
-        ),
-        const Divider(height: 1),
-        const ListTile(
-          title: Text('ส่วนลด (%)'),
-          trailing: Text('-'),
-        ),
-        const Divider(height: 1),
-        ListTile(
-          title: const Text(
-            'ยอดรวมสุทธิ',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
-          ),
-          trailing: Text(
-            '฿${formatDouble(_total)}',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
-          ),
-        ),
-        const Divider(height: 1),
-        const SizedBox(height: 16),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: ElevatedButton(
-            onPressed: _orderItems.isEmpty ? null : _showPaymentDialog,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Theme.of(context).colorScheme.onPrimary,
-              disabledBackgroundColor: AppColors.of(context).surfaceSunken,
-              disabledForegroundColor: AppColors.of(context).textSecondary,
-              minimumSize: const Size(double.infinity, 64),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  _orderItems.isEmpty
-                      ? "เลือกสินค้าเพื่อเริ่มขาย"
-                      : "ชำระเงิน (${_orderItems.length} รายการ)",
-                  style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  '฿${formatDouble(_total)}',
-                  style: const TextStyle(
-                    height: 1.4,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-      ],
+  Widget _buildCart({bool showSearchIcon = false}) {
+    return CartPanel(
+      cartNumber: _viewModel.openCart + 1,
+      lineCount: _orderItems.length,
+      lineBuilder: _buildLine,
+      total: _total,
+      customer: _viewModel.customer,
+      complianceSummary:
+          _hasComplianceInfo() ? _getComplianceSummary() : null,
+      showSearchButton: showSearchIcon,
+      onOpenProducts: _showProductDialog,
+      onChooseCustomer: _showCustomerDialog,
+      onRemoveCustomer: () => _viewModel.setCustomer(null),
+      onCompliance: _showComplianceDialog,
+      onPay: _showPaymentDialog,
     );
   }
 
@@ -422,53 +268,47 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
     );
   }
 
-  Expanded _buildCartOrderItems() {
-    return Expanded(
-      child: ListView.builder(
-        itemCount: _orderItems.length,
-        itemBuilder: (context, index) {
-          final content = _orderItems[index];
-          return CartOrderItem(
-            title: content.product.name,
-            quantity: content.quantity,
-            price: content.priceType.price,
-            unit: content.unit,
-            discount: content.discount,
-            priceDetail: content.getPriceDetail(),
-            allowOversell: content.allowOversell,
-            onToggleOversell: () {
-              _viewModel.toggleAllowOversell(index);
-            },
-            onRemove: () {
-              _viewModel.minusItem(index);
-            },
-            onAdd: () {
-              _viewModel.plusItem(index);
-            },
-            onEdit: () {
-              showInputNumberDialog(
-                context,
-                title: 'จำนวนสินค้า',
-                onCompleted: (value) {
-                  _viewModel.editItem(index, value);
-                },
-              );
-            },
-            onEditPrice: () {
-              showEditOrderItemDialog(
-                context,
-                orderItem: content,
-                onCompleted: (value) {
-                  _viewModel.editLine(index, value);
-                },
-                onRemove: () {
-                  _viewModel.removeItem(index);
-                },
-              );
-            },
-          );
-        },
-      ),
+  /// The cart's line [index], with what each of its controls does.
+  Widget _buildLine(BuildContext context, int index) {
+    final content = _orderItems[index];
+    return CartOrderItem(
+      title: content.product.name,
+      quantity: content.quantity,
+      price: content.priceType.price,
+      unit: content.unit,
+      discount: content.discount,
+      priceDetail: content.getPriceDetail(),
+      allowOversell: content.allowOversell,
+      onToggleOversell: () {
+        _viewModel.toggleAllowOversell(index);
+      },
+      onRemove: () {
+        _viewModel.minusItem(index);
+      },
+      onAdd: () {
+        _viewModel.plusItem(index);
+      },
+      onEdit: () {
+        showInputNumberDialog(
+          context,
+          title: 'จำนวนสินค้า',
+          onCompleted: (value) {
+            _viewModel.editItem(index, value);
+          },
+        );
+      },
+      onEditPrice: () {
+        showEditOrderItemDialog(
+          context,
+          orderItem: content,
+          onCompleted: (value) {
+            _viewModel.editLine(index, value);
+          },
+          onRemove: () {
+            _viewModel.removeItem(index);
+          },
+        );
+      },
     );
   }
 
