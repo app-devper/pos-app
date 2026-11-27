@@ -1,11 +1,11 @@
-// The parts of the app every screen shares: the sidebar, the "จัดการ" tiles,
+// The parts of the app every screen shares: the tabs, the "จัดการ" tiles,
 // snackbars, the confirm and error dialogs, and TitleBar dialogs.
 
 // Flutter imports:
 import 'package:flutter/material.dart';
 
 // Package imports:
-import 'package:design_system/widgets/app_shell.dart';
+import 'package:design_system/widgets/app_shell_tabs.dart';
 import 'package:design_system/widgets/title_bar.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -37,13 +37,24 @@ class ShellRobot {
 
   final WidgetTester tester;
 
-  // --- Sidebar --------------------------------------------------------------
+  // --- Tabs and the account menu -------------------------------------------
 
-  /// The sidebar entry [label], found by the widget that draws it (the label
-  /// text itself is hidden when the rail is collapsed).
+  /// The shell's tab [label], found by the widget that draws it (a phone's
+  /// bottom bar shows a shorter name).
   Finder sidebarItem(String label) => find
-      .byWidgetPredicate((w) => w is AppSidebarAction && w.label == label)
+      .byWidgetPredicate((w) => w is AppShellTab && w.label == label)
       .hitTestable();
+
+  /// Opens the account menu and presses its entry [label].
+  Future<void> chooseFromAccountMenu(String label) async {
+    await tester
+        .tap(find.byTooltip(AppShellAccountButton.tooltip).hitTestable());
+    await tester.pump();
+    final entry = find.text(label).hitTestable();
+    await pumpUntilFound(tester, entry);
+    await tester.tap(entry);
+    await tester.pump();
+  }
 
   Future<void> openSelling() =>
       _openFromSidebar('ขายสินค้า', find.text('ตะกร้าสินค้า #1'));
@@ -57,8 +68,10 @@ class ShellRobot {
   Future<void> openManage() =>
       _openFromSidebar('จัดการ', find.text('ร้านค้าของฉัน'));
 
-  Future<void> openUserInfo() =>
-      _openFromSidebar('ข้อมูลผู้ใช้งาน', find.text('ข้อมูลของฉัน'));
+  Future<void> openUserInfo() async {
+    await chooseFromAccountMenu('ข้อมูลผู้ใช้งาน');
+    await pumpUntilFound(tester, find.text('ข้อมูลของฉัน').hitTestable());
+  }
 
   Future<void> _openFromSidebar(String label, Finder arrived) async {
     await tester.tap(sidebarItem(label));

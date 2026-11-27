@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:common/localizations/localizations_delegate.dart';
 import 'package:design_system/theme/theme.dart';
-import 'package:design_system/widgets/app_shell.dart';
+import 'package:design_system/widgets/app_shell_tabs.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:um/domain/usecase/auth_use_cases.dart';
 
@@ -106,7 +106,7 @@ Future<void> _settle(WidgetTester tester) async {
 }
 
 Future<void> _tapSection(WidgetTester tester, String label) => tester.tap(find
-    .byWidgetPredicate((w) => w is AppSidebarAction && w.label == label)
+    .byWidgetPredicate((w) => w is AppShellTab && w.label == label)
     .hitTestable());
 
 void main() {
@@ -117,7 +117,7 @@ void main() {
       (tester) async {
     // Arrange
     await _openHome(tester);
-    final menu = find.byType(AppSidebarAction).first;
+    final menu = find.byType(AppShellTab).first;
     final menuAt = tester.getTopLeft(menu);
 
     // Act

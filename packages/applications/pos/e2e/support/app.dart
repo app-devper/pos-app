@@ -24,6 +24,7 @@ import 'package:pos/presentation/app.dart';
 import 'cleanup.dart';
 import 'env.dart';
 import 'pump.dart';
+import 'robots/shell_robot.dart';
 import 'sign_in_pacing.dart';
 
 /// Every e2e test's time bound. LiveTestWidgetsFlutterBinding sets none, so
@@ -330,10 +331,10 @@ String _alertText(WidgetTester tester) => find
     .map((e) => (e.widget as Text).data ?? '')
     .join(' | ');
 
-/// Signs out from the sidebar and waits for the sign-in screen.
+/// Signs out from the account menu and waits for the sign-in screen.
 Future<void> signOut(WidgetTester tester) async {
   _sessionRole = null;
-  await tester.tap(find.byTooltip('ออกจากระบบ').hitTestable());
+  await ShellRobot(tester).chooseFromAccountMenu('ออกจากระบบ');
   await pumpUntilFound(tester, find.text('ยินดีต้อนรับ').hitTestable());
   // The home route animates out after sign-in shows; wait until it has gone.
   await pumpUntilGone(tester, find.text('ตะกร้าสินค้า #1'));

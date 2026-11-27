@@ -53,10 +53,8 @@ appId: app.devper.pos
           visible: "ร้านค้าของฉัน"
           timeout: 15000
       - assertVisible: "จัดการลูกค้า"
-- runFlow:
-    file: steps/open_screen.yaml
-    env:
-      SCREEN: "ข้อมูลผู้ใช้งาน"
+- tapOn: "บัญชี"
+- tapOn: "ข้อมูลผู้ใช้งาน"
 - extendedWaitUntil:
     visible: "ข้อมูลของฉัน.*"
     timeout: 15000
