@@ -127,10 +127,19 @@ After the release lands, testers get the Android build from App Distribution
 (project `devperpos`, group `testers`, Firebase app `1:1056670356976:android:b899a584c0ace390a73935`):
 ```bash
 git checkout main && git pull --ff-only
-(cd packages/applications/pos && flutter build apk --release)
+(cd packages/applications/pos && fvm flutter pub get)
+(cd packages/applications/pos/android && JAVA_HOME="$(/usr/libexec/java_home -v 17)" ./gradlew app:assembleRelease)
 firebase appdistribution:distribute packages/applications/pos/build/app/outputs/flutter-apk/app-release.apk \
   --project devperpos --app 1:1056670356976:android:b899a584c0ace390a73935 --groups testers --release-notes "vX.Y.Z: <one line>"
 ```
+Build through the Gradle wrapper on JDK 17, not `flutter build apk`: Flutter picks
+Android Studio's Java (25 on this Mac), and Gradle then stops with
+`Error resolving plugin [id: 'dev.flutter.flutter-plugin-loader'] > 25.0.4`.
+The wrapper writes the same `flutter-apk/app-release.apk`. `android/gradlew` and
+`android/gradle/wrapper/gradle-wrapper.jar` are git-ignored: a new clone or worktree copies
+them from a checkout that has them. Before distributing, check
+it is signed: `apksigner verify --print-certs <apk>` names `CN=Devper POS`.
+
 The release APK is signed with the key in `~/.devper/keystores/pos-release.properties`
 (never in the repo; without it the APK is unsigned and App Distribution refuses it). It is
 backed up in Secret Manager of `devperpos`; on a new machine:
