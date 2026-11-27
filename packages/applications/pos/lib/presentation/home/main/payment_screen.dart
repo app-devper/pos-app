@@ -11,6 +11,7 @@ import 'package:design_system/widgets/title_bar.dart';
 
 // Project imports:
 import 'package:design_system/theme/app_colors.dart';
+import 'package:design_system/theme/radius.dart';
 import 'package:pos/domain/model/sale/money.dart';
 import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/home/main/quick_cash_chips.dart';
@@ -249,11 +250,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
     return ElevatedButton(
       onPressed: _pay,
       style: ElevatedButton.styleFrom(
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        backgroundColor: AppColors.of(context).primaryFill,
+        foregroundColor: AppColors.of(context).onPrimaryFill,
         minimumSize: Size(double.infinity, tight ? 56 : 64),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.card),
         ),
       ),
       child: _payButtonLabel(),
@@ -392,7 +393,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: tight ? 6 : 16),
       decoration: BoxDecoration(
         color: AppColors.of(context).surfaceRaised,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.card),
       ),
       // Tightened, the title and the amount share one line.
       child: tight
@@ -430,7 +431,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       padding: EdgeInsets.symmetric(vertical: tight ? 4 : 8, horizontal: 16),
       decoration: BoxDecoration(
         color: AppColors.of(context).surfaceSunken,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.card),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -477,6 +478,24 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
+  /// The chosen method is filled, the other outlined: the redesign's rule
+  /// for one choice among a few.
+  BoxDecoration _optionDecoration(bool isSelected) {
+    final colors = AppColors.of(context);
+    return BoxDecoration(
+      color: isSelected ? colors.primaryFill : colors.surfaceRaised,
+      borderRadius: BorderRadius.circular(AppRadius.card),
+      border: Border.all(
+        color: isSelected ? colors.primaryFill : colors.border,
+      ),
+    );
+  }
+
+  Color _optionForeground(bool isSelected) {
+    final colors = AppColors.of(context);
+    return isSelected ? colors.onPrimaryFill : colors.textPrimary;
+  }
+
   Widget _buildWideOption(String title,
       {required IconData iconData,
       required bool isSelected,
@@ -488,29 +507,20 @@ class _PaymentScreenState extends State<PaymentScreen> {
       child: Container(
         height: 80,
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.of(context).surfaceRaised,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-              color: isSelected
-                  ? AppColors.of(context).textPrimary
-                  : AppColors.of(context).border,
-              width: 2),
-        ),
+        decoration: _optionDecoration(isSelected),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(iconData,
-                    color: AppColors.of(context).textPrimary, size: 20),
+                Icon(iconData, color: _optionForeground(isSelected), size: 20),
                 Icon(
                   isSelected
                       ? Icons.check_circle_rounded
                       : Icons.circle_outlined,
                   color: isSelected
-                      ? AppColors.of(context).textPrimary
+                      ? _optionForeground(true)
                       : AppColors.of(context).border,
                   size: 18,
                 ),
@@ -524,7 +534,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 child: Text(title,
                     style: TextStyle(
                         fontSize: 16,
-                        color: AppColors.of(context).textPrimary,
+                        color: _optionForeground(isSelected),
                         fontWeight: FontWeight.w600)),
               ),
             ),
@@ -550,15 +560,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
       child: Container(
         height: height,
         padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: colors.surfaceRaised,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-              color: isSelected ? colors.textPrimary : colors.border, width: 2),
-        ),
+        decoration: _optionDecoration(isSelected),
         child: Row(
           children: [
-            Icon(iconData, color: colors.textPrimary, size: 20),
+            Icon(iconData, color: _optionForeground(isSelected), size: 20),
             const SizedBox(width: 8),
             Expanded(
               child: FittedBox(
@@ -567,14 +572,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 child: Text(title,
                     style: TextStyle(
                         fontSize: 16,
-                        color: colors.textPrimary,
+                        color: _optionForeground(isSelected),
                         fontWeight: FontWeight.w600)),
               ),
             ),
             const SizedBox(width: 8),
             Icon(
               isSelected ? Icons.check_circle_rounded : Icons.circle_outlined,
-              color: isSelected ? colors.textPrimary : colors.border,
+              color: isSelected ? _optionForeground(true) : colors.border,
               size: 18,
             ),
           ],
