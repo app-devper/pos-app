@@ -11,6 +11,7 @@ import 'package:design_system/widgets/title_bar.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // Project imports:
+import 'package:pos/presentation/home/main/cart_panel.dart';
 import 'package:pos/presentation/home/main/cart_widget.dart';
 import 'package:pos/presentation/home/main/product_card.dart';
 import 'package:pos/presentation/home/main/payment_screen.dart';
@@ -75,9 +76,8 @@ class CartRobot {
 
   /// 'ยอดรวมสุทธิ' as the cart prints it, e.g. `฿75.00`.
   String total() {
-    final tile = find.widgetWithText(ListTile, 'ยอดรวมสุทธิ').hitTestable();
-    final trailing = (tester.widget<ListTile>(tile).trailing as Text?)?.data;
-    return trailing ?? '';
+    final amount = find.byKey(CartPanel.netTotalKey).hitTestable();
+    return tester.widget<Text>(amount).data ?? '';
   }
 
   /// Taps the line's `<n>x` and keys [quantity] in the 'จำนวนสินค้า'
