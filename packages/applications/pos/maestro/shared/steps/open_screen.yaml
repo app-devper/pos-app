@@ -1,9 +1,5 @@
-# Opens the shell screen whose menu item reads ${SCREEN}.
+# Opens the shell screen whose tab reads ${SCREEN} (the top bar on a wide
+# layout, the bottom bar on a narrow one; both carry the full name).
 appId: app.devper.pos
 ---
-- runFlow:
-    when:
-      true: ${LAYOUT == 'narrow'}
-    commands:
-      - tapOn: "เมนู"
 - tapOn: ${SCREEN}

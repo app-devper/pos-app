@@ -4,19 +4,33 @@ import 'package:flutter/material.dart';
 // Project imports:
 import 'package:design_system/theme/app_colors.dart';
 import 'package:design_system/theme/spacing.dart';
+import 'package:design_system/widgets/app_shell_tabs.dart';
 import 'package:design_system/widgets/responsive.dart';
 
-/// One entry in the shell's sidebar.
+/// One entry in the shell's navigation.
 class AppShellItem {
   final String id;
   final String label;
   final IconData icon;
 
+  /// What a narrow tab bar shows in place of [label].
+  final String? shortLabel;
+
   const AppShellItem({
     required this.id,
     required this.label,
     required this.icon,
+    this.shortLabel,
   });
+}
+
+/// How the shell offers its sections.
+enum AppShellNavigation {
+  /// A collapsible sidebar; a drawer on a narrow viewport.
+  sidebar,
+
+  /// Tabs across the top; a bar along the bottom of a narrow viewport.
+  tabs,
 }
 
 /// Application frame with a collapsible sidebar.
@@ -58,6 +72,12 @@ class AppShell extends StatefulWidget {
   /// back), while a wide one keeps the side menu beside it.
   final bool showDrawer;
 
+  /// Sidebar or tabs. The tabs draw no title bar and no sidebar, so
+  /// [title], [showTopBar], [initiallyExpanded] and [sidebarFooter] do
+  /// nothing there; [accountMenu] sits behind an account button instead.
+  final AppShellNavigation navigation;
+  final List<AppShellAction> accountMenu;
+
   const AppShell({
     super.key,
     required this.title,
@@ -73,6 +93,8 @@ class AppShell extends StatefulWidget {
     this.showTopBar = true,
     this.onBack,
     this.showDrawer = true,
+    this.navigation = AppShellNavigation.sidebar,
+    this.accountMenu = const [],
   });
 
   @override
@@ -100,6 +122,9 @@ class _AppShellState extends State<AppShell>
   @override
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
+    if (widget.navigation == AppShellNavigation.tabs) {
+      return _buildTabs(isMobile);
+    }
     final drawerOpen = isMobile && widget.showDrawer && _isOpen(true);
     return PopScope<Object?>(
       canPop: !drawerOpen && widget.onBack == null,
@@ -112,6 +137,30 @@ class _AppShellState extends State<AppShell>
         }
       },
       child: isMobile ? _buildMobile(context) : _buildDesktop(context),
+    );
+  }
+
+  /// Tabs have no drawer to close first: Back goes straight to [onBack].
+  Widget _buildTabs(bool isMobile) {
+    return PopScope<Object?>(
+      canPop: widget.onBack == null,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) widget.onBack?.call();
+      },
+      // A page pushed over the host stands alone on a narrow viewport.
+      child: isMobile && !widget.showDrawer
+          ? widget.child
+          : AppShellTabsFrame(
+              brand: widget.brand,
+              items: widget.items,
+              selectedId: widget.selectedId,
+              onSelect: widget.onSelect,
+              accountMenu: widget.accountMenu,
+              actions: widget.actions,
+              floatingActionButton: widget.floatingActionButton,
+              isMobile: isMobile,
+              child: widget.child,
+            ),
     );
   }
 

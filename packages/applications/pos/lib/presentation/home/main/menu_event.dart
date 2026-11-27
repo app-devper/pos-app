@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:design_system/widgets/app_shell.dart';
 
-/// The shell's sections, in side-menu order.
+/// The shell's sections, in tab order.
 enum MenuEvent {
   home,
   order,
@@ -18,14 +18,20 @@ const posBrand = 'Devper POS';
 bool isAdminOnly(MenuEvent section) =>
     section == MenuEvent.product || section == MenuEvent.database;
 
-/// The side menu's entries. Cashiers only sell and review sales; the rest
+/// The shell's tabs. Cashiers only sell and review sales; the rest
 /// is admin territory.
 List<AppShellItem> posMenuItems({required bool isAdmin}) {
   return [
     const AppShellItem(
-        id: 'home', label: 'ขายสินค้า', icon: Icons.shopping_cart_outlined),
+        id: 'home',
+        label: 'ขายสินค้า',
+        shortLabel: 'ขาย',
+        icon: Icons.shopping_cart_outlined),
     const AppShellItem(
-        id: 'order', label: 'รายการขาย', icon: Icons.receipt_long_outlined),
+        id: 'order',
+        label: 'รายการขาย',
+        shortLabel: 'บิล',
+        icon: Icons.receipt_long_outlined),
     if (isAdmin) ...[
       const AppShellItem(
           id: 'product', label: 'สินค้า', icon: Icons.inventory_2_outlined),
@@ -34,7 +40,7 @@ List<AppShellItem> posMenuItems({required bool isAdmin}) {
   ];
 }
 
-/// The section a side-menu entry [id] opens; an unknown one opens selling.
+/// The section a tab [id] opens; an unknown one opens selling.
 MenuEvent menuEventOf(String? id) {
   return switch (id) {
     'order' => MenuEvent.order,

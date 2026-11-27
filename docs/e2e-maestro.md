@@ -125,8 +125,8 @@ packages/applications/pos/maestro/
                         adjustments, stock counts, products, customers)
 ```
 
-- **Layout, not platform.** The phone shows the narrow layout (menu in a
-  drawer, product grid behind a button), the browser the wide one. Steps that
+- **Layout, not platform.** The phone shows the narrow layout (tabs in a
+  bottom bar, product grid behind a button), the browser the wide one. Steps that
   differ are picked with `when: true: ${LAYOUT == 'narrow'}`, which costs no
   waiting. Only one thing is truly per platform: hiding the soft keyboard,
   always through `steps/hide_keyboard.yaml`, never a bare `hideKeyboard`.

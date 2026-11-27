@@ -18,7 +18,7 @@ import 'package:pos/presentation/order/main/order_page.dart';
 import 'package:pos/presentation/product/main/product_page.dart';
 
 class HomePage extends StatefulWidget {
-  /// The side-menu entry to open first (see [posMenuItems]); null opens
+  /// The tab to open first (see [posMenuItems]); null opens
   /// selling.
   final String? section;
 

@@ -30,7 +30,7 @@ void main() {
     await continueSignedIn(tester);
     final shell = ShellRobot(tester);
 
-    // Act / Assert: the sidebar areas
+    // Act / Assert: the shell's tabs
     await shell.openSelling();
     await shell.expectScreenWithoutError(find.text('ตะกร้าสินค้า #1'));
 
@@ -167,10 +167,10 @@ Future<void> _expectSellingAndBillsWithoutAdminTools(ShellRobot shell) async {
   // so that "not shown" is not just "not shown yet".
   await shell.waitForRoleToApply();
 
-  expect(shell.sidebarItem('ขายสินค้า'), findsOneWidget);
-  expect(shell.sidebarItem('รายการขาย'), findsOneWidget);
-  expect(shell.sidebarItem('สินค้า'), findsNothing);
-  expect(shell.sidebarItem('จัดการ'), findsNothing);
+  expect(shell.tab('ขายสินค้า'), findsOneWidget);
+  expect(shell.tab('รายการขาย'), findsOneWidget);
+  expect(shell.tab('สินค้า'), findsNothing);
+  expect(shell.tab('จัดการ'), findsNothing);
   expect(shell.choiceChip('ทั้งหมด'), findsNothing);
   expect(find.text('ต้นทุน'), findsNothing);
   expect(shell.rangeDropdown, findsNothing);

@@ -23,18 +23,8 @@ appId: app.devper.pos
     timeout: 15000
 - assertVisible: "ต้นทุน ฿ .*"
 - assertVisible: "\\d+\n?${output.billCode}.*ต้นทุน: .*"
-- runFlow:
-    when:
-      true: ${LAYOUT == 'narrow'}
-    commands:
-      - tapOn: "เมนู"
 - assertVisible: "สินค้า"
 - assertVisible: "จัดการ"
-- runFlow:
-    when:
-      true: ${LAYOUT == 'narrow'}
-    commands:
-      - tapOn: "รายการขาย"
 - runFlow: steps/sign_out.yaml
 - runFlow:
     file: steps/sign_in.yaml

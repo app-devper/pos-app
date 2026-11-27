@@ -13,7 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:common/config/app_config.dart';
 import 'package:common/localizations/localizations_delegate.dart';
 import 'package:design_system/theme/theme.dart';
-import 'package:design_system/widgets/app_shell.dart';
+import 'package:design_system/widgets/app_shell_tabs.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:um/domain/entities/auth/login.dart';
 import 'package:um/domain/entities/auth/system.dart';
@@ -27,6 +27,7 @@ import 'package:pos/presentation/customer/main/customer_view_model.dart';
 import 'package:pos/presentation/customer/main/customers_view_model.dart';
 import 'package:pos/localizations/language/languages.dart';
 import 'package:pos/presentation/home/main/home_page.dart';
+import 'package:pos/presentation/home/main/pos_shell.dart';
 import 'package:pos/presentation/home/main/inner_page_frame.dart';
 import 'package:pos/domain/model/order/order_detail.dart';
 import 'package:pos/domain/model/supplier/supplier.dart';
@@ -176,19 +177,20 @@ Future<void> _openApp(WidgetTester tester,
   await _settle(tester);
 }
 
-/// Opens the shell section [label] from the side menu (the drawer on a
+/// Opens the shell section [label] from its tab (the bottom bar on a
 /// phone).
 Future<void> _openSection(WidgetTester tester, String label) async {
-  final menu = find.byTooltip('เมนู');
-  if (menu.hitTestable().evaluate().isNotEmpty) {
-    await tester.tap(menu.hitTestable());
-    await _settle(tester);
-  }
-  await tester.tap(find
-      .byWidgetPredicate((w) => w is AppSidebarAction && w.label == label)
-      .hitTestable());
+  await tester.tap(_tab(label));
   await _settle(tester);
 }
+
+/// The shell's tab [label], drawn and reachable.
+Finder _tab(String label) => find
+    .byWidgetPredicate((w) => w is AppShellTab && w.label == label)
+    .hitTestable();
+
+/// The account button of the shell.
+final _accountButton = find.byTooltip(AppShellAccountButton.tooltip);
 
 /// The selling screen, recognised by its cart's title.
 final _sellingScreen = find.text('ตะกร้าสินค้า #1');
@@ -279,18 +281,21 @@ void main() {
     expect(handled, isFalse);
   });
 
-  testWidgets('system Back with the drawer open closes only the drawer',
+  testWidgets(
+      'system Back with the account menu open closes only the menu',
       (tester) async {
     // Arrange
     await _openApp(tester);
     await _openSection(tester, 'จัดการ');
-    await tester.tap(find.byTooltip('เมนู'));
+    await tester.tap(_accountButton.hitTestable());
     await _settle(tester);
+    expect(find.text(PosShell.logoutLabel).hitTestable(), findsOneWidget);
 
     // Act
     await _systemBack(tester);
 
     // Assert
+    expect(find.text(PosShell.logoutLabel), findsNothing);
     expect(_managePage.hitTestable(), findsOneWidget);
   });
 
@@ -527,11 +532,6 @@ void main() {
     }
   }
 
-  /// The side menu's entry [label], drawn and reachable.
-  Finder sideMenuEntry(String label) => find
-      .byWidgetPredicate((w) => w is AppSidebarAction && w.label == label)
-      .hitTestable();
-
   testWidgets(
       'on a wide screen a form opened from จัดการ shows no side menu, '
       'only its back arrow', (tester) async {
@@ -546,7 +546,7 @@ void main() {
     // Assert
     expect(_managePage.hitTestable(), findsNothing);
     expect(find.byTooltip('ย้อนกลับ').hitTestable(), findsOneWidget);
-    expect(sideMenuEntry('ขายสินค้า'), findsNothing);
+    expect(_tab('ขายสินค้า'), findsNothing);
   });
 
   testWidgets(
@@ -562,11 +562,13 @@ void main() {
 
     // Assert
     expect(find.text('RC-1').hitTestable(), findsOneWidget);
-    expect(sideMenuEntry('ออกจากระบบ'), findsOneWidget);
-    expect(
-        sideMenuEntry(
-            Languages.of(tester.element(find.text('RC-1'))).userInfoTitle),
-        findsOneWidget);
+    expect(_tab('จัดการ'), findsOneWidget);
+    final userInfo =
+        Languages.of(tester.element(find.text('RC-1'))).userInfoTitle;
+    await tester.tap(_accountButton.hitTestable());
+    await _settle(tester);
+    expect(find.text(PosShell.logoutLabel).hitTestable(), findsOneWidget);
+    expect(find.text(userInfo).hitTestable(), findsOneWidget);
   });
 
   testWidgets(

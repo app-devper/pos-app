@@ -16,6 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'support/app.dart';
 import 'support/env.dart';
 import 'support/pump.dart';
+import 'support/robots/shell_robot.dart';
 
 const _hostedApiUrl = 'https://api.devper.app';
 const _localApiUrl = 'http://127.0.0.1:8585';
@@ -53,7 +54,7 @@ void main() {
     await signIn(tester);
 
     // Assert
-    expect(find.byTooltip('ขายสินค้า').hitTestable(), findsOneWidget);
+    expect(ShellRobot(tester).tab('ขายสินค้า'), findsOneWidget);
     expect(find.text('ตะกร้าสินค้า #1').hitTestable(), findsOneWidget);
 
     // Act
