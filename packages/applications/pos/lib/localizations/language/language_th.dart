@@ -301,6 +301,15 @@ class LanguageTh extends Languages {
   String inCartCount(int count) => "ในตะกร้า $count";
 
   @override
+  String get cartEmpty => "ว่าง";
+
+  @override
+  String cartLines(int count) => "$count รายการ";
+
+  @override
+  String get cartTitle => "ตะกร้าสินค้า";
+
+  @override
   String get chooseProductHint => "เลือกสินค้าเพื่อดูรายละเอียด";
 
   @override

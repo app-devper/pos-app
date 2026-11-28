@@ -126,7 +126,7 @@ packages/applications/pos/maestro/
 ```
 
 - **Layout, not platform.** The phone shows the narrow layout (tabs in a
-  bottom bar, product grid behind a button), the browser the wide one. Steps that
+  bottom bar, products first and the cart behind the bar along their foot), the browser the wide one. Steps that
   differ are picked with `when: true: ${LAYOUT == 'narrow'}`, which costs no
   waiting. Only one thing is truly per platform: hiding the soft keyboard,
   always through `steps/hide_keyboard.yaml`, never a bare `hideKeyboard`.
@@ -169,8 +169,8 @@ button labels, the stock row's scrollbar, among others).
 - Every icon-only control has a name, in the app's strings (`Languages`,
   Thai and English), and no two on a screen share one
   (`test/presentation/accessibility_walk_test.dart` walks the screens the
-  widget tests can build). The ones the flows use: `เลือกสินค้า` (the phone's
-  product picker), `นำลูกค้า <name> ออก`, `เพิ่มลูกค้า`, `คำสั่งเพิ่มเติม`
+  widget tests can build). The ones the flows use: `ตะกร้าสินค้า #<n>` and what it holds
+  (the phone's cart bar), `นำลูกค้า <name> ออก`, `เพิ่มลูกค้า`, `คำสั่งเพิ่มเติม`
   (a list's commands on a phone), `ย้อนกลับ` (a pushed page's back arrow),
   `ปรับสต็อก ล็อต <lot>`, `เพิ่มการนับสต็อก`,
   `บันทึกการนับสต็อก`, `คำสั่งเพิ่มเติมของบิล` (the bill's menu, which

@@ -27,7 +27,7 @@ appId: app.devper.pos
 - tapOn: "ชำระเงิน \\(1 รายการ\\)\n?฿50\\.00"
 - tapOn: "รับชำระพอดี ไม่มีเงินทอน"
 - extendedWaitUntil:
-    visible: "ยอดรวมสุทธิ\n?฿0\\.00"
+    visible: "(ยอดรวมสุทธิ\n?฿0\\.00|ตะกร้าสินค้า #1\n?ว่าง)"
     timeout: 15000
 # After the payment the search field has the focus again: a scan typed
 # without touching it adds a line. Only the wide layout shows the field.

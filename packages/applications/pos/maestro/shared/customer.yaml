@@ -43,8 +43,14 @@ env:
     env:
       SCREEN: "ขายสินค้า"
 - extendedWaitUntil:
-    visible: "ยอดรวมสุทธิ\n?฿0\\.00"
+    visible: "(ยอดรวมสุทธิ\n?฿0\\.00|ตะกร้าสินค้า #1\n?ว่าง)"
     timeout: 15000
+# The phone keeps the cart behind the bar along the foot of the products.
+- runFlow:
+    when:
+      true: ${LAYOUT == 'narrow'}
+    commands:
+      - tapOn: "ตะกร้าสินค้า #1\n?ว่าง"
 - tapOn: "ข้อมูลลูกค้า\n?เลือกลูกค้า"
 - tapOn: "ค้นหา\\.\\.\\."
 - inputText: MST-${RUN_ID}
@@ -59,6 +65,11 @@ env:
     timeout: 10000
 - assertVisible: "นำลูกค้า ${CUSTOMER} ออก"
 - takeScreenshot: customer-on-sale
+- runFlow:
+    when:
+      true: ${LAYOUT == 'narrow'}
+    commands:
+      - tapOn: "ปิด"
 - runFlow:
     file: steps/open_screen.yaml
     env:

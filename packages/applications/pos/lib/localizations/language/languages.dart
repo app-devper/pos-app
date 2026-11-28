@@ -220,6 +220,14 @@ abstract class Languages {
   /// A product card's cue once the open cart holds [count] of it.
   String inCartCount(int count);
 
+  /// The phone's cart bar: an empty cart, and how many lines a cart holds.
+  String get cartEmpty;
+
+  String cartLines(int count);
+
+  /// The title of the phone's open cart.
+  String get cartTitle;
+
   /// A wide list page's pane while nothing in the list is chosen.
   String get chooseProductHint;
 

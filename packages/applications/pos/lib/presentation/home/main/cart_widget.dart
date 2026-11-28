@@ -155,11 +155,18 @@ class CartOrderItem extends StatelessWidget {
       );
     }
 
+    // A tile's trailing slot is only so high: at a large text size the two
+    // lines of the price shrink to it rather than overflow.
+    Widget fittedPrice() => FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: AlignmentDirectional.centerEnd,
+          child: getPriceDiscount(),
+        );
     return LayoutBuilder(builder: (context, constraints) {
       if (constraints.maxWidth < _wideMinWidth) {
-        return _buildNarrow(context, getPriceDiscount());
+        return _buildNarrow(context, fittedPrice());
       }
-      return _buildWide(context, getPriceDiscount());
+      return _buildWide(context, fittedPrice());
     });
   }
 
@@ -374,32 +381,6 @@ class CartOrderItem extends StatelessWidget {
   /// A round icon button of the line, named for a screen reader.
   static Widget _named(String label, Widget button) =>
       Semantics(button: true, label: label, child: button);
-}
-
-/// Opens the product picker on a narrow (phone) layout, where the product grid
-/// is not on the selling screen itself.
-class CartSearchButton extends StatelessWidget {
-  final VoidCallback onPressed;
-
-  const CartSearchButton({super.key, required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 40,
-      width: 40,
-      child: IconButton(
-        tooltip: Languages.of(context).chooseProduct,
-        padding: const EdgeInsets.all(0),
-        splashRadius: 20,
-        onPressed: onPressed,
-        icon: Icon(
-          Icons.search,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-      ),
-    );
-  }
 }
 
 /// Takes the chosen customer off the sale. Its tooltip names the customer: on

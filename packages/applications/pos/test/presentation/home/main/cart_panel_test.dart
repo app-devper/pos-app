@@ -16,7 +16,6 @@ Future<List<String>> _pump(
   double total = 0,
   Size size = const Size(400, 800),
   double textScale = 1,
-  bool showSearchButton = false,
   IndexedWidgetBuilder? lineBuilder,
 }) async {
   tester.view.physicalSize = size;
@@ -43,8 +42,6 @@ Future<List<String>> _pump(
           total: total,
           customer: null,
           complianceSummary: null,
-          showSearchButton: showSearchButton,
-          onOpenProducts: () => events.add('products'),
           onChooseCustomer: () => events.add('customer'),
           onRemoveCustomer: () => events.add('remove-customer'),
           onCompliance: () => events.add('compliance'),
@@ -133,15 +130,8 @@ void main() {
     expect(second.top - first.bottom, greaterThan(0));
   });
 
-  testWidgets('the phone\'s product button opens the products', (tester) async {
-    final events = await _pump(tester, showSearchButton: true);
-
-    await tester.tap(find.byTooltip('เลือกสินค้า'));
-    expect(events, ['products']);
-  });
-
   testWidgets('on a short phone at a large text size the pay button stays '
-      'on screen and the lines scroll', (tester) async {
+      'on screen and the rest scrolls', (tester) async {
     await _pump(tester,
         lines: 12, total: 120, size: const Size(340, 640), textScale: 1.3);
 
@@ -184,5 +174,35 @@ void main() {
         find.ancestor(of: ink.first, matching: find.byType(Material)).first;
     expect(find.descendant(of: card, matching: material), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a phone on its side overflows nothing; the totals scroll into '
+      'view under the lines', (tester) async {
+    await _pump(tester, lines: 2, total: 20, size: const Size(340, 300));
+
+    expect(tester.takeException(), isNull);
+    expect(find.textContaining('ชำระเงิน (2 รายการ)').hitTestable(),
+        findsOneWidget);
+    await tester.ensureVisible(find.text('ยอดรวมสุทธิ'));
+    await tester.pumpAndSettle();
+    expect(find.text('ยอดรวมสุทธิ').hitTestable(), findsOneWidget);
+  });
+
+  testWidgets('with few lines the totals sit at the foot, by the pay button',
+      (tester) async {
+    await _pump(tester, lines: 1, total: 10);
+
+    final total = tester.getRect(find.text('ยอดรวมสุทธิ'));
+    final pay = tester.getRect(find.textContaining('ชำระเงิน (1 รายการ)'));
+    expect(pay.top - total.bottom, lessThan(60));
+  });
+
+  testWidgets('a tall cart column keeps the details and totals in view '
+      'however many lines it has', (tester) async {
+    await _pump(tester, lines: 30, total: 300, size: const Size(400, 900));
+
+    expect(find.text('ยอดรวมสุทธิ').hitTestable(), findsOneWidget);
+    expect(find.text('ข้อมูลลูกค้า').hitTestable(), findsOneWidget);
+    expect(find.text('บรรทัด 29').hitTestable(), findsNothing);
   });
 }

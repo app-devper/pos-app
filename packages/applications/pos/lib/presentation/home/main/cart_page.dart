@@ -19,6 +19,8 @@ import 'package:pos/domain/model/order/order_item.dart';
 import 'package:design_system/widgets/dialogs.dart';
 import 'package:pos/presentation/core/dialog_widget.dart';
 import 'package:pos/presentation/customer/add/customer_add_page.dart';
+import 'package:pos/localizations/language/languages.dart';
+import 'package:pos/presentation/home/main/cart_bar.dart';
 import 'package:pos/presentation/home/main/cart_panel.dart';
 import 'package:pos/presentation/home/main/cart_quantities.dart';
 import 'package:pos/presentation/home/main/cart_state.dart';
@@ -31,6 +33,9 @@ import 'package:design_system/theme/app_colors.dart';
 import 'cart_view_model.dart';
 
 class CartPage extends StatefulWidget {
+  /// The phone's open cart, over the products; at most one at a time.
+  static final GlobalKey cartSheetKey = GlobalKey(debugLabel: 'cart-sheet');
+
   const CartPage({super.key});
 
   @override
@@ -81,6 +86,21 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
     if (_alertKey.currentContext != null) {
       Navigator.of(context).pop();
     }
+    _closeCartSheet();
+  }
+
+  /// The phone's open cart, while it is open.
+  Route<Object?>? _cartSheetRoute;
+  bool _cartSheetOpening = false;
+
+  /// After a sale the phone goes back to the products, ready for the next
+  /// customer. The cart's own route is taken away wherever it is in the
+  /// stack, so a dialog still closing above it cannot be popped instead.
+  void _closeCartSheet() {
+    final route = _cartSheetRoute;
+    _cartSheetRoute = null;
+    if (route == null || !route.isActive) return;
+    route.navigator?.removeRoute(route);
   }
 
   void _onStateChanged() {
@@ -108,6 +128,8 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    // The cart reads this page; it does not outlive it.
+    _closeCartSheet();
     WidgetsBinding.instance.removeObserver(this);
     _viewModel.state.removeListener(_onStateChanged);
     _lookupErrors.cancel();
@@ -140,18 +162,77 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
     }
   }
 
-  Row _buildMobile() {
-    return Row(
+  /// The phone: the products first, the open cart a bar along the foot.
+  Widget _buildMobile() {
+    return Column(
       children: [
-        Expanded(
-          child: _buildCart(showSearchIcon: true),
-        ),
-        Container(width: 1, color: AppColors.of(context).border),
-        SizedBox(
-          width: 50,
-          child: _buildCartItem(),
+        Expanded(child: _buildProductSearch()),
+        Container(height: 1, color: AppColors.of(context).border),
+        CartBar(
+          cartNumber: _viewModel.openCart + 1,
+          lineCount: _orderItems.length,
+          total: _total,
+          onOpen: _showCartSheet,
         ),
       ],
+    );
+  }
+
+  Widget _buildProductSearch() {
+    return ProductSearch(
+      onSelected: (serialNumber) {
+        _viewModel.addOrderItem(serialNumber);
+      },
+      saleRecorded: _viewModel.orderPlaced,
+      inCart: cartQuantities(_orderItems),
+    );
+  }
+
+  /// The phone's cart, over the products: the cart and the strip of carts
+  /// beside it, following every change to the sale.
+  void _showCartSheet() {
+    // One cart at a time: a second tap before it is up opens nothing.
+    if (_cartSheetOpening || _cartSheetRoute != null) return;
+    _cartSheetOpening = true;
+    // Let go of the search field: closing the cart would hand it the focus
+    // back, and a phone's keyboard with it, over the products and the tabs.
+    FocusManager.instance.primaryFocus?.unfocus();
+    showRightDialog(
+      context,
+      builder: (sheetContext) {
+        _cartSheetRoute ??= ModalRoute.of(sheetContext);
+        return _buildCartSheet(sheetContext);
+      },
+    ).whenComplete(() {
+      _cartSheetOpening = false;
+      _cartSheetRoute = null;
+    });
+  }
+
+  Widget _buildCartSheet(BuildContext sheetContext) {
+    return KeyedSubtree(
+        key: CartPage.cartSheetKey,
+        child: ValueListenableBuilder<CartState>(
+          valueListenable: _viewModel.state,
+          builder: (context, _, __) => Column(
+            children: [
+              TitleBar(
+                title: Languages.of(context).cartTitle,
+                onBack: () => Navigator.pop(sheetContext),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(child: _buildCart()),
+                    Container(width: 1, color: AppColors.of(context).border),
+                    SizedBox(width: 50, child: _buildCartItem()),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
     );
   }
 
@@ -159,13 +240,7 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
     return Row(
       children: [
         Expanded(
-          child: ProductSearch(
-            onSelected: (serialNumber) {
-              _viewModel.addOrderItem(serialNumber);
-            },
-            saleRecorded: _viewModel.orderPlaced,
-            inCart: cartQuantities(_orderItems),
-          ),
+          child: _buildProductSearch(),
         ),
         Container(width: 1, color: AppColors.of(context).border),
         SizedBox(
@@ -185,13 +260,7 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
     return Row(
       children: [
         Expanded(
-          child: ProductSearch(
-            onSelected: (serialNumber) {
-              _viewModel.addOrderItem(serialNumber);
-            },
-            saleRecorded: _viewModel.orderPlaced,
-            inCart: cartQuantities(_orderItems),
-          ),
+          child: _buildProductSearch(),
         ),
         Container(width: 1, color: AppColors.of(context).border),
         SizedBox(
@@ -207,7 +276,7 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildCart({bool showSearchIcon = false}) {
+  Widget _buildCart() {
     return CartPanel(
       cartNumber: _viewModel.openCart + 1,
       lineCount: _orderItems.length,
@@ -216,8 +285,6 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
       customer: _viewModel.customer,
       complianceSummary:
           _hasComplianceInfo() ? _getComplianceSummary() : null,
-      showSearchButton: showSearchIcon,
-      onOpenProducts: _showProductDialog,
       onChooseCustomer: _showCustomerDialog,
       onRemoveCustomer: () => _viewModel.setCustomer(null),
       onCompliance: _showComplianceDialog,
@@ -438,36 +505,6 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
         Navigator.pop(context);
         refreshCustomer();
       }),
-    );
-  }
-
-  void _showProductDialog() {
-    showRightDialog(
-      context,
-      builder: (context) => Column(
-        children: [
-          TitleBar(
-            title: "เลือกสินค้า",
-            onBack: () {
-              Navigator.pop(context);
-            },
-          ),
-          const Divider(height: 1),
-          Expanded(
-            // The dialog outlives a tap, so it follows the cart itself.
-            child: ValueListenableBuilder<CartState>(
-              valueListenable: _viewModel.state,
-              builder: (context, state, _) => ProductSearch(
-                onSelected: (serialNumber) {
-                  _viewModel.addOrderItem(serialNumber);
-                },
-                saleRecorded: _viewModel.orderPlaced,
-                inCart: cartQuantities(state.orderItems ?? const []),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 

@@ -6,8 +6,13 @@ import 'package:design_system/widgets/decimal_input.dart';
 import 'package:design_system/theme/app_colors.dart';
 import 'package:design_system/widgets/title_bar.dart';
 
-void showRightDialog(BuildContext context, {required WidgetBuilder builder}) {
-  showDialog(
+/// A panel along the right-hand side, over the page. The future completes
+/// when it closes.
+Future<void> showRightDialog(
+  BuildContext context, {
+  required WidgetBuilder builder,
+}) {
+  return showDialog<void>(
     barrierDismissible: true,
     context: context,
     builder: (BuildContext context) {

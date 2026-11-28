@@ -297,6 +297,15 @@ class LanguageEn extends Languages {
   String inCartCount(int count) => "In cart: $count";
 
   @override
+  String get cartEmpty => "Empty";
+
+  @override
+  String cartLines(int count) => count == 1 ? "1 item" : "$count items";
+
+  @override
+  String get cartTitle => "Cart";
+
+  @override
   String get chooseProductHint => "Choose a product to see its details";
 
   @override
