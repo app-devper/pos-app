@@ -11,6 +11,7 @@ import 'package:design_system/widgets/title_bar.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // Project imports:
+import 'package:pos/presentation/order/main/order_list_tile.dart';
 import 'package:pos/presentation/order/detail/order_detail_page.dart';
 import 'package:pos/presentation/order/main/order_page.dart';
 import 'package:pos/presentation/order/return/product_return_widget.dart';
@@ -69,17 +70,15 @@ class OrderRobot {
     await _settleList();
   }
 
-  /// The rows showing [bill]'s number and total (`฿` before it). The
-  /// number is the row's title, so this is one row; the detail's header
-  /// still confirms it.
+  /// The rows showing [bill]'s number and total (`฿` before it), on a
+  /// phone's list or a wide one. The number is the row's own, so this is
+  /// one row; the detail's header still confirms it.
   Finder _rows(Bill bill) => find.descendant(
       of: _list,
-      matching: find.byWidgetPredicate((w) =>
-          w is ListTile &&
-          w.title is Text &&
-          (w.title as Text).data == bill.code &&
-          w.trailing is Text &&
-          (w.trailing as Text).data == '฿${bill.totalText}'));
+      matching: find.ancestor(
+          of: find.text('฿${bill.totalText}'),
+          matching: find.byWidgetPredicate(
+              (w) => w is OrderListTile && w.order.code == bill.code)));
 
   /// Whether a row with [bill]'s title and total is listed, scrolling the
   /// whole list (today's bills, in the server's order).

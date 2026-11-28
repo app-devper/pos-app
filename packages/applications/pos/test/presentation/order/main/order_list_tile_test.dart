@@ -296,5 +296,37 @@ void main() {
         expect(tag.tone, AppTagTone.danger);
       });
     }
+
+    // A tablet's list is a wide one: the admin's cost and profit, and a
+    // customer's name, are read in full, not cut to an ellipsis.
+    testWidgets('on a 768 px tablet an admin reads cost, profit and the '
+        'customer in full', (tester) async {
+      tester.view.physicalSize = const Size(768, 1024);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final order = OrderSummary(
+        id: 'o1',
+        code: 'OD_202611250007',
+        customerCode: '',
+        customerName: 'สมศรี ใจดีมากที่สุดในซอย',
+        createdDate: '2026-11-25T10:00:00Z',
+        total: 14690,
+        totalCost: 12345,
+        discount: 0,
+        type: 'Store',
+        status: 'CONFIRMED',
+      );
+      await tester.pumpWidget(_appHost(
+          OrderListTile(index: 0, order: order, showCost: true, onTap: () {})));
+
+      for (final text in [
+        'ต้นทุน: 12,345.00  กำไร: 2,345.00',
+        '${order.getCreatedDate()} ลูกค้า: สมศรี ใจดีมากที่สุดในซอย',
+      ]) {
+        final paragraph = tester.renderObject<RenderParagraph>(find.text(text));
+        expect(paragraph.didExceedMaxLines, isFalse, reason: text);
+      }
+      expect(tester.takeException(), isNull);
+    });
   });
 }

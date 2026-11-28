@@ -41,6 +41,11 @@ class OrderListTile extends StatelessWidget {
   static const double _wideFrom = 720;
   static const double _indexWidth = 40;
 
+  /// A bill number is short; time and customer, cost and profit get more.
+  static const int _codeFlex = 2;
+  static const int _detailFlex = 3;
+  static const int _detailLines = 2;
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -116,7 +121,7 @@ class OrderListTile extends StatelessWidget {
               children: [
                 SizedBox(width: _indexWidth, child: _index(context)),
                 Expanded(
-                  flex: 3,
+                  flex: _codeFlex,
                   child: Row(
                     children: [
                       Flexible(child: _code(context)),
@@ -127,18 +132,20 @@ class OrderListTile extends StatelessWidget {
                     ],
                   ),
                 ),
+                // Time, customer, cost and profit wrap onto a second line
+                // where a column is narrow, rather than being cut short.
                 Expanded(
-                  flex: 3,
+                  flex: _detailFlex,
                   child: Text(_time(context),
-                      maxLines: 1,
+                      maxLines: _detailLines,
                       overflow: TextOverflow.ellipsis,
                       style: secondary),
                 ),
                 if (showCost)
                   Expanded(
-                    flex: 3,
+                    flex: _detailFlex,
                     child: Text(_costText,
-                        maxLines: 1,
+                        maxLines: _detailLines,
                         overflow: TextOverflow.ellipsis,
                         style: secondary),
                   ),
