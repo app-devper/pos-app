@@ -194,6 +194,9 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
     // One cart at a time: a second tap before it is up opens nothing.
     if (_cartSheetOpening || _cartSheetRoute != null) return;
     _cartSheetOpening = true;
+    // Let go of the search field: closing the cart would hand it the focus
+    // back, and a phone's keyboard with it, over the products and the tabs.
+    FocusManager.instance.primaryFocus?.unfocus();
     showRightDialog(
       context,
       builder: (sheetContext) {

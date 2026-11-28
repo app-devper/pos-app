@@ -219,4 +219,21 @@ void main() {
     expect(_sheet, findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  // Closing a route gives the focus back to what had it; on a phone that
+  // would bring the keyboard back over the products and the tabs.
+  testWidgets('after typing in the search, opening and closing the cart '
+      'leaves the search field without the focus', (tester) async {
+    await _open(tester);
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.focusNode!.hasFocus, isTrue);
+
+    await _openCart(tester);
+    await tester.tap(find.text('ปิด'));
+    await _settle(tester);
+
+    expect(field.focusNode!.hasFocus, isFalse);
+  });
 }
