@@ -84,7 +84,18 @@ class _ProductSearchState extends State<ProductSearch> {
   /// stays on the route), so the next scan would go nowhere.
   void _onSaleRecorded() {
     _viewModel.refresh();
-    _serialNumberNode.requestFocus();
+    _refocusSearch();
+  }
+
+  /// Set by the layout: a phone's panel, where the search field never takes
+  /// the focus by itself (its soft keyboard would cover the products and
+  /// the tabs).
+  bool _compact = false;
+
+  /// Puts the cursor back in the search field, ready for the next scan, on
+  /// a screen with a scanner or a keyboard of its own.
+  void _refocusSearch() {
+    if (!_compact) _serialNumberNode.requestFocus();
   }
 
   @override
@@ -96,6 +107,7 @@ class _ProductSearchState extends State<ProductSearch> {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         final compact = constraints.maxWidth < _compactBelow;
+        _compact = compact;
         final columns = compact
             ? _compactColumns
             : (constraints.maxWidth ~/ _cardWidth).clamp(1, 12);
@@ -104,7 +116,7 @@ class _ProductSearchState extends State<ProductSearch> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: _buildSearchField(context),
+              child: _buildSearchField(context, autofocus: !compact),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -123,9 +135,9 @@ class _ProductSearchState extends State<ProductSearch> {
     );
   }
 
-  Widget _buildSearchField(BuildContext context) {
+  Widget _buildSearchField(BuildContext context, {required bool autofocus}) {
     return TextField(
-      autofocus: true,
+      autofocus: autofocus,
       focusNode: _serialNumberNode,
       controller: _serialNumberEditingController,
       decoration: buildSearchDecoration(
@@ -144,7 +156,7 @@ class _ProductSearchState extends State<ProductSearch> {
         if (value.isEmpty) return;
         widget.onSelected(value);
         _serialNumberEditingController.text = "";
-        _serialNumberNode.requestFocus();
+        _refocusSearch();
         _viewModel.searchProduct("");
       },
     );
@@ -163,7 +175,7 @@ class _ProductSearchState extends State<ProductSearch> {
           // desktop; the next scan must still land in it.
           onSelected: (category) {
             _viewModel.selectCategory(category);
-            _serialNumberNode.requestFocus();
+            _refocusSearch();
           },
           items: [
             FilterPill<String?>(
@@ -286,7 +298,7 @@ class _ProductSearchState extends State<ProductSearch> {
           compact: compact,
           onAdd: () {
             widget.onSelected(barcode);
-            _serialNumberNode.requestFocus();
+            _refocusSearch();
           },
         );
       },

@@ -196,4 +196,13 @@ void main() {
     final pay = tester.getRect(find.textContaining('ชำระเงิน (1 รายการ)'));
     expect(pay.top - total.bottom, lessThan(60));
   });
+
+  testWidgets('a tall cart column keeps the details and totals in view '
+      'however many lines it has', (tester) async {
+    await _pump(tester, lines: 30, total: 300, size: const Size(400, 900));
+
+    expect(find.text('ยอดรวมสุทธิ').hitTestable(), findsOneWidget);
+    expect(find.text('ข้อมูลลูกค้า').hitTestable(), findsOneWidget);
+    expect(find.text('บรรทัด 29').hitTestable(), findsNothing);
+  });
 }

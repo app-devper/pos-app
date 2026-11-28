@@ -93,6 +93,8 @@ env:
 - extendedWaitUntil:
     visible: "${ADDED}.*฿30\\.00.*"
     timeout: 15000
+# A phone's keyboard would cover the tabs.
+- runFlow: steps/hide_keyboard.yaml
 # Deleted: it has no stock, so the question is the plain one.
 - runFlow:
     file: steps/open_product_edit.yaml

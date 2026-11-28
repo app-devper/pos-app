@@ -22,6 +22,10 @@ class CartPanel extends StatelessWidget {
   /// The net total's amount, for a test to read what the cart prints.
   static const Key netTotalKey = Key('cart-net-total');
 
+  /// From this height up the details and totals stay in view; below it
+  /// they scroll with the lines.
+  static const double _pinDetailsFrom = 680;
+
   static const double _gutter = 12;
   static const double _lineGap = 6;
   static const double _payHeight = 64;
@@ -59,33 +63,52 @@ class CartPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _header(),
+          const Divider(height: 1),
+          _columnTitles(context),
+          Expanded(
+            child: constraints.maxHeight >= _pinDetailsFrom
+                ? _pinnedBody()
+                : _scrollingBody(),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(_gutter, 8, _gutter, _gutter),
+            child: _payButton(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// A column tall enough for both: the lines scroll, and the sale's details
+  /// and totals stay in view under them.
+  Widget _pinnedBody() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _header(),
-        const Divider(height: 1),
-        _columnTitles(context),
-        // The lines, then the sale's details and totals at the foot of what
-        // is left. Where there is not room for both (a short phone, a large
-        // text size, a phone on its side) they scroll as one; the pay button
-        // below always stays.
-        Expanded(
-          child: CustomScrollView(
-            slivers: [
-              _lines(),
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: _details(),
-                ),
-              ),
-            ],
+        Expanded(child: CustomScrollView(slivers: [_lines()])),
+        _details(),
+      ],
+    );
+  }
+
+  /// A short one (a phone's cart, a large text size, a phone on its side):
+  /// the lines, then the details and totals at the foot of what is left,
+  /// scrolling as one where there is not room for both.
+  Widget _scrollingBody() {
+    return CustomScrollView(
+      slivers: [
+        _lines(),
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: _details(),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(_gutter, 8, _gutter, _gutter),
-          child: _payButton(context),
         ),
       ],
     );

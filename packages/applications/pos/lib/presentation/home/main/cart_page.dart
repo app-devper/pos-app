@@ -89,14 +89,18 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
     _closeCartSheet();
   }
 
+  /// The phone's open cart, while it is open.
+  Route<Object?>? _cartSheetRoute;
+  bool _cartSheetOpening = false;
+
   /// After a sale the phone goes back to the products, ready for the next
   /// customer. The cart's own route is taken away wherever it is in the
   /// stack, so a dialog still closing above it cannot be popped instead.
   void _closeCartSheet() {
-    final sheet = CartPage.cartSheetKey.currentContext;
-    if (sheet == null) return;
-    final route = ModalRoute.of(sheet);
-    if (route != null) Navigator.of(sheet).removeRoute(route);
+    final route = _cartSheetRoute;
+    _cartSheetRoute = null;
+    if (route == null || !route.isActive) return;
+    route.navigator?.removeRoute(route);
   }
 
   void _onStateChanged() {
@@ -124,6 +128,8 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    // The cart reads this page; it does not outlive it.
+    _closeCartSheet();
     WidgetsBinding.instance.removeObserver(this);
     _viewModel.state.removeListener(_onStateChanged);
     _lookupErrors.cancel();
@@ -185,9 +191,23 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
   /// The phone's cart, over the products: the cart and the strip of carts
   /// beside it, following every change to the sale.
   void _showCartSheet() {
+    // One cart at a time: a second tap before it is up opens nothing.
+    if (_cartSheetOpening || _cartSheetRoute != null) return;
+    _cartSheetOpening = true;
     showRightDialog(
       context,
-      builder: (sheetContext) => KeyedSubtree(
+      builder: (sheetContext) {
+        _cartSheetRoute ??= ModalRoute.of(sheetContext);
+        return _buildCartSheet(sheetContext);
+      },
+    ).whenComplete(() {
+      _cartSheetOpening = false;
+      _cartSheetRoute = null;
+    });
+  }
+
+  Widget _buildCartSheet(BuildContext sheetContext) {
+    return KeyedSubtree(
         key: CartPage.cartSheetKey,
         child: ValueListenableBuilder<CartState>(
           valueListenable: _viewModel.state,
@@ -210,7 +230,6 @@ class _CartPageState extends State<CartPage> with WidgetsBindingObserver {
             ],
           ),
         ),
-      ),
     );
   }
 

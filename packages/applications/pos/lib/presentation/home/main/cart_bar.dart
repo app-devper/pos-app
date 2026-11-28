@@ -33,7 +33,7 @@ class CartBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final strings = Languages.of(context);
-    final title = 'ตะกร้าสินค้า #$cartNumber';
+    final title = '${strings.cartTitle} #$cartNumber';
     final empty = lineCount == 0;
     final detail = empty
         ? strings.cartEmpty
@@ -64,22 +64,36 @@ class CartBar extends StatelessWidget {
                   children: [
                     Icon(Icons.shopping_cart_outlined, color: foreground),
                     const SizedBox(width: 12),
-                    Flexible(
-                      child: Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: foreground,
-                        ),
+                    // The cart's name over what it holds; at a large text
+                    // size the name shrinks to fit rather than being cut.
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: AlignmentDirectional.centerStart,
+                            child: Text(
+                              title,
+                              maxLines: 1,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: foreground,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            empty
+                                ? strings.cartEmpty
+                                : strings.cartLines(lineCount),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 12, color: foreground),
+                          ),
+                        ],
                       ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      empty ? strings.cartEmpty : strings.cartLines(lineCount),
-                      style: TextStyle(fontSize: 13, color: foreground),
                     ),
                     if (!empty) ...[
                       const SizedBox(width: 8),

@@ -3,6 +3,7 @@
 
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pos/container.dart';
 import 'package:pos/presentation/home/main/cart_bar.dart';
@@ -168,5 +169,54 @@ void main() {
     final e2 = tester.takeException();
     expect(e2, isNull);
     expect(find.textContaining('ชำระเงิน ('), findsOneWidget);
+  });
+
+  // A phone's soft keyboard would cover the products and the tabs.
+  testWidgets('on a phone the search field does not take the focus by '
+      'itself: not on arrival, after a card, or after the cart closes',
+      (tester) async {
+    await _open(tester);
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.focusNode!.hasFocus, isFalse, reason: 'on arrival');
+
+    await tester.tap(find.byType(ProductCard));
+    await _settle(tester);
+    expect(field.focusNode!.hasFocus, isFalse, reason: 'after a card');
+
+    await _openCart(tester);
+    await tester.tap(find.text('ปิด'));
+    await _settle(tester);
+    expect(field.focusNode!.hasFocus, isFalse, reason: 'after the cart');
+  });
+
+  testWidgets('the bar names its cart in full at a large text size',
+      (tester) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await _open(tester, size: const Size(360, 640));
+    for (var i = 0; i < 12; i++) {
+      await tester.tap(find.byType(ProductCard));
+      await tester.pump();
+    }
+    await _settle(tester);
+
+    final title = find.descendant(
+        of: _bar, matching: find.text('ตะกร้าสินค้า #1'));
+    final painter = tester.renderObject<RenderParagraph>(title);
+    expect(painter.didExceedMaxLines, isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a second tap on the bar does not open a second cart',
+      (tester) async {
+    await _open(tester);
+    final bar = tester.widget<CartBar>(_bar);
+
+    bar.onOpen();
+    bar.onOpen();
+    await _settle(tester);
+
+    expect(_sheet, findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }

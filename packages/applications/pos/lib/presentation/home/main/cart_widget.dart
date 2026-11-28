@@ -383,32 +383,6 @@ class CartOrderItem extends StatelessWidget {
       Semantics(button: true, label: label, child: button);
 }
 
-/// Opens the product picker on a narrow (phone) layout, where the product grid
-/// is not on the selling screen itself.
-class CartSearchButton extends StatelessWidget {
-  final VoidCallback onPressed;
-
-  const CartSearchButton({super.key, required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 40,
-      width: 40,
-      child: IconButton(
-        tooltip: Languages.of(context).chooseProduct,
-        padding: const EdgeInsets.all(0),
-        splashRadius: 20,
-        onPressed: onPressed,
-        icon: Icon(
-          Icons.search,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-      ),
-    );
-  }
-}
-
 /// Takes the chosen customer off the sale. Its tooltip names the customer: on
 /// the web the tile's own title does not reach the semantics tree.
 class CartCustomerRemoveButton extends StatelessWidget {

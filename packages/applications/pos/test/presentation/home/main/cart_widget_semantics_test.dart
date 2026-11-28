@@ -50,20 +50,6 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('the button that opens the product picker is labelled',
-      (tester) async {
-    // Arrange
-    var opened = 0;
-    await tester.pumpWidget(_host(CartSearchButton(onPressed: () => opened++)));
-
-    // Act
-    await tester.tap(find.byTooltip('เลือกสินค้า'));
-
-    // Assert
-    expect(opened, 1);
-    expect(find.byIcon(Icons.search), findsOneWidget);
-  });
-
   testWidgets('the button that takes the customer off the sale names them',
       (tester) async {
     // Arrange
@@ -84,14 +70,12 @@ void main() {
     // Arrange / Act
     await tester.pumpWidget(_host(
       Row(children: [
-        CartSearchButton(onPressed: () {}),
         CartCustomerRemoveButton(customerName: 'Ann', onPressed: () {}),
       ]),
       languages: englishLanguages,
     ));
 
     // Assert
-    expect(find.byTooltip('Choose product'), findsOneWidget);
     expect(find.byTooltip('Remove customer Ann'), findsOneWidget);
   });
 }
