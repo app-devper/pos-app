@@ -234,7 +234,7 @@ void main() {
         index: 0, order: _order(), showCost: false, onTap: () => opened++)));
 
     // Act
-    await tester.tap(find.byType(ListTile));
+    await tester.tap(find.text('OD_202611250007'));
 
     // Assert
     expect(opened, 1);

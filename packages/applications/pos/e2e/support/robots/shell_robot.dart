@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:design_system/widgets/app_shell_tabs.dart';
+import 'package:design_system/widgets/filter_pills.dart';
 import 'package:design_system/widgets/title_bar.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -119,8 +120,13 @@ class ShellRobot {
           (w) => w is TextField && w.decoration?.hintText == hint)
       .hitTestable();
 
-  Finder choiceChip(String label) =>
-      find.widgetWithText(ChoiceChip, label).hitTestable();
+  /// The bills list's channel pill [label] (ทั้งหมด, หน้าร้าน, ออนไลน์).
+  Finder filterPill(String label) => find
+      .descendant(
+          of: find.byType(FilterPills<String>),
+          matching: find.ancestor(
+              of: find.text(label), matching: find.byType(InkWell)))
+      .hitTestable();
 
   Finder get rangeDropdown =>
       find.byWidgetPredicate((w) => w is DropdownButton).hitTestable();

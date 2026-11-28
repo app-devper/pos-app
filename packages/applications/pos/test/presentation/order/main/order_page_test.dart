@@ -104,9 +104,9 @@ void main() {
     expect(find.byType(ChoiceChip), findsNothing);
     expect(
         [for (final p in tester.widget<FilterPills<String>>(pills).items) p.label],
-        ['ทั้งหมด', 'หน้าร้าน', 'ออนไลน์']);
+        ['All', 'Store', 'Online']);
 
-    await tester.tap(find.text('หน้าร้าน'));
+    await tester.tap(find.text('Store'));
     await tester.pump();
     await tester.pump();
     expect(tester.widget<FilterPills<String>>(pills).selected, 'Store');

@@ -64,7 +64,7 @@ class OrderRobot {
   }
 
   Future<void> chooseFilter(String label) async {
-    await tester.tap(shell.choiceChip(label));
+    await tester.tap(shell.filterPill(label));
     await tester.pump();
     await _settleList();
   }
