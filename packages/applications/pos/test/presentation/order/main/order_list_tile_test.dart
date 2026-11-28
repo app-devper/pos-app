@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:design_system/theme/text_styles.dart';
 import 'package:design_system/theme/app_colors.dart';
 import 'package:design_system/theme/theme.dart';
+import 'package:design_system/widgets/app_tag.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // Project imports:
@@ -27,6 +28,20 @@ OrderSummary _order({String status = 'CONFIRMED', String customerName = ''}) =>
       type: 'Store',
       status: status,
     );
+
+/// A phone's list: the row lays its parts out under each other.
+void useNarrowList(WidgetTester tester) {
+  tester.view.physicalSize = const Size(390, 844);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+}
+
+/// A wide list: the row reads across.
+void useWideList(WidgetTester tester) {
+  tester.view.physicalSize = const Size(1000, 700);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+}
 
 Widget _host(Widget child, {bool thai = true}) => MaterialApp(
     localizationsDelegates: [thai ? thaiLanguages : englishLanguages],
@@ -67,9 +82,10 @@ void main() {
         findsOneWidget);
   });
 
-  testWidgets('a bill row shows its bill number above its time',
+  testWidgets('on a phone a bill row shows its bill number above its time',
       (tester) async {
     // Arrange / Act
+    useNarrowList(tester);
     await tester.pumpWidget(_host(OrderListTile(
         index: 0, order: _order(), showCost: true, onTap: () {})));
 
@@ -222,5 +238,63 @@ void main() {
 
     // Assert
     expect(opened, 1);
+  });
+
+  group('the redesign', () {
+    setUpAll(loadAppFonts);
+
+    testWidgets('on a wide list a bill reads across one line: number, time, '
+        'cost, amount', (tester) async {
+      useWideList(tester);
+      final order = _order(customerName: 'สมชาย');
+      await tester.pumpWidget(_appHost(OrderListTile(
+          index: 0, order: order, showCost: true, onTap: () {})));
+
+      double mid(Finder f) => tester.getCenter(f).dy;
+      final code = find.text('OD_202611250007');
+      final time = find.text('${order.getCreatedDate()} ลูกค้า: สมชาย');
+      final cost = find.text('ต้นทุน: 20.00  กำไร: 30.00');
+      final amount = find.text('฿50.00');
+      expect((mid(code) - mid(time)).abs(), lessThan(6));
+      expect((mid(code) - mid(amount)).abs(), lessThan(6));
+      expect((mid(code) - mid(cost)).abs(), lessThan(6));
+      expect(tester.getTopLeft(code).dx, lessThan(tester.getTopLeft(time).dx));
+      expect(tester.getTopLeft(time).dx, lessThan(tester.getTopLeft(cost).dx));
+      expect(tester.getTopRight(amount).dx, greaterThan(900));
+      expect(tester.takeException(), isNull);
+    });
+
+    for (final wide in [false, true]) {
+      testWidgets('a wide=$wide row is still read as one node, number first',
+          (tester) async {
+        wide ? useWideList(tester) : useNarrowList(tester);
+        final semantics = tester.ensureSemantics();
+        await tester.pumpWidget(_appHost(OrderListTile(
+            index: 0, order: _order(), showCost: true, onTap: () {})));
+
+        expect(
+            find.bySemanticsLabel(RegExp(
+                r'^1\nOD_202611250007\n.*ต้นทุน: .*฿50\.00$',
+                dotAll: true)),
+            findsOneWidget);
+        semantics.dispose();
+      });
+
+      testWidgets('a cancelled wide=$wide row is muted and tagged in the '
+          'danger tone', (tester) async {
+        wide ? useWideList(tester) : useNarrowList(tester);
+        await tester.pumpWidget(_appHost(OrderListTile(
+            index: 0,
+            order: _order(status: 'CANCELLED'),
+            showCost: false,
+            onTap: () {})));
+
+        expect(tester.widget<Text>(find.text('OD_202611250007')).style?.color,
+            AppColors.light.textSecondary);
+        final tag = tester.widget<AppTag>(find.byType(AppTag));
+        expect(tag.label, 'ยกเลิกแล้ว');
+        expect(tag.tone, AppTagTone.danger);
+      });
+    }
   });
 }
