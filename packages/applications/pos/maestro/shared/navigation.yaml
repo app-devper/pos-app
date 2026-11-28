@@ -65,6 +65,6 @@ appId: app.devper.pos
     env:
       SCREEN: "ขายสินค้า"
 - extendedWaitUntil:
-    visible: "ยอดรวมสุทธิ\n?฿0\\.00"
+    visible: "(ยอดรวมสุทธิ\n?฿0\\.00|ตะกร้าสินค้า #1\n?ว่าง)"
     timeout: 15000
 - runFlow: steps/sign_out.yaml

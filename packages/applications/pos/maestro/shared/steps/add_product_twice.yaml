@@ -1,19 +1,10 @@
-# Puts two of ${PRODUCT_NAME} in the cart. On the narrow layout the product
-# grid is a dialog behind the search button; on the wide one it is on the
-# selling screen. The search text is only the run's prefix, so the field's own
-# value never matches the tile's selector.
+# Puts two of ${PRODUCT_NAME} in the cart, and shows the cart: on the narrow
+# layout the products come first and the cart opens from the bar along the
+# foot; on the wide one it is beside them. The search text is only the run's
+# prefix, so the field's own value never matches the card's selector.
 appId: app.devper.pos
 ---
-- runFlow:
-    when:
-      true: ${LAYOUT == 'narrow'}
-    commands:
-      - tapOn: "เลือกสินค้า"
-- runFlow:
-    when:
-      true: ${LAYOUT == 'wide'}
-    commands:
-      - tapOn: "ค้นหาชื่อสินค้า หรือสแกนบาร์โค้ด"
+- tapOn: "ค้นหาชื่อสินค้า หรือสแกนบาร์โค้ด"
 - inputText: MST-${RUN_ID}
 - extendedWaitUntil:
     visible: "${PRODUCT_NAME}.*"
@@ -24,4 +15,5 @@ appId: app.devper.pos
     when:
       true: ${LAYOUT == 'narrow'}
     commands:
-      - tapOn: "ปิด"
+      - runFlow: hide_keyboard.yaml
+      - tapOn: "ตะกร้าสินค้า #\\d+\n?\\d+ รายการ.*"
