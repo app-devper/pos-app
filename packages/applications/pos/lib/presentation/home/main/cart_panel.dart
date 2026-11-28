@@ -38,9 +38,6 @@ class CartPanel extends StatelessWidget {
   /// What the controlled-drug details say; null when none are given.
   final String? complianceSummary;
 
-  /// The phone's button for the product picker, which is not on its screen.
-  final bool showSearchButton;
-  final VoidCallback onOpenProducts;
   final VoidCallback onChooseCustomer;
   final VoidCallback onRemoveCustomer;
   final VoidCallback onCompliance;
@@ -54,12 +51,10 @@ class CartPanel extends StatelessWidget {
     required this.total,
     required this.customer,
     required this.complianceSummary,
-    required this.onOpenProducts,
     required this.onChooseCustomer,
     required this.onRemoveCustomer,
     required this.onCompliance,
     required this.onPay,
-    this.showSearchButton = false,
   });
 
   @override
@@ -70,38 +65,61 @@ class CartPanel extends StatelessWidget {
         _header(),
         const Divider(height: 1),
         _columnTitles(context),
-        Expanded(child: _lines()),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(_gutter, 0, _gutter, _gutter),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppCard(
-                padding: EdgeInsets.zero,
-                child: CartCustomerTile(
-                  customer: customer,
-                  onChoose: onChooseCustomer,
-                  onRemove: onRemoveCustomer,
+        // The lines, then the sale's details and totals at the foot of what
+        // is left. Where there is not room for both (a short phone, a large
+        // text size, a phone on its side) they scroll as one; the pay button
+        // below always stays.
+        Expanded(
+          child: CustomScrollView(
+            slivers: [
+              _lines(),
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: _details(),
                 ),
               ),
-              const SizedBox(height: _lineGap),
-              AppCard(padding: EdgeInsets.zero, child: _complianceTile()),
-              const SizedBox(height: 8),
-              _CartTotalRow(label: 'ราคาเฉพาะสินค้า', value: _money(total)),
-              const _CartTotalRow(label: 'ส่วนลด (%)', value: '-'),
-              _CartTotalRow(
-                label: 'ยอดรวมสุทธิ',
-                value: _money(total),
-                valueKey: netTotalKey,
-                emphasised: true,
-              ),
-              const SizedBox(height: 8),
-              _payButton(context),
             ],
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(_gutter, 8, _gutter, _gutter),
+          child: _payButton(context),
+        ),
       ],
+    );
+  }
+
+  /// The sale's customer and controlled-drug cards, and its totals.
+  Widget _details() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(_gutter, 0, _gutter, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AppCard(
+            padding: EdgeInsets.zero,
+            child: CartCustomerTile(
+              customer: customer,
+              onChoose: onChooseCustomer,
+              onRemove: onRemoveCustomer,
+            ),
+          ),
+          const SizedBox(height: _lineGap),
+          AppCard(padding: EdgeInsets.zero, child: _complianceTile()),
+          const SizedBox(height: 8),
+          _CartTotalRow(label: 'ราคาเฉพาะสินค้า', value: _money(total)),
+          const _CartTotalRow(label: 'ส่วนลด (%)', value: '-'),
+          _CartTotalRow(
+            label: 'ยอดรวมสุทธิ',
+            value: _money(total),
+            valueKey: netTotalKey,
+            emphasised: true,
+          ),
+        ],
+      ),
     );
   }
 
@@ -109,10 +127,6 @@ class CartPanel extends StatelessWidget {
 
   Widget _header() {
     return Row(children: [
-      if (showSearchButton) ...[
-        const SizedBox(width: 4),
-        CartSearchButton(onPressed: onOpenProducts),
-      ],
       Expanded(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -158,13 +172,15 @@ class CartPanel extends StatelessWidget {
   }
 
   Widget _lines() {
-    return ListView.separated(
+    return SliverPadding(
       padding: const EdgeInsets.fromLTRB(_gutter, 0, _gutter, _gutter),
-      itemCount: lineCount,
-      separatorBuilder: (_, __) => const SizedBox(height: _lineGap),
-      itemBuilder: (context, index) => AppCard(
-        padding: EdgeInsets.zero,
-        child: lineBuilder(context, index),
+      sliver: SliverList.separated(
+        itemCount: lineCount,
+        separatorBuilder: (_, __) => const SizedBox(height: _lineGap),
+        itemBuilder: (context, index) => AppCard(
+          padding: EdgeInsets.zero,
+          child: lineBuilder(context, index),
+        ),
       ),
     );
   }

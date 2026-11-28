@@ -155,11 +155,18 @@ class CartOrderItem extends StatelessWidget {
       );
     }
 
+    // A tile's trailing slot is only so high: at a large text size the two
+    // lines of the price shrink to it rather than overflow.
+    Widget fittedPrice() => FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: AlignmentDirectional.centerEnd,
+          child: getPriceDiscount(),
+        );
     return LayoutBuilder(builder: (context, constraints) {
       if (constraints.maxWidth < _wideMinWidth) {
-        return _buildNarrow(context, getPriceDiscount());
+        return _buildNarrow(context, fittedPrice());
       }
-      return _buildWide(context, getPriceDiscount());
+      return _buildWide(context, fittedPrice());
     });
   }
 

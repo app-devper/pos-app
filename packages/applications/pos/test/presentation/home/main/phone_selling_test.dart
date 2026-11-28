@@ -72,7 +72,9 @@ void main() {
     await tester.tap(find.byType(ProductCard));
     await _settle(tester);
 
-    expect(find.text('ในตะกร้า 1'), findsOneWidget);
+    expect(tester.widget<ProductCard>(find.byType(ProductCard)).inCart, 1);
+    expect(tester.getSemantics(find.byType(ProductCard)).label,
+        contains('ในตะกร้า 1'));
     expect(tester.getSemantics(_bar).label,
         'ตะกร้าสินค้า #1\n1 รายการ ฿10.00');
   });
@@ -155,11 +157,16 @@ void main() {
     tester.platformDispatcher.textScaleFactorTestValue = 1.3;
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
     await _open(tester, size: const Size(360, 640));
+    final e = tester.takeException();
+    expect(e, isNull, reason: 'the products');
     await tester.tap(find.byType(ProductCard));
+    await _settle(tester);
+    expect(tester.takeException(), isNull, reason: 'a card in the cart');
     await _settle(tester);
     await _openCart(tester);
 
-    expect(tester.takeException(), isNull);
+    final e2 = tester.takeException();
+    expect(e2, isNull);
     expect(find.textContaining('ชำระเงิน ('), findsOneWidget);
   });
 }
