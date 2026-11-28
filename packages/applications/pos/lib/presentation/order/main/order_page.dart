@@ -17,6 +17,7 @@ import 'package:pos/presentation/constants.dart';
 import 'package:pos/presentation/order/bill_summary.dart';
 import 'package:pos/presentation/order/argument.dart';
 import 'package:design_system/theme/app_colors.dart';
+import 'package:design_system/widgets/filter_pills.dart';
 import 'package:design_system/theme/color.dart';
 import 'order_list_tile.dart';
 import 'order_state.dart';
@@ -266,30 +267,21 @@ class _OrderPageState extends State<OrderPage> {
     }
   }
 
-  Wrap _buildFilter() {
-    return Wrap(
-      spacing: 8,
-      children: List.generate(_choices.length, (index) {
-        return ChoiceChip(
-          label: Text(_choiceName(Languages.of(context), index)),
-          labelStyle: TextStyle(
-              color: _defaultChoiceIndex == index
-                  ? Theme.of(context).colorScheme.onPrimary
-                  : AppColors.of(context).textPrimary),
-          selected: _defaultChoiceIndex == index,
-          selectedColor: Theme.of(context).colorScheme.primary,
-          backgroundColor: AppColors.of(context).surfaceSunken,
-          onSelected: (value) {
-            setState(() {
-              _defaultChoiceIndex = value ? index : _defaultChoiceIndex;
-            });
-            _viewModel.getOrderItem(
-                _choices[_defaultChoiceIndex], _getOrderRangeParam());
-          },
-          elevation: 1,
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-        );
-      }),
+  /// The channel a bill was sold through: all, the shop, online.
+  Widget _buildFilter() {
+    return FilterPills<String>(
+      selected: _choices[_defaultChoiceIndex],
+      items: [
+        for (final (index, choice) in _choices.indexed)
+          FilterPill<String>(
+            value: choice,
+            label: _choiceName(Languages.of(context), index),
+          ),
+      ],
+      onSelected: (choice) {
+        setState(() => _defaultChoiceIndex = _choices.indexOf(choice));
+        _viewModel.getOrderItem(choice, _getOrderRangeParam());
+      },
     );
   }
 

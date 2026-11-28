@@ -37,46 +37,133 @@ class OrderListTile extends StatelessWidget {
 
   static final _format = NumberFormat("#,##0.00", "en_US");
 
+  /// From this width a row reads across, its parts in columns.
+  static const double _wideFrom = 720;
+  static const double _indexWidth = 40;
+
+  /// A bill number is short; time and customer, cost and profit get more.
+  static const int _codeFlex = 2;
+  static const int _detailFlex = 3;
+  static const int _detailLines = 2;
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final secondary = theme.textTheme.bodySmall
-        ?.copyWith(color: AppColors.of(context).textSecondary);
+    return LayoutBuilder(
+      builder: (context, constraints) => constraints.maxWidth >= _wideFrom
+          ? _buildWide(context)
+          : _buildNarrow(context),
+    );
+  }
+
+  /// A cancelled bill is still listed, but its text is muted.
+  Color? _textColor(BuildContext context) =>
+      order.isCancelled ? AppColors.of(context).textSecondary : null;
+
+  TextStyle? _secondary(BuildContext context) => Theme.of(context)
+      .textTheme
+      .bodySmall
+      ?.copyWith(color: AppColors.of(context).textSecondary);
+
+  String _time(BuildContext context) {
     final customer = order.customerName;
-    final time = order.getCreatedDate() +
+    return order.getCreatedDate() +
         (customer.isNotEmpty
             ? " ${Languages.of(context).customerNamed(customer)}"
             : "");
+  }
+
+  String get _costText => costAndProfitText(
+      cost: order.totalCost, profit: order.total - order.totalCost);
+
+  Text _index(BuildContext context) => Text("${index + 1}",
+      style: _secondary(context)?.copyWith(fontSize: _minLabelSize));
+
+  Text _code(BuildContext context) => Text(order.code,
+      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+          fontWeight: FontWeight.bold, color: _textColor(context)));
+
+  Text _amount(BuildContext context) =>
+      Text('฿${_format.format(order.total)}', style: _amountStyle(context));
+
+  Widget _buildNarrow(BuildContext context) {
+    final secondary = _secondary(context);
     return ListTile(
-      leading: Text("${index + 1}",
-          style: secondary?.copyWith(fontSize: _minLabelSize)),
+      leading: _index(context),
       minLeadingWidth: 24,
-      title: Text(order.code,
-          style: theme.textTheme.titleSmall
-              ?.copyWith(fontWeight: FontWeight.bold)),
+      title: _code(context),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           if (order.isCancelled) const CancelledBadge(),
-          Text(time, style: secondary),
-          if (showCost)
-            Text(
-                costAndProfitText(
-                    cost: order.totalCost,
-                    profit: order.total - order.totalCost),
-                style: secondary),
+          Text(_time(context), style: secondary),
+          if (showCost) Text(_costText, style: secondary),
         ],
       ),
-      trailing:
-          Text('฿${_format.format(order.total)}', style: _amountStyle(theme)),
+      trailing: _amount(context),
       onTap: onTap,
     );
   }
 
+  /// A wide list's row: number, bill number (and its mark), time and
+  /// customer, cost and profit for an admin, then the amount at the end.
+  /// Read as one node, in that order, as the phone's row is.
+  Widget _buildWide(BuildContext context) {
+    final secondary = _secondary(context);
+    return MergeSemantics(
+      child: Semantics(
+        button: true,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                SizedBox(width: _indexWidth, child: _index(context)),
+                Expanded(
+                  flex: _codeFlex,
+                  child: Row(
+                    children: [
+                      Flexible(child: _code(context)),
+                      if (order.isCancelled) ...[
+                        const SizedBox(width: 8),
+                        const CancelledBadge(),
+                      ],
+                    ],
+                  ),
+                ),
+                // Time, customer, cost and profit wrap onto a second line
+                // where a column is narrow, rather than being cut short.
+                Expanded(
+                  flex: _detailFlex,
+                  child: Text(_time(context),
+                      maxLines: _detailLines,
+                      overflow: TextOverflow.ellipsis,
+                      style: secondary),
+                ),
+                if (showCost)
+                  Expanded(
+                    flex: _detailFlex,
+                    child: Text(_costText,
+                        maxLines: _detailLines,
+                        overflow: TextOverflow.ellipsis,
+                        style: secondary),
+                  ),
+                const SizedBox(width: 16),
+                _amount(context),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   /// The row's most prominent text: bold, its figures in even columns.
-  TextStyle? _amountStyle(ThemeData theme) =>
-      AppText.money(theme.textTheme.titleMedium
-          ?.copyWith(fontWeight: FontWeight.bold)
+  TextStyle? _amountStyle(BuildContext context) =>
+      AppText.money(Theme.of(context)
+          .textTheme
+          .titleMedium
+          ?.copyWith(fontWeight: FontWeight.bold, color: _textColor(context))
           .merge(amountStyle(cancelled: order.isCancelled)));
 }

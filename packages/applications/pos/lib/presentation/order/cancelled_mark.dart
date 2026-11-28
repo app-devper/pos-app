@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 // Package imports:
+import 'package:design_system/widgets/app_tag.dart';
 import 'package:design_system/widgets/status_badge.dart';
 
 /// What a cancelled bill or line is marked with.
@@ -12,8 +13,8 @@ class CancelledBadge extends StatelessWidget {
   const CancelledBadge({super.key});
 
   @override
-  Widget build(BuildContext context) => StatusBadge(
-      label: cancelledLabel, color: Theme.of(context).colorScheme.error);
+  Widget build(BuildContext context) => const StatusBadge.tone(
+      label: cancelledLabel, tone: AppTagTone.danger);
 }
 
 /// A cancelled bill's or line's amount is struck through: it is shown, and

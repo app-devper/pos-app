@@ -36,7 +36,7 @@ void main() {
 
     await shell.openOrders();
     await shell.expectScreenWithoutError(find.text('สรุปรายการ'));
-    expect(shell.choiceChip('ทั้งหมด'), findsOneWidget);
+    expect(shell.filterPill('ทั้งหมด'), findsOneWidget);
     expect(find.text('ต้นทุน').hitTestable(), findsOneWidget);
 
     await shell.openProducts();
@@ -171,7 +171,7 @@ Future<void> _expectSellingAndBillsWithoutAdminTools(ShellRobot shell) async {
   expect(shell.tab('รายการขาย'), findsOneWidget);
   expect(shell.tab('สินค้า'), findsNothing);
   expect(shell.tab('จัดการ'), findsNothing);
-  expect(shell.choiceChip('ทั้งหมด'), findsNothing);
+  expect(shell.filterPill('ทั้งหมด'), findsNothing);
   expect(find.text('ต้นทุน'), findsNothing);
   expect(shell.rangeDropdown, findsNothing);
 }

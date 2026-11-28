@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 // Package imports:
+import 'package:design_system/widgets/filter_pills.dart';
 import 'package:design_system/widgets/snack_bar.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:um/domain/usecase/auth_use_cases.dart';
@@ -91,5 +92,23 @@ void main() {
       // Assert
       expectFootClear(tester);
     });
+  });
+
+  testWidgets('an admin chooses the channel with the redesign\'s pills',
+      (tester) async {
+    useViewSize(tester, phoneSize);
+    await showScreen(tester, _billsList(), isDialog: false);
+
+    final pills = find.byType(FilterPills<String>);
+    expect(pills, findsOneWidget);
+    expect(find.byType(ChoiceChip), findsNothing);
+    expect(
+        [for (final p in tester.widget<FilterPills<String>>(pills).items) p.label],
+        ['All', 'Store', 'Online']);
+
+    await tester.tap(find.text('Store'));
+    await tester.pump();
+    await tester.pump();
+    expect(tester.widget<FilterPills<String>>(pills).selected, 'Store');
   });
 }
